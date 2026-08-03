@@ -1,0 +1,63 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "I2IT Campus Boundary — Detailed Polygon",
+        "source": "Traced from satellite imagery"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.736544, 18.583664],
+            [73.73708,  18.583308],
+            [73.73722,  18.583466],
+            [73.737912, 18.584304],
+            [73.73863,  18.583847],
+            [73.738668, 18.583872],
+            [73.738738, 18.583954],
+            [73.738711, 18.584111],
+            [73.738528, 18.584248],
+            [73.738614, 18.584406],
+            [73.738432, 18.584559],
+            [73.738604, 18.584838],
+            [73.738507, 18.584904],
+            [73.738158, 18.585128],
+            [73.738502, 18.584905],
+            [73.73782,  18.585362],
+            [73.737418, 18.584879],
+            [73.736592, 18.585408],
+            [73.735685, 18.584346],
+            [73.736544, 18.583664]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "I2IT Main Entrance / Academic Block",
+        "source": "Google Places",
+        "place_id": "ChIJM4S33eW7wjsR0Uu4zo0H_J8"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [73.7377211, 18.5849503]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "I2IT Campus Southern Edge",
+        "source": "Google Places",
+        "place_id": "ChIJ8SegG-a7wjsRLga6gsjd_e0"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [73.7367858, 18.5838091]
+      }
+    }
+  ]
+}
