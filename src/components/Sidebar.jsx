@@ -79,7 +79,7 @@ function AdminSidebar({ user, location, navigate, logout }) {
       background: 'linear-gradient(180deg, #010e07 0%, #021307 50%, #010904 100%)',
       display: 'flex', flexDirection: 'column',
       borderRight: '1px solid rgba(16,185,129,0.12)',
-      position: 'relative', overflow: 'hidden',
+      position: 'fixed', top: 0, left: 0, zIndex: 100, overflow: 'hidden',
     }}>
       {/* Left accent bar */}
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg, #059669, #10b981 40%, transparent)' }} />
@@ -194,7 +194,7 @@ function MaintenanceSidebar({ user, location, navigate, logout }) {
       background: '#0e0900',
       display: 'flex', flexDirection: 'column',
       borderRight: '1px solid rgba(245,158,11,0.1)',
-      position: 'relative', overflow: 'hidden',
+      position: 'fixed', top: 0, left: 0, zIndex: 100, overflow: 'hidden',
     }}>
       {/* Diagonal stripe texture */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.025, backgroundImage: 'repeating-linear-gradient(55deg,#f59e0b 0px,#f59e0b 8px,transparent 8px,transparent 24px)', pointerEvents: 'none' }} />
@@ -327,7 +327,7 @@ function StudentSidebar({ user, location, navigate, logout }) {
       background: 'linear-gradient(180deg, #020d18 0%, #061a2e 60%, #020e1c 100%)',
       display: 'flex', flexDirection: 'column',
       borderRight: '1px solid rgba(14,165,233,0.1)',
-      position: 'relative', overflow: 'hidden',
+      position: 'fixed', top: 0, left: 0, zIndex: 100, overflow: 'hidden',
     }}>
       {/* Dot grid background */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(rgba(14,165,233,0.6) 1px, transparent 1px)', backgroundSize: '26px 26px', pointerEvents: 'none' }} />
