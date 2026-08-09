@@ -1,7 +1,11 @@
 // ─── Authentication Context ──────────────────────────────────────────────────
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
+
+const STORAGE_KEY = 'aquamanage_user';
+const LAST_ACTIVE_KEY = 'aquamanage_last_active';
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes inactivity timeout for Admin & Maintenance
 
 // ── Hardcoded credentials for demo ─────────────────────────────────────────
 const CREDENTIALS = {
@@ -19,10 +23,63 @@ const CREDENTIALS = {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const stored = sessionStorage.getItem('aquamanage_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+      const parsedUser = JSON.parse(stored);
+
+      // Check inactivity for admin and maintenance on initial app launch / page refresh
+      if (parsedUser?.role === 'admin' || parsedUser?.role === 'maintenance') {
+        const lastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+        if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_TIMEOUT) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LAST_ACTIVE_KEY);
+          return null;
+        }
+      }
+      return parsedUser;
+    } catch {
+      return null;
+    }
   });
+
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LAST_ACTIVE_KEY);
+  }, []);
+
+  const updateLastActive = useCallback(() => {
+    if (user && (user.role === 'admin' || user.role === 'maintenance')) {
+      localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+    }
+  }, [user]);
+
+  // Monitor user activity and handle 15-min idle timeout for Admin & Maintenance
+  useEffect(() => {
+    if (!user || (user.role !== 'admin' && user.role !== 'maintenance')) return;
+
+    updateLastActive();
+
+    const handleUserActivity = () => {
+      updateLastActive();
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach((evt) => window.addEventListener(evt, handleUserActivity));
+
+    // Check inactivity every 10 seconds
+    const interval = setInterval(() => {
+      const lastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+      if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_TIMEOUT) {
+        logout();
+      }
+    }, 10000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, handleUserActivity));
+      clearInterval(interval);
+    };
+  }, [user, updateLastActive, logout]);
 
   const login = (role, username, password) => {
     const cleanUsername = (username || '').trim();
@@ -34,7 +91,10 @@ export function AuthProvider({ children }) {
     if (found) {
       const userData = { name: found.name, role: found.role, username: found.username };
       setUser(userData);
-      sessionStorage.setItem('aquamanage_user', JSON.stringify(userData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      if (role === 'admin' || role === 'maintenance') {
+        localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+      }
       return { success: true };
     }
     return { success: false, error: 'Invalid credentials. Please check your username and password.' };
@@ -44,12 +104,7 @@ export function AuthProvider({ children }) {
     const cleanName = (name || '').trim();
     const userData = { name: cleanName || 'Student', role: 'student', username: cleanName || 'Student' };
     setUser(userData);
-    sessionStorage.setItem('aquamanage_user', JSON.stringify(userData));
-  };
-
-  const logout = () => {
-    setUser(null);
-    sessionStorage.removeItem('aquamanage_user');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
   };
 
   return (

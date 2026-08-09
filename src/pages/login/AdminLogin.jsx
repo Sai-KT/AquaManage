@@ -32,7 +32,7 @@ const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +41,14 @@ export default function AdminLogin() {
   const [loading,  setLoading]  = useState(false);
   const [activeField, setActiveField] = useState(null);
   const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
+      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
+      else navigate('/student/report', { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);

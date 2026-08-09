@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // ── Dedicated login pages (completely separate, no shared UI) ─────────────────
@@ -26,15 +26,22 @@ import StudentHarvesting from './pages/student/Harvesting';
 import TaskQueue      from './pages/maintenance/TaskQueue';
 import CompletedTasks from './pages/maintenance/CompletedTasks';
 
+function RootRedirect() {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login/student" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === 'maintenance') return <Navigate to="/maintenance/tasks" replace />;
+  return <Navigate to="/student/report" replace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
 
-          {/* ── Entry points — each role has its own isolated login page ── */}
-          {/* / and unknown routes redirect to student login by default      */}
-          <Route path="/"                   element={<Navigate to="/login/student" replace />} />
+          {/* ── Entry points — smart root redirect ── */}
+          <Route path="/"                   element={<RootRedirect />} />
           <Route path="/login/student"     element={<StudentLogin />} />
           <Route path="/login/admin"       element={<AdminLogin />} />
           <Route path="/login/maintenance" element={<MaintenanceLogin />} />
@@ -57,8 +64,8 @@ export default function App() {
           <Route path="/student/myreports"  element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
           <Route path="/student/harvesting" element={<ProtectedRoute><StudentHarvesting /></ProtectedRoute>} />
 
-          {/* Unknown URL → student login */}
-          <Route path="*" element={<Navigate to="/login/student" replace />} />
+          {/* Unknown URL → smart root redirect */}
+          <Route path="*" element={<RootRedirect />} />
 
         </Routes>
       </BrowserRouter>

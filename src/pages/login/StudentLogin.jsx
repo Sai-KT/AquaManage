@@ -20,10 +20,18 @@ const campusStats = [
 
 export default function StudentLogin() {
   const navigate = useNavigate();
-  const { loginStudent } = useAuth();
+  const { user, loginStudent } = useAuth();
   const [name, setName] = useState('');
   const [focused, setFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
+      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
+      else navigate('/student/report', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleContinue = () => {
     loginStudent(name);

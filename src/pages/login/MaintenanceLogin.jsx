@@ -9,7 +9,7 @@ import {
 
 export default function MaintenanceLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
 
   const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +17,14 @@ export default function MaintenanceLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+
+  React.useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
+      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
+      else navigate('/student/report', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
