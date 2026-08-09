@@ -19,10 +19,11 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to={dest} state={{ from: location }} replace />;
   }
 
-  // Logged in but wrong role → send back to their own login page
+  // Logged in but wrong role → send to their authorized landing page
   if (requiredRole && user.role !== requiredRole) {
-    const dest = LOGIN_PAGE[user.role] || '/login/student';
-    return <Navigate to={dest} replace />;
+    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'maintenance') return <Navigate to="/maintenance/tasks" replace />;
+    return <Navigate to="/student/report" replace />;
   }
 
   return children;

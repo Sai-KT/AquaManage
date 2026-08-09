@@ -19,10 +19,8 @@ export default function MaintenanceLogin() {
   const [focusedField, setFocusedField] = useState(null);
 
   React.useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
-      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
-      else navigate('/student/report', { replace: true });
+    if (user && user.role === 'maintenance') {
+      navigate('/maintenance/tasks', { replace: true });
     }
   }, [user, navigate]);
 
@@ -228,7 +226,47 @@ export default function MaintenanceLogin() {
                 ? <><span style={{ width: 15, height: 15, border: '2px solid rgba(255,255,255,0.25)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} /> Verifying...</>
                 : <>Access Maintenance Portal <ArrowRight size={15} /></>}
             </button>
+
+            {/* Demo Credentials Hint */}
+            <div style={{
+              marginTop: 18, padding: '10px 12px',
+              background: 'rgba(245,158,11,0.06)',
+              border: '1px solid rgba(245,158,11,0.18)',
+              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                Demo: <code style={{ color: '#fbbf24', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>EMP-01</code> / <code style={{ color: '#fbbf24', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>Maint@1234</code>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setEmpId('EMP-01'); setPassword('Maint@1234'); }}
+                style={{
+                  background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: 5, color: '#fbbf24', fontSize: '0.65rem', fontWeight: 700,
+                  padding: '3px 8px', cursor: 'pointer',
+                }}
+              >
+                Auto-fill
+              </button>
+            </div>
           </form>
+
+          {/* Portal Switcher */}
+          <div style={{ marginTop: 22, textAlign: 'center' }}>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginRight: 8 }}>Switch portal:</span>
+            <button
+              onClick={() => navigate('/login/student')}
+              style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', marginRight: 12 }}
+            >
+              Student Login
+            </button>
+            <button
+              onClick={() => navigate('/login/admin')}
+              style={{ background: 'none', border: 'none', color: '#34d399', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Admin Login
+            </button>
+          </div>
 
           <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.13)' }}>I2IT Hinjewadi · Field Ops</span>

@@ -43,10 +43,8 @@ export default function AdminLogin() {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
-      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
-      else navigate('/student/report', { replace: true });
+    if (user && user.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
@@ -370,11 +368,51 @@ export default function AdminLogin() {
                 <>Authenticate &amp; Enter <ArrowRight size={14} /></>
               )}
             </button>
+
+            {/* Demo Credentials Hint */}
+            <div style={{
+              marginTop: 18, padding: '10px 12px',
+              background: 'rgba(16,185,129,0.06)',
+              border: '1px solid rgba(16,185,129,0.15)',
+              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                Demo: <code style={{ color: '#34d399', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>admin@i2it.edu.in</code> / <code style={{ color: '#34d399', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>Admin@1234</code>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setEmail('admin@i2it.edu.in'); setPassword('Admin@1234'); }}
+                style={{
+                  background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                  borderRadius: 5, color: '#34d399', fontSize: '0.65rem', fontWeight: 700,
+                  padding: '3px 8px', cursor: 'pointer',
+                }}
+              >
+                Auto-fill
+              </button>
+            </div>
           </form>
 
+          {/* Portal Switcher */}
+          <div style={{ marginTop: 22, textAlign: 'center' }}>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginRight: 8 }}>Switch portal:</span>
+            <button
+              onClick={() => navigate('/login/student')}
+              style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', marginRight: 12 }}
+            >
+              Student Login
+            </button>
+            <button
+              onClick={() => navigate('/login/maintenance')}
+              style={{ background: 'none', border: 'none', color: '#fbbf24', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Maintenance Login
+            </button>
+          </div>
+
           {/* Security footer */}
-          <div style={{ marginTop: 32 }}>
-            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.12), transparent)', marginBottom: 20 }} />
+          <div style={{ marginTop: 24 }}>
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.12), transparent)', marginBottom: 16 }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Lock size={9} style={{ color: 'rgba(52,211,153,0.45)' }} />

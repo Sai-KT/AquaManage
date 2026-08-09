@@ -26,6 +26,8 @@ import StudentHarvesting from './pages/student/Harvesting';
 import TaskQueue      from './pages/maintenance/TaskQueue';
 import CompletedTasks from './pages/maintenance/CompletedTasks';
 
+import Landing          from './pages/Landing';
+
 function RootRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login/student" replace />;
@@ -42,6 +44,8 @@ export default function App() {
 
           {/* ── Entry points — smart root redirect ── */}
           <Route path="/"                   element={<RootRedirect />} />
+          <Route path="/landing"           element={<Landing />} />
+          <Route path="/portal"            element={<Landing />} />
           <Route path="/login/student"     element={<StudentLogin />} />
           <Route path="/login/admin"       element={<AdminLogin />} />
           <Route path="/login/maintenance" element={<MaintenanceLogin />} />

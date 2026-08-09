@@ -29,10 +29,8 @@ export default function StudentLogin() {
   const [error, setError] = useState('');
 
   React.useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
-      else if (user.role === 'maintenance') navigate('/maintenance/tasks', { replace: true });
-      else navigate('/student/report', { replace: true });
+    if (user && user.role === 'student') {
+      navigate('/student/report', { replace: true });
     }
   }, [user, navigate]);
 
@@ -283,7 +281,47 @@ export default function StudentLogin() {
               Continue to Student Portal
               <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
             </button>
+
+            {/* Demo Auto-fill Hint */}
+            <div style={{
+              marginTop: 16, padding: '10px 12px',
+              background: 'rgba(14,165,233,0.06)',
+              border: '1px solid rgba(14,165,233,0.18)',
+              borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                Demo: <code style={{ color: '#38bdf8', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>Arjun Mehta</code> / <code style={{ color: '#38bdf8', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>IRN2024891</code>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setName('Arjun Mehta'); setIrnNo('IRN2024891'); setError(''); }}
+                style={{
+                  background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)',
+                  borderRadius: 6, color: '#38bdf8', fontSize: '0.65rem', fontWeight: 700,
+                  padding: '3px 8px', cursor: 'pointer',
+                }}
+              >
+                Auto-fill
+              </button>
+            </div>
           </form>
+
+          {/* Portal Switcher */}
+          <div style={{ marginTop: 22, textAlign: 'center' }}>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginRight: 8 }}>Staff & Ops login:</span>
+            <button
+              onClick={() => navigate('/login/maintenance')}
+              style={{ background: 'none', border: 'none', color: '#fbbf24', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', marginRight: 12 }}
+            >
+              Maintenance Login
+            </button>
+            <button
+              onClick={() => navigate('/login/admin')}
+              style={{ background: 'none', border: 'none', color: '#34d399', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Admin Login
+            </button>
+          </div>
 
           {/* Verification badge */}
           <div style={{
