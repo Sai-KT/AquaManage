@@ -100,9 +100,15 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'Invalid credentials. Please check your username and password.' };
   };
 
-  const loginStudent = (name) => {
+  const loginStudent = (name, irnNo) => {
     const cleanName = (name || '').trim();
-    const userData = { name: cleanName || 'Student', role: 'student', username: cleanName || 'Student' };
+    const cleanIrn = (irnNo || '').trim();
+    const userData = {
+      name: cleanName || 'Student',
+      irnNo: cleanIrn,
+      role: 'student',
+      username: cleanName || 'Student',
+    };
     setUser(userData);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
   };

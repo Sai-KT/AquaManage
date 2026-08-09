@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   BookOpen, User, Droplets, CheckCircle,
-  CloudRain, FileText, ArrowRight, Leaf, Star
+  CloudRain, FileText, ArrowRight, Leaf, Star,
+  IdCard, AlertCircle
 } from 'lucide-react';
 
 const features = [
@@ -22,8 +23,10 @@ export default function StudentLogin() {
   const navigate = useNavigate();
   const { user, loginStudent } = useAuth();
   const [name, setName] = useState('');
-  const [focused, setFocused] = useState(false);
+  const [irnNo, setIrnNo] = useState('');
+  const [focusedField, setFocusedField] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [error, setError] = useState('');
 
   React.useEffect(() => {
     if (user) {
@@ -33,8 +36,18 @@ export default function StudentLogin() {
     }
   }, [user, navigate]);
 
-  const handleContinue = () => {
-    loginStudent(name);
+  const handleContinue = (e) => {
+    if (e) e.preventDefault();
+    if (!name.trim()) {
+      setError('Please enter your full name (compulsory).');
+      return;
+    }
+    if (!irnNo.trim()) {
+      setError('Please enter your IRN No. (compulsory).');
+      return;
+    }
+    setError('');
+    loginStudent(name, irnNo);
     navigate('/student/report');
   };
 
@@ -180,70 +193,107 @@ export default function StudentLogin() {
             }}>
               <BookOpen size={34} style={{ color: '#38bdf8' }} />
             </div>
-            <h2 style={{ fontSize: '1.4375rem', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Welcome, Student!</h2>
+            <h2 style={{ fontSize: '1.4375rem', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Student Sign In</h2>
             <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.32)', margin: 0, lineHeight: 1.6 }}>
-              Enter your name to continue — no password needed
+              Enter your Name and IRN No. to access the student portal
             </p>
           </div>
 
-          {/* Name field */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 10, letterSpacing: '0.2px' }}>
-              Your Name <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>(optional)</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <User size={15} style={{
-                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                color: focused ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
-              }} />
-              <input
-                type="text" placeholder="e.g. Arjun Mehta"
-                value={name} onChange={e => setName(e.target.value)}
-                onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-                onKeyDown={e => e.key === 'Enter' && handleContinue()}
-                autoFocus
-                style={{
-                  width: '100%', padding: '13px 14px 13px 42px',
-                  background: focused ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
-                  border: `1.5px solid ${focused ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
-                  borderRadius: 12, color: '#fff', fontSize: '0.9375rem',
-                  outline: 'none', boxSizing: 'border-box',
-                  transition: 'all 0.2s ease', caretColor: '#38bdf8',
-                }}
-              />
+          {/* Form */}
+          <form onSubmit={handleContinue}>
+            {/* Name field */}
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', marginBottom: 8, letterSpacing: '0.2px' }}>
+                Full Name <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <User size={15} style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                  color: focusedField === 'name' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
+                }} />
+                <input
+                  type="text" placeholder="e.g. Arjun Mehta"
+                  value={name} onChange={e => { setName(e.target.value); if (error) setError(''); }}
+                  onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)}
+                  autoFocus required
+                  style={{
+                    width: '100%', padding: '13px 14px 13px 42px',
+                    background: focusedField === 'name' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${focusedField === 'name' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
+                    borderRadius: 12, color: '#fff', fontSize: '0.9375rem',
+                    outline: 'none', boxSizing: 'border-box',
+                    transition: 'all 0.2s ease', caretColor: '#38bdf8',
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* CTA button */}
-          <button
-            onClick={handleContinue}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-              width: '100%', padding: '14px',
-              background: 'linear-gradient(135deg, #0284c7, #0ea5e9)',
-              border: 'none', borderRadius: 12,
-              color: '#fff', fontWeight: 700, fontSize: '0.9375rem',
-              cursor: 'pointer', letterSpacing: '0.2px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: isHovered ? '0 8px 32px rgba(14,165,233,0.55)' : '0 4px 20px rgba(14,165,233,0.35)',
-              transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-              transition: 'all 0.22s ease',
-            }}
-          >
-            Continue to Student Portal
-            <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
-          </button>
+            {/* IRN No. field */}
+            <div style={{ marginBottom: 22 }}>
+              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', marginBottom: 8, letterSpacing: '0.2px' }}>
+                IRN No. / PRN No. <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <IdCard size={15} style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                  color: focusedField === 'irn' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
+                }} />
+                <input
+                  type="text" placeholder="e.g. IRN2024891"
+                  value={irnNo} onChange={e => { setIrnNo(e.target.value); if (error) setError(''); }}
+                  onFocus={() => setFocusedField('irn')} onBlur={() => setFocusedField(null)}
+                  required
+                  style={{
+                    width: '100%', padding: '13px 14px 13px 42px',
+                    background: focusedField === 'irn' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${focusedField === 'irn' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
+                    borderRadius: 12, color: '#fff', fontSize: '0.9375rem',
+                    outline: 'none', boxSizing: 'border-box',
+                    transition: 'all 0.2s ease', caretColor: '#38bdf8',
+                  }}
+                />
+              </div>
+            </div>
 
-          {/* Open access badge */}
+            {/* Error Message */}
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, marginBottom: 18, fontSize: '0.8125rem', color: '#f87171' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* CTA button */}
+            <button
+              type="submit"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              style={{
+                width: '100%', padding: '14px',
+                background: 'linear-gradient(135deg, #0284c7, #0ea5e9)',
+                border: 'none', borderRadius: 12,
+                color: '#fff', fontWeight: 700, fontSize: '0.9375rem',
+                cursor: 'pointer', letterSpacing: '0.2px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: isHovered ? '0 8px 32px rgba(14,165,233,0.55)' : '0 4px 20px rgba(14,165,233,0.35)',
+                transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                transition: 'all 0.22s ease',
+              }}
+            >
+              Continue to Student Portal
+              <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
+            </button>
+          </form>
+
+          {/* Verification badge */}
           <div style={{
             marginTop: 20, padding: '11px 16px',
-            background: 'rgba(16,185,129,0.06)',
-            border: '1px solid rgba(16,185,129,0.15)',
+            background: 'rgba(14,165,233,0.06)',
+            border: '1px solid rgba(14,165,233,0.15)',
             borderRadius: 10, textAlign: 'center',
           }}>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
-              🔓 <strong style={{ color: 'rgba(52,211,153,0.8)' }}>Open Access</strong> — No password required for I2IT students &amp; staff
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
+              🆔 <strong style={{ color: '#38bdf8' }}>Verified Portal</strong> — Name &amp; IRN No. mandatory for campus issue reporting
             </div>
           </div>
 
