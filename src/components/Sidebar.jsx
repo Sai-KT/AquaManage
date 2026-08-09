@@ -117,6 +117,17 @@ function AdminSidebar({ user, location, navigate, logout }) {
           </div>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981', flexShrink: 0, animation: 'blink 2s ease-in-out infinite' }} />
         </div>
+        <button
+          onClick={() => navigate('/student/report')}
+          style={{
+            marginTop: 10, width: '100%', padding: '6px 10px',
+            background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)',
+            borderRadius: 8, color: '#38bdf8', fontSize: '0.72rem', fontWeight: 700,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}
+        >
+          <BookOpen size={12} /> Student View
+        </button>
       </div>
 
       {/* ── Nav ── */}
@@ -371,6 +382,32 @@ function StudentSidebar({ user, location, navigate, logout }) {
             <Leaf size={9} style={{ color: '#34d399' }} />
             <span style={{ fontSize: '0.5625rem', fontWeight: 700, color: '#34d399', letterSpacing: '0.5px' }}>Eco Contributor</span>
           </div>
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              style={{
+                marginTop: 10, width: '100%', padding: '6px 10px',
+                background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                borderRadius: 8, color: '#34d399', fontSize: '0.72rem', fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+            >
+              <Shield size={12} /> Admin Dashboard
+            </button>
+          )}
+          {user?.role === 'maintenance' && (
+            <button
+              onClick={() => navigate('/maintenance/tasks')}
+              style={{
+                marginTop: 10, width: '100%', padding: '6px 10px',
+                background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)',
+                borderRadius: 8, color: '#fbbf24', fontSize: '0.72rem', fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+            >
+              <HardHat size={12} /> Maintenance Tasks
+            </button>
+          )}
         </div>
       </div>
 

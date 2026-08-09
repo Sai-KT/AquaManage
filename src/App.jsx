@@ -31,8 +31,6 @@ import Landing          from './pages/Landing';
 function RootRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login/student" replace />;
-  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-  if (user.role === 'maintenance') return <Navigate to="/maintenance/tasks" replace />;
   return <Navigate to="/student/report" replace />;
 }
 
