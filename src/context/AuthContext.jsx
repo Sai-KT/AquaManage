@@ -25,9 +25,11 @@ export function AuthProvider({ children }) {
   });
 
   const login = (role, username, password) => {
+    const cleanUsername = (username || '').trim();
+    const cleanPassword = (password || '').trim();
     const list = CREDENTIALS[role] || [];
     const found = list.find(
-      (c) => c.username.toLowerCase() === username.toLowerCase() && c.password === password
+      (c) => c.username.trim().toLowerCase() === cleanUsername.toLowerCase() && c.password.trim() === cleanPassword
     );
     if (found) {
       const userData = { name: found.name, role: found.role, username: found.username };
@@ -39,7 +41,8 @@ export function AuthProvider({ children }) {
   };
 
   const loginStudent = (name) => {
-    const userData = { name: name || 'Student', role: 'student', username: name };
+    const cleanName = (name || '').trim();
+    const userData = { name: cleanName || 'Student', role: 'student', username: cleanName || 'Student' };
     setUser(userData);
     sessionStorage.setItem('aquamanage_user', JSON.stringify(userData));
   };
