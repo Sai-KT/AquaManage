@@ -307,22 +307,6 @@ export default function StudentLogin() {
             </div>
           </form>
 
-          {/* Portal Switcher */}
-          <div style={{ marginTop: 22, textAlign: 'center' }}>
-            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginRight: 8 }}>Staff & Ops login:</span>
-            <button
-              onClick={() => navigate('/login/maintenance')}
-              style={{ background: 'none', border: 'none', color: '#fbbf24', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', marginRight: 12 }}
-            >
-              Maintenance Login
-            </button>
-            <button
-              onClick={() => navigate('/login/admin')}
-              style={{ background: 'none', border: 'none', color: '#34d399', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-            >
-              Admin Login
-            </button>
-          </div>
 
           {/* Verification badge */}
           <div style={{
