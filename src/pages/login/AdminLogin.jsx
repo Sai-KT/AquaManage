@@ -69,9 +69,10 @@ export default function AdminLogin() {
 
   return (
     <div className="admin-login-page" style={{
-      minHeight: '100vh', display: 'flex',
+      minHeight: '100vh', minHeight: '100dvh', display: 'flex',
       fontFamily: "'Inter', sans-serif",
       background: '#010804',
+      width: '100%', maxWidth: '100vw', overflowX: 'hidden',
     }}>
 
       {/* ════════════════════════════════════════════════
@@ -239,7 +240,8 @@ export default function AdminLogin() {
         background: '#010a05',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '48px 56px',
-        position: 'relative',
+        position: 'relative', overflow: 'hidden',
+        width: '100%', maxWidth: '100vw', boxSizing: 'border-box',
       }}>
         {/* Subtle corner glows */}
         <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />

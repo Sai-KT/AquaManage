@@ -50,7 +50,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', fontFamily: "'Inter', sans-serif", width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
 
       {/* ─────── LEFT PANEL — Friendly student branding ─────── */}
       <div className="student-login-left" style={{
@@ -173,7 +173,8 @@ export default function StudentLogin() {
         justifyContent: 'center', alignItems: 'center',
         padding: '48px 48px',
         borderLeft: '1px solid rgba(14,165,233,0.1)',
-        position: 'relative',
+        position: 'relative', overflow: 'hidden',
+        width: '100%', boxSizing: 'border-box',
       }}>
         <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', top: -70, right: -70, background: 'radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', bottom: -40, left: -40, background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />

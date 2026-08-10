@@ -38,11 +38,15 @@ export default function MaintenanceLogin() {
   return (
     <div className="maintenance-login-page" style={{
       minHeight: '100vh',
+      minHeight: '100dvh',
       fontFamily: "'Inter', sans-serif",
       background: '#0e0900',
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
+      width: '100%',
+      maxWidth: '100vw',
+      overflowX: 'hidden',
     }}>
 
       {/* ── Full-page diagonal hazard stripes (very subtle) ── */}
