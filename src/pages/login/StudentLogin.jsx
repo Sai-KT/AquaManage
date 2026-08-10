@@ -50,10 +50,10 @@ export default function StudentLogin() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", overflow: 'hidden' }}>
+    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", overflow: 'hidden' }}>
 
       {/* ─────── LEFT PANEL — Friendly student branding ─────── */}
-      <div style={{
+      <div className="student-login-left" style={{
         flex: '1 1 55%',
         background: 'linear-gradient(145deg, #020d18 0%, #061a2e 40%, #0a2540 100%)',
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
@@ -166,7 +166,7 @@ export default function StudentLogin() {
       </div>
 
       {/* ─────── RIGHT PANEL — Login form ─────── */}
-      <div style={{
+      <div className="student-login-right" style={{
         flex: '1 1 45%', maxWidth: 520,
         background: '#060e18',
         display: 'flex', flexDirection: 'column',

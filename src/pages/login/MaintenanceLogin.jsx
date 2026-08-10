@@ -36,7 +36,7 @@ export default function MaintenanceLogin() {
   };
 
   return (
-    <div style={{
+    <div className="maintenance-login-page" style={{
       minHeight: '100vh',
       fontFamily: "'Inter', sans-serif",
       background: '#0e0900',
@@ -59,7 +59,7 @@ export default function MaintenanceLogin() {
       {/* ══════════════════════════════════════════
           TOP BANNER — Full-width amber header
       ══════════════════════════════════════════ */}
-      <div style={{
+      <div className="maintenance-banner" style={{
         width: '100%',
         background: 'linear-gradient(135deg, #451a00 0%, #78350f 40%, #92400e 100%)',
         borderBottom: '1px solid rgba(245,158,11,0.25)',
@@ -76,7 +76,7 @@ export default function MaintenanceLogin() {
         {/* Bottom amber glow line */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #fbbf24 30%, #f59e0b 70%, transparent)' }} />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 860, margin: '0 auto', padding: '36px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="maintenance-banner-inner" style={{ position: 'relative', zIndex: 1, maxWidth: 860, margin: '0 auto', padding: '36px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Left: Brand + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             {/* HardHat icon */}
@@ -136,7 +136,7 @@ export default function MaintenanceLogin() {
         padding: '48px 24px',
         position: 'relative', zIndex: 1,
       }}>
-        <div style={{
+        <div className="maintenance-card-box" style={{
           width: '100%', maxWidth: 440,
           background: 'rgba(245,158,11,0.035)',
           border: '1px solid rgba(245,158,11,0.12)',

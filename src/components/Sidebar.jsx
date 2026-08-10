@@ -5,7 +5,7 @@ import {
   Droplets, LayoutDashboard, FileText, CloudRain, BarChart3,
   Map, Bell, Activity, ClipboardList, LogOut, CheckSquare,
   AlertTriangle, Wrench, Shield, ChevronRight,
-  BookOpen, Leaf, HardHat, Zap, Settings,
+  BookOpen, Leaf, HardHat, Zap, Settings, X,
 } from 'lucide-react';
 
 // ─── Navigation configs ───────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ function AdminSidebar({ user, location, navigate, logout }) {
   const cfg = navConfigs.admin;
 
   return (
-    <div style={{
+    <div className="sidebar-wrapper" style={{
       width: 240, height: '100vh', flexShrink: 0,
       background: 'linear-gradient(180deg, #010e07 0%, #021307 50%, #010904 100%)',
       display: 'flex', flexDirection: 'column',
@@ -200,7 +200,7 @@ function MaintenanceSidebar({ user, location, navigate, logout }) {
   const cfg = navConfigs.maintenance;
 
   return (
-    <div style={{
+    <div className="sidebar-wrapper" style={{
       width: 240, height: '100vh', flexShrink: 0,
       background: '#0e0900',
       display: 'flex', flexDirection: 'column',
@@ -333,7 +333,7 @@ function StudentSidebar({ user, location, navigate, logout }) {
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
 
   return (
-    <div style={{
+    <div className="sidebar-wrapper" style={{
       width: 240, height: '100vh', flexShrink: 0,
       background: 'linear-gradient(180deg, #020d18 0%, #061a2e 60%, #020e1c 100%)',
       display: 'flex', flexDirection: 'column',
@@ -500,9 +500,28 @@ export default function Sidebar({ role = 'admin' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
-  const props = { user, location, navigate, logout };
 
-  if (role === 'admin')       return <AdminSidebar       {...props} />;
-  if (role === 'maintenance') return <MaintenanceSidebar {...props} />;
-  return <StudentSidebar {...props} />;
+  const handleNavigate = (path) => {
+    document.body.classList.remove('sidebar-mobile-open');
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    document.body.classList.remove('sidebar-mobile-open');
+    logout();
+  };
+
+  const props = { user, location, navigate: handleNavigate, logout: handleLogout };
+
+  return (
+    <>
+      <div
+        className="sidebar-backdrop"
+        onClick={() => document.body.classList.remove('sidebar-mobile-open')}
+      />
+      {role === 'admin' && <AdminSidebar {...props} />}
+      {role === 'maintenance' && <MaintenanceSidebar {...props} />}
+      {role !== 'admin' && role !== 'maintenance' && <StudentSidebar {...props} />}
+    </>
+  );
 }

@@ -68,7 +68,7 @@ export default function AdminLogin() {
   const dateStr = time.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 
   return (
-    <div style={{
+    <div className="admin-login-page" style={{
       minHeight: '100vh', display: 'flex',
       fontFamily: "'Inter', sans-serif",
       background: '#010804',
@@ -78,7 +78,7 @@ export default function AdminLogin() {
       {/* ════════════════════════════════════════════════
           LEFT PANEL — Atmospheric brand + system status
       ════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="admin-login-left" style={{
         flex: '0 0 50%',
         background: 'linear-gradient(155deg, #010e07 0%, #021407 35%, #031a0a 65%, #020f06 100%)',
         display: 'flex', flexDirection: 'column',
@@ -235,7 +235,7 @@ export default function AdminLogin() {
       {/* ════════════════════════════════════════════════
           RIGHT PANEL — Premium login form
       ════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="admin-login-right" style={{
         flex: 1,
         background: '#010a05',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
