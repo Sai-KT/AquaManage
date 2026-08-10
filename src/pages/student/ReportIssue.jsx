@@ -3,18 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
 import Topbar from '../../components/Topbar';
-import { Upload, MapPin, AlertTriangle, CheckCircle, X, FileText } from 'lucide-react';
+import { Upload, MapPin, AlertTriangle, CheckCircle, X, FileText, Video } from 'lucide-react';
 import { campusZones, issueTypes } from '../../data/mockData';
 
 let reportCounter = 10; // for generating IDs
 
 export default function ReportIssue() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ type: '', zone: '', location: '', description: '', photo: null });
+  const [form, setForm] = useState({ type: '', zone: '', location: '', description: '', photo: null, video: null });
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const [videoDragOver, setVideoDragOver] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [videoName, setVideoName] = useState('');
   const [errors, setErrors] = useState({});
 
   const handleChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -25,6 +28,16 @@ export default function ReportIssue() {
     const reader = new FileReader();
     reader.onload = (e) => setPhotoPreview(e.target.result);
     reader.readAsDataURL(file);
+  };
+
+  const handleVideo = (file) => {
+    if (!file) return;
+    const allowed = ['video/mp4', 'video/quicktime', 'video/webm', 'video/ogg'];
+    if (!allowed.includes(file.type)) return;
+    setForm((f) => ({ ...f, video: file }));
+    setVideoName(file.name);
+    const url = URL.createObjectURL(file);
+    setVideoPreview(url);
   };
 
   const validate = () => {
@@ -46,8 +59,11 @@ export default function ReportIssue() {
   };
 
   const resetForm = () => {
-    setForm({ type: '', zone: '', location: '', description: '', photo: null });
+    setForm({ type: '', zone: '', location: '', description: '', photo: null, video: null });
     setPhotoPreview(null);
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoPreview(null);
+    setVideoName('');
     setSubmitted(false);
     setErrors({});
   };
@@ -215,6 +231,52 @@ export default function ReportIssue() {
                       <p>Drag & drop a photo, or <strong style={{ color: 'var(--green-600)' }}>browse</strong></p>
                       <span>JPG, PNG up to 5MB</span>
                       <input id="photo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handlePhoto(e.target.files[0])} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Upload */}
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Video size={14} style={{ color: 'var(--navy-500)' }} /> Video (Optional)
+                  </label>
+                  {videoPreview ? (
+                    <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                      <video
+                        src={videoPreview}
+                        controls
+                        style={{
+                          width: '100%', maxHeight: 200, borderRadius: 10,
+                          border: '2px solid var(--green-300)', background: '#000',
+                          display: 'block',
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, padding: '6px 10px', background: 'var(--navy-50)', borderRadius: 8 }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--navy-500)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
+                          📹 {videoName}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { if (videoPreview) URL.revokeObjectURL(videoPreview); setVideoPreview(null); setVideoName(''); setForm(f => ({ ...f, video: null })); }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--red-500)', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          <X size={11} /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="upload-zone"
+                      onDragOver={(e) => { e.preventDefault(); setVideoDragOver(true); }}
+                      onDragLeave={() => setVideoDragOver(false)}
+                      onDrop={(e) => { e.preventDefault(); setVideoDragOver(false); handleVideo(e.dataTransfer.files[0]); }}
+                      onClick={() => document.getElementById('video-input').click()}
+                      style={{ borderColor: videoDragOver ? 'var(--green-500)' : undefined, background: videoDragOver ? 'var(--green-50)' : undefined }}
+                    >
+                      <Video size={28} style={{ color: 'var(--navy-400)', margin: '0 auto' }} />
+                      <p>Drag & drop a video, or <strong style={{ color: 'var(--green-600)' }}>browse</strong></p>
+                      <span>MP4, MOV, WebM up to 50MB</span>
+                      <input id="video-input" type="file" accept="video/mp4,video/quicktime,video/webm,video/ogg" style={{ display: 'none' }} onChange={(e) => handleVideo(e.target.files[0])} />
                     </div>
                   )}
                 </div>
