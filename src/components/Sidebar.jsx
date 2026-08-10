@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Droplets, LayoutDashboard, FileText, CloudRain, BarChart3,
   Map, Bell, Activity, ClipboardList, LogOut, CheckSquare,
-  AlertTriangle, Wrench, Shield, ChevronRight,
-  BookOpen, Leaf, HardHat, Zap, Settings, X,
+  AlertTriangle, Shield, ChevronRight,
+  BookOpen, Leaf, HardHat, X,
 } from 'lucide-react';
 
 // ─── Navigation configs ───────────────────────────────────────────────────────
@@ -96,14 +96,25 @@ function AdminSidebar({ user, location, navigate, logout }) {
 
       {/* ── Brand ── */}
       <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(16,185,129,0.08)', position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(16,185,129,0.4)', flexShrink: 0 }}>
-            <Droplets size={17} color="#fff" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(16,185,129,0.4)', flexShrink: 0 }}>
+              <Droplets size={17} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff', letterSpacing: '-0.2px' }}>AquaManage</div>
+              <div style={{ fontSize: '0.5625rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>I2IT Hinjewadi</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff', letterSpacing: '-0.2px' }}>AquaManage</div>
-            <div style={{ fontSize: '0.5625rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>I2IT Hinjewadi</div>
-          </div>
+          <button
+            className="sidebar-mobile-close"
+            onClick={() => document.body.classList.remove('sidebar-mobile-open')}
+            style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}
+            title="Close Menu"
+            aria-label="Close Menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Admin identity card */}
@@ -224,14 +235,25 @@ function MaintenanceSidebar({ user, location, navigate, logout }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {/* Brand row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#f59e0b,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Droplets size={14} color="#fff" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#f59e0b,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Droplets size={14} color="#fff" />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.8125rem', color: '#fff' }}>AquaManage</div>
+                <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.6px', textTransform: 'uppercase' }}>Maintenance Ops</div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.8125rem', color: '#fff' }}>AquaManage</div>
-              <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.6px', textTransform: 'uppercase' }}>Maintenance Ops</div>
-            </div>
+            <button
+              className="sidebar-mobile-close"
+              onClick={() => document.body.classList.remove('sidebar-mobile-open')}
+              style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}
+              title="Close Menu"
+              aria-label="Close Menu"
+            >
+              <X size={16} />
+            </button>
           </div>
 
           {/* Staff ID card */}
@@ -350,20 +372,31 @@ function StudentSidebar({ user, location, navigate, logout }) {
       {/* ── Header ── */}
       <div style={{ padding: '22px 18px 16px', borderBottom: '1px solid rgba(14,165,233,0.09)', position: 'relative', zIndex: 1 }}>
         {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: 'linear-gradient(135deg,#0ea5e9,#10b981)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(14,165,233,0.35)', flexShrink: 0,
-            animation: 'logoBounce 3s ease-in-out infinite',
-          }}>
-            <Droplets size={16} color="#fff" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: 'linear-gradient(135deg,#0ea5e9,#10b981)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(14,165,233,0.35)', flexShrink: 0,
+              animation: 'logoBounce 3s ease-in-out infinite',
+            }}>
+              <Droplets size={16} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff' }}>AquaManage</div>
+              <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.6px', textTransform: 'uppercase' }}>Student Portal</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff' }}>AquaManage</div>
-            <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.6px', textTransform: 'uppercase' }}>Student Portal</div>
-          </div>
+          <button
+            className="sidebar-mobile-close"
+            onClick={() => document.body.classList.remove('sidebar-mobile-open')}
+            style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}
+            title="Close Menu"
+            aria-label="Close Menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Avatar + greeting card */}

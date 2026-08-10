@@ -1356,6 +1356,7 @@ tbody tr:hover { background: var(--green-50); }
   }
 
   /* Table & Scroll Container Horizontal Scroll on Touchscreens */
+  .table-wrapper,
   .table-responsive,
   .table-container,
   table {
@@ -1370,8 +1371,76 @@ tbody tr:hover { background: var(--green-50); }
     border-radius: 12px !important;
   }
 
-  /* Touch-friendly inputs and buttons */
-  input, select, textarea, button {
-    min-height: 40px;
+  /* Touch-friendly inputs and buttons; prevent iOS automatic zoom on tap */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS Safari from zooming in on input focus */
+    min-height: 42px;
+  }
+
+  button {
+    min-height: 38px;
+  }
+
+  /* Responsive Grid Utility Classes */
+  .responsive-grid-2-1 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .responsive-grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .responsive-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Hero Banner Mobile Styling */
+  .hero-banner-inner {
+    padding: 20px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  .hero-banner-left {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .hero-banner-right {
+    text-align: left !important;
+    width: 100% !important;
+  }
+
+  .hero-banner-right > div {
+    justify-content: flex-start !important;
+  }
+
+  /* Mobile Close Button inside Sidebar Header */
+  .sidebar-mobile-close {
+    display: flex !important;
+  }
+
+  /* Compact Topbar Live Indicator */
+  .topbar-live-status-text {
+    display: none !important;
   }
 }
+
+@media (max-width: 480px) {
+  .responsive-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stat-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+

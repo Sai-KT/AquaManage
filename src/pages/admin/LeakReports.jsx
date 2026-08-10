@@ -229,7 +229,7 @@ export default function LeakReports() {
                       {expanded === r.id && (
                         <tr>
                           <td colSpan={9} style={{ background: 'var(--green-50)', padding: '20px 24px', borderBottom: '2px solid var(--green-200)' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, marginBottom: 16 }}>
+                            <div className="responsive-grid-3" style={{ marginBottom: 16 }}>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--navy-400)', textTransform: 'uppercase', marginBottom: 6 }}>Description</div>
                                 <p style={{ fontSize: '0.875rem', color: 'var(--navy-700)', lineHeight: 1.6 }}>{r.description}</p>

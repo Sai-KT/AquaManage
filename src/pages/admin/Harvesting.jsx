@@ -122,7 +122,7 @@ export default function Harvesting() {
                 Total: {Math.round(totalCur / 1000)}kL / {Math.round(totalCap / 1000)}kL
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div className="responsive-grid-4">
               {tankData.map((t) => <TankGauge key={t.id} tank={t} />)}
             </div>
           </div>

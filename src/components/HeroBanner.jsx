@@ -75,9 +75,9 @@ function AdminHero({ user }) {
       {/* Top accent bar */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #059669, #10b981 50%, transparent)' }} />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '28px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+      <div className="hero-banner-inner" style={{ position: 'relative', zIndex: 1, padding: '28px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
         {/* Left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div className="hero-banner-left" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           {/* Shield */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(16,185,129,0.2)', animation: 'ringPulse 3s ease-in-out infinite' }} />
@@ -104,7 +104,7 @@ function AdminHero({ user }) {
         </div>
 
         {/* Right — live clock + quick actions */}
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div className="hero-banner-right" style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: '2rem', fontWeight: 900, color: 'rgba(52,211,153,0.85)', fontVariantNumeric: 'tabular-nums', letterSpacing: '1px', lineHeight: 1, marginBottom: 4 }}>{timeStr}</div>
           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginBottom: 16 }}>{dateStr}</div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -158,9 +158,9 @@ function MaintenanceHero({ user }) {
       {/* Right glow */}
       <div style={{ position: 'absolute', right: -40, top: '50%', transform: 'translateY(-50%)', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.09) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '28px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+      <div className="hero-banner-inner" style={{ position: 'relative', zIndex: 1, padding: '28px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
         {/* Left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div className="hero-banner-left" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <div style={{ width: 68, height: 68, borderRadius: 20, background: 'rgba(245,158,11,0.12)', border: '1.5px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(245,158,11,0.12)', flexShrink: 0 }}>
             <HardHat size={32} style={{ color: '#fbbf24' }} />
           </div>
@@ -186,7 +186,7 @@ function MaintenanceHero({ user }) {
         </div>
 
         {/* Right — date + summary */}
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div className="hero-banner-right" style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'rgba(251,191,36,0.8)', fontVariantNumeric: 'tabular-nums', lineHeight: 1, marginBottom: 4 }}>{timeStr}</div>
           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', marginBottom: 16 }}>{today}</div>
 
@@ -243,10 +243,10 @@ function StudentHero({ user }) {
       {/* Right glow */}
       <div style={{ position: 'absolute', right: -50, top: '50%', transform: 'translateY(-50%)', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '28px 36px' }}>
+      <div className="hero-banner-inner" style={{ position: 'relative', zIndex: 1, padding: '28px 36px' }}>
         {/* Top row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div className="hero-banner-inner" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div className="hero-banner-left" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(14,165,233,0.12)', border: '1.5px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 28px rgba(14,165,233,0.14)', animation: 'logoBounce 3s ease-in-out infinite', flexShrink: 0 }}>
               <BookOpen size={26} style={{ color: '#38bdf8' }} />
             </div>
@@ -267,7 +267,7 @@ function StudentHero({ user }) {
           </div>
 
           {/* Campus impact stat */}
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div className="hero-banner-right" style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'rgba(56,189,248,0.85)', lineHeight: 1, marginBottom: 3 }}>2.4M</div>
             <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.28)', fontWeight: 600 }}>Litres Saved This Month</div>
           </div>

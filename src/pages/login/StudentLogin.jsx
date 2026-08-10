@@ -50,7 +50,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", overflow: 'hidden' }}>
+    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
 
       {/* ─────── LEFT PANEL — Friendly student branding ─────── */}
       <div className="student-login-left" style={{

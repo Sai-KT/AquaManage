@@ -72,7 +72,6 @@ export default function AdminLogin() {
       minHeight: '100vh', display: 'flex',
       fontFamily: "'Inter', sans-serif",
       background: '#010804',
-      overflow: 'hidden',
     }}>
 
       {/* ════════════════════════════════════════════════

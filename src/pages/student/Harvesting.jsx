@@ -43,7 +43,7 @@ export default function StudentHarvesting() {
             <div className="card-header">
               <div className="card-title"><CloudRain size={17} style={{ color: 'var(--teal-600)' }} /> Tank Levels</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div className="responsive-grid-4">
               {tankData.map((t) => <TankGauge key={t.id} tank={t} />)}
             </div>
           </div>

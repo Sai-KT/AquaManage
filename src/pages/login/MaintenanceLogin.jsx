@@ -43,7 +43,6 @@ export default function MaintenanceLogin() {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      overflow: 'hidden',
     }}>
 
       {/* ── Full-page diagonal hazard stripes (very subtle) ── */}

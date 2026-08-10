@@ -123,7 +123,7 @@ export default function ReportIssue() {
         <div className="page-body">
           <HeroBanner role="student" />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, alignItems: 'start' }}>
+          <div className="responsive-grid-2-1" style={{ alignItems: 'start' }}>
             {/* Form */}
             <div className="card">
               <form onSubmit={handleSubmit}>

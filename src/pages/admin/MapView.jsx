@@ -65,7 +65,7 @@ export default function MapView() {
             </div>
           </div>
 
-          <CampusMap height={520} />
+          <CampusMap height={window.innerWidth < 768 ? 340 : 520} />
 
           {/* Tables below map */}
           <div style={{ marginTop: 24 }}>

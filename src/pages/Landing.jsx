@@ -85,7 +85,7 @@ export default function Landing() {
           </p>
 
           {/* Live stats */}
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 32, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 28, flexWrap: 'wrap' }}>
             {stats.map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>
                 <s.icon size={16} style={{ color: s.color }} />

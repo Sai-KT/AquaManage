@@ -42,7 +42,7 @@ export default function Topbar({ title, subtitle }) {
 
         <div className="topbar-live-status" style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
           <span className="live-dot" />
-          <span style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: 600 }}>Live</span>
+          <span className="topbar-live-status-text" style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: 600 }}>Live</span>
         </div>
       </div>
     </div>
