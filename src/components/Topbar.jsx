@@ -1,7 +1,10 @@
 import React from 'react';
-import { Bell, Search, RefreshCw, Menu } from 'lucide-react';
+import { Bell, Search, RefreshCw, Menu, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Topbar({ title, subtitle }) {
+  const { isDark, toggleTheme } = useTheme();
+
   return (
     <div className="topbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -38,6 +41,42 @@ export default function Topbar({ title, subtitle }) {
         <button className="topbar-btn" title="Notifications">
           <Bell size={16} />
           <div className="topbar-notif-dot" />
+        </button>
+
+        {/* ── Dark / Light mode toggle ──────────────────── */}
+        <button
+          className="topbar-btn topbar-theme-btn"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          style={{ position: 'relative', overflow: 'hidden' }}
+        >
+          <span
+            className="theme-icon-wrap"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease',
+              transform: isDark ? 'rotate(0deg) scale(1)' : 'rotate(-30deg) scale(0.8)',
+              opacity: isDark ? 1 : 0,
+              position: 'absolute',
+            }}
+          >
+            <Sun size={16} style={{ color: '#fbbf24' }} />
+          </span>
+          <span
+            className="theme-icon-wrap"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease',
+              transform: isDark ? 'rotate(30deg) scale(0.8)' : 'rotate(0deg) scale(1)',
+              opacity: isDark ? 0 : 1,
+              position: 'absolute',
+            }}
+          >
+            <Moon size={16} />
+          </span>
+          {/* Invisible spacer to maintain button size */}
+          <span style={{ opacity: 0, pointerEvents: 'none' }}><Moon size={16} /></span>
         </button>
 
         <div className="topbar-live-status" style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
