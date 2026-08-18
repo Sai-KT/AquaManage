@@ -371,28 +371,7 @@ export default function StudentLogin() {
               <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
             </button>
 
-            {/* Demo Auto-fill Hint */}
-            <div style={{
-              marginTop: 16, padding: '10px 12px',
-              background: 'rgba(14,165,233,0.06)',
-              border: '1px solid rgba(14,165,233,0.18)',
-              borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-                Demo: <code style={{ color: '#38bdf8', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>Arjun Mehta</code> / <code style={{ color: '#38bdf8', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>IRN2024891</code>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setName('Arjun Mehta'); setIrnNo('IRN2024891'); setError(''); }}
-                style={{
-                  background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)',
-                  borderRadius: 6, color: '#38bdf8', fontSize: '0.65rem', fontWeight: 700,
-                  padding: '3px 8px', cursor: 'pointer',
-                }}
-              >
-                Auto-fill
-              </button>
-            </div>
+
           </form>
 
 
