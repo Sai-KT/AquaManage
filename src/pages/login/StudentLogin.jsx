@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -27,6 +27,112 @@ export default function StudentLogin() {
   const [focusedField, setFocusedField] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState('');
+  const canvasRef = useRef(null);
+
+  /* ── Particle field (aaronjcunningham.com style) ── */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let particles = [];
+    const COUNT = 110;
+    const CONNECT_DIST = 130;
+    const COLORS = [
+      [56, 189, 248],   // sky-400
+      [52, 211, 153],   // emerald-400
+      [99, 179, 237],   // blue-300
+    ];
+
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+
+    const mkParticle = () => {
+      const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+      return {
+        x:     Math.random() * canvas.width,
+        y:     Math.random() * canvas.height,
+        vx:    (Math.random() - 0.5) * 0.45,
+        vy:    (Math.random() - 0.5) * 0.45,
+        r:     Math.random() * 1.6 + 0.5,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.007 + 0.004,
+        amp:   Math.random() * 0.18 + 0.05,
+        color: c,
+      };
+    };
+
+    const init = () => {
+      resize();
+      particles = Array.from({ length: COUNT }, mkParticle);
+    };
+
+    const tick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      /* move */
+      particles.forEach(p => {
+        p.phase += p.speed;
+        p.x += p.vx + Math.sin(p.phase * 0.9) * p.amp;
+        p.y += p.vy + Math.cos(p.phase * 0.7) * p.amp;
+        if (p.x < -10)               p.x = canvas.width  + 10;
+        else if (p.x > canvas.width  + 10) p.x = -10;
+        if (p.y < -10)               p.y = canvas.height + 10;
+        else if (p.y > canvas.height + 10) p.y = -10;
+      });
+
+      /* connections */
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx   = particles[i].x - particles[j].x;
+          const dy   = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < CONNECT_DIST) {
+            const alpha = (1 - dist / CONNECT_DIST) * 0.28;
+            const [r, g, b] = particles[i].color;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+            ctx.lineWidth   = 0.7;
+            ctx.stroke();
+          }
+        }
+      }
+
+      /* dots */
+      particles.forEach(p => {
+        const pulse  = Math.sin(p.phase * 1.3) * 0.28 + 0.72;
+        const [r, g, b] = p.color;
+
+        /* outer glow */
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 7);
+        grad.addColorStop(0, `rgba(${r},${g},${b},${0.12 * pulse})`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 7, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        /* core dot */
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.85 * pulse})`;
+        ctx.fill();
+      });
+
+      animId = requestAnimationFrame(tick);
+    };
+
+    init();
+    animId = requestAnimationFrame(tick);
+
+    const ro = new ResizeObserver(init);
+    ro.observe(canvas);
+    return () => { cancelAnimationFrame(animId); ro.disconnect(); };
+  }, []);
 
   React.useEffect(() => {
     if (user && user.role === 'student') {
@@ -59,34 +165,16 @@ export default function StudentLogin() {
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         padding: '60px 64px', position: 'relative', overflow: 'hidden',
       }}>
-        {/* Animated water ripple orbs */}
-        <div style={{
-          position: 'absolute', width: 500, height: 500, borderRadius: '50%',
-          top: -120, left: -120,
-          background: 'radial-gradient(circle, rgba(14,165,233,0.13) 0%, transparent 65%)',
-          animation: 'floatOrb 7s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', width: 350, height: 350, borderRadius: '50%',
-          bottom: -80, right: -60,
-          background: 'radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 65%)',
-          animation: 'floatOrb 9s ease-in-out infinite reverse',
-        }} />
-        <div style={{
-          position: 'absolute', width: 180, height: 180, borderRadius: '50%',
-          top: '55%', right: '8%',
-          background: 'radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 70%)',
-          animation: 'floatOrb 5s ease-in-out infinite 2s',
-        }} />
-
-        {/* Dot grid */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.14, backgroundImage: 'radial-gradient(rgba(14,165,233,0.55) 1px, transparent 1px)', backgroundSize: '34px 34px' }} />
-
-        {/* Wave decoration at bottom */}
-        <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: 0.12 }} viewBox="0 0 800 120" fill="none">
-          <path d="M0 60C133 20 267 100 400 60C533 20 667 100 800 60V120H0V60Z" fill="#38bdf8" />
-          <path d="M0 80C133 40 267 110 400 80C533 40 667 110 800 80V120H0V80Z" fill="#34d399" />
-        </svg>
+        {/* ── Aaron Cunningham-style particle field canvas ── */}
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            display: 'block',
+            zIndex: 0,
+          }}
+        />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {/* Animated logo */}
@@ -335,11 +423,6 @@ export default function StudentLogin() {
         @keyframes logoBounce {
           0%, 100% { transform: translateY(0px); }
           50%       { transform: translateY(-8px); }
-        }
-        @keyframes floatOrb {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33%       { transform: translate(12px, -18px) scale(1.03); }
-          66%       { transform: translate(-8px, 10px) scale(0.97); }
         }
         @keyframes pulse {
           0%, 100% { opacity: 1; }
