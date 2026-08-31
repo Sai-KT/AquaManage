@@ -333,6 +333,15 @@ p  { font-size: 0.9375rem; }
 
 .topbar-btn:hover { background: var(--navy-100); color: var(--navy-800); }
 
+.topbar-search-box:focus-within {
+  border-color: var(--green-500) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important;
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
 .topbar-notif-dot {
   position: absolute;
   top: 6px;
