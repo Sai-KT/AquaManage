@@ -85,7 +85,7 @@ export default function LeakReports() {
     <div className="app-layout">
       <Sidebar role="admin" />
       <div className="main-content">
-        <Topbar title="Leak Reports — I2IT Campus" subtitle="All reported water issues" />
+        <Topbar title="Leak Reports — IIIT Campus" subtitle="All reported water issues" />
         <div className="page-body">
 
           {/* Back to Dashboard if coming from a drilldown */}
@@ -103,7 +103,7 @@ export default function LeakReports() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2>{getTitle()}</h2>
-                <p>Manage and track all water issue reports across I2IT campus. Assign to maintenance staff as needed.</p>
+                <p>Manage and track all water issue reports across IIIT campus. Assign to maintenance staff as needed.</p>
               </div>
               <button className="btn btn-secondary btn-sm">
                 <Download size={14} /> Export CSV

@@ -1,5 +1,5 @@
 /**
- * CampusMap.jsx — I2IT Hinjewadi
+ * CampusMap.jsx — IIIT Hinjewadi
  *
  * Map library : react-leaflet (Leaflet.js)
  * Boundary    : /public/data/campus-boundary.geojson  (fetched at runtime)
@@ -11,7 +11,7 @@
  * GeoJSON coordinate order : [longitude, latitude]
  * Leaflet coordinate order : [latitude, longitude]  ← swapped on parse
  *
- * Center : [18.5849503, 73.7377211]  (I2IT main entrance)
+ * Center : [18.5849503, 73.7377211]  (IIIT main entrance)
  * Bounds : SW [18.5832, 73.7362]  →  NE [18.5855, 73.7382]
  */
 
@@ -341,7 +341,7 @@ export default function CampusMap({ height = 450 }) {
               background: 'rgba(16,185,129,0.92)', color: '#fff',
               border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, padding: '3px 8px',
             }}>
-              🏫 I2IT Campus — Hinjewadi
+              🏫 IIIT Campus — Hinjewadi
             </LeafletTooltip>
           </Polygon>
         ))}

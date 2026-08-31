@@ -98,7 +98,7 @@ function AdminHero({ user }) {
               Welcome back, <span style={{ background: 'linear-gradient(90deg,#34d399,#6ee7b7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.name?.split(' ')[0] || 'Admin'}</span>
             </h1>
             <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              I2IT Campus Water Management — full system control
+              IIIT Campus Water Management — full system control
             </p>
           </div>
         </div>
@@ -180,7 +180,7 @@ function MaintenanceHero({ user }) {
               Good shift, <span style={{ background: 'linear-gradient(90deg,#fbbf24,#fcd34d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.name?.split(' ')[0] || 'Staff'}</span>
             </h1>
             <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              I2IT Campus · Field maintenance operations
+              IIIT Campus · Field maintenance operations
             </p>
           </div>
         </div>
@@ -261,7 +261,7 @@ function StudentHero({ user }) {
                 {greeting}, <span style={{ background: 'linear-gradient(90deg,#38bdf8,#67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.name || 'Student'}</span>!
               </h1>
               <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-                I2IT Hinjewadi · Help keep campus water-efficient
+                IIIT Hinjewadi · Help keep campus water-efficient
               </p>
             </div>
           </div>

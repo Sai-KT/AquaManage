@@ -1,4 +1,4 @@
-// ─── Mock Data for Campus Water Management System — I2IT Hinjewadi ──────────
+// ─── Mock Data for Campus Water Management System — IIIT Hinjewadi ──────────
 
 export const campusStats = {
   activeLeaks: 7,
@@ -28,7 +28,7 @@ export const monthlyHarvesting = {
   collected: [220000, 185000, 310000, 420000, 380000, 295000, 340000],
 };
 
-// ─── Water Usage — 5 I2IT Campus Zones ────────────────────────────────────
+// ─── Water Usage — 5 IIIT Campus Zones ────────────────────────────────────
 // Daily estimates based on occupancy:
 //   Academic Block : ~1800 students × 4L avg + faculty + washrooms ≈ 8,500 L
 //   PPCRC          : ~600 students, lab-heavy water use ≈ 6,200 L
@@ -43,8 +43,8 @@ export const waterUsageByZone = {
   monthly: [255000, 186200, 546000, 684000, 114000],
 };
 
-// ─── I2IT Hinjewadi Campus — Actual Coordinates ──────────────────────────
-// I2IT is at approx 18.5908°N, 73.7393°E (Hinjewadi Phase 1, Pune)
+// ─── IIIT Hinjewadi Campus — Actual Coordinates ──────────────────────────
+// IIIT is at approx 18.5908°N, 73.7393°E (Hinjewadi Phase 1, Pune)
 
 export const leakReports = [
   {
@@ -172,7 +172,7 @@ export const analyticsData = {
   leaksResolved:  [6, 5, 10, 8, 12, 10, 5],
 };
 
-// ─── I2IT Hinjewadi Map Pins ─────────────────────────────────────────────────
+// ─── IIIT Hinjewadi Map Pins ─────────────────────────────────────────────────
 // Campus center: 18.5908, 73.7393
 export const mapPins = [
   // Leak reports on campus
@@ -188,7 +188,7 @@ export const mapPins = [
   { id: 9,  type: 'harvesting', lat: 18.5895, lng: 73.7390, label: 'Tank D — Vikramshila Hostel',  location: 'Vikramshila Hostel Rooftop',   level: 75 },
 ];
 
-// ─── I2IT Campus Building Data (for map overlay labels) ─────────────────────
+// ─── IIIT Campus Building Data (for map overlay labels) ─────────────────────
 export const i2itBuildings = [
   {
     id: 'academic', name: 'Academic Block', floors: 3,

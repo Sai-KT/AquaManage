@@ -98,7 +98,7 @@ export default function MaintenanceLogin() {
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#f59e0b,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Droplets size={14} color="#fff" />
                 </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(251,191,36,0.7)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>I2IT AquaManage</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(251,191,36,0.7)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>IIIT AquaManage</span>
               </div>
               <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.6px', margin: '0 0 4px', lineHeight: 1.1 }}>
                 Maintenance Staff Portal
@@ -272,7 +272,7 @@ export default function MaintenanceLogin() {
           </div>
 
           <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.13)' }}>I2IT Hinjewadi · Field Ops</span>
+            <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.13)' }}>IIIT Hinjewadi · Field Ops</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', display: 'inline-block', boxShadow: '0 0 6px rgba(245,158,11,0.7)' }} />
               <span style={{ fontSize: '0.6875rem', color: 'rgba(245,158,11,0.5)', fontWeight: 600 }}>Online</span>

@@ -10,7 +10,7 @@ import {
 const features = [
   { icon: FileText,    title: 'Report Issues',      desc: 'Spot a leak or overflow? Report it in seconds from anywhere on campus' },
   { icon: CheckCircle, title: 'Track Your Reports', desc: 'See live status updates as maintenance resolves your reported issues' },
-  { icon: CloudRain,   title: 'Harvesting Status',  desc: 'Check real-time rainwater harvesting levels across I2IT buildings' },
+  { icon: CloudRain,   title: 'Harvesting Status',  desc: 'Check real-time rainwater harvesting levels across IIIT buildings' },
 ];
 
 const campusStats = [
@@ -190,7 +190,7 @@ export default function StudentLogin() {
               <Droplets size={26} color="#fff" />
             </div>
             <div>
-              <div style={{ fontWeight: 900, fontSize: '1.125rem', color: '#fff', letterSpacing: '-0.4px' }}>I2IT AquaManage</div>
+              <div style={{ fontWeight: 900, fontSize: '1.125rem', color: '#fff', letterSpacing: '-0.4px' }}>IIIT AquaManage</div>
               <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>Campus Water System</div>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function StudentLogin() {
             </span>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.75, maxWidth: 400, marginBottom: 44 }}>
-            Every report counts. Help I2IT campus stay water-efficient by reporting leaks, tracking repairs, and staying informed.
+            Every report counts. Help IIIT campus stay water-efficient by reporting leaks, tracking repairs, and staying informed.
           </p>
 
           {/* Feature list */}
@@ -393,7 +393,7 @@ export default function StudentLogin() {
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981', animation: 'pulse 2s ease-in-out infinite' }} />
               <span style={{ fontSize: '0.75rem', color: 'rgba(16,185,129,0.75)', fontWeight: 600 }}>System Online</span>
             </div>
-            <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.14)' }}>I2IT Hinjewadi · Campus Water Management</div>
+            <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.14)' }}>IIIT Hinjewadi · Campus Water Management</div>
           </div>
         </div>
       </div>

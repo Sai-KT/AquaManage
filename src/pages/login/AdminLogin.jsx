@@ -140,7 +140,7 @@ export default function AdminLogin() {
               <Droplets size={15} color="#fff" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff', letterSpacing: '-0.2px' }}>I2IT AquaManage</div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff', letterSpacing: '-0.2px' }}>IIIT AquaManage</div>
               <div style={{ fontSize: '0.5625rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Admin Command Centre</div>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function AdminLogin() {
             </span>
           </h2>
           <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.32)', textAlign: 'center', lineHeight: 1.7, maxWidth: 320 }}>
-            This portal is restricted to authorised I2IT campus facilities officers and water system administrators only.
+            This portal is restricted to authorised IIIT campus facilities officers and water system administrators only.
           </p>
         </div>
 

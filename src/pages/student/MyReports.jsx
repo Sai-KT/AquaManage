@@ -143,7 +143,7 @@ export default function MyReports() {
           <div style={{ marginTop: 24, padding: '20px 24px', background: 'var(--green-50)', borderRadius: 16, border: '1px solid var(--green-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontWeight: 700, color: 'var(--green-800)', marginBottom: 4 }}>See another issue on campus?</div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--green-700)' }}>Help keep I2IT water systems efficient — every report counts!</div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--green-700)' }}>Help keep IIIT water systems efficient — every report counts!</div>
             </div>
             <button
               className="btn btn-primary"

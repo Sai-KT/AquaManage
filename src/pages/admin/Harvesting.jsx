@@ -77,7 +77,7 @@ export default function Harvesting() {
     <div className="app-layout">
       <Sidebar role="admin" />
       <div className="main-content">
-        <Topbar title="Rainwater Harvesting — I2IT" subtitle="Monitoring collection performance and tank levels" />
+        <Topbar title="Rainwater Harvesting — IIIT" subtitle="Monitoring collection performance and tank levels" />
         <div className="page-body">
           <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/dashboard')}>
             <ChevronLeft size={14} /> Back to Dashboard
@@ -86,7 +86,7 @@ export default function Harvesting() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2>Rainwater Harvesting</h2>
-                <p>Track collection efficiency and tank statuses across all I2IT campus buildings</p>
+                <p>Track collection efficiency and tank statuses across all IIIT campus buildings</p>
               </div>
               <button className="btn btn-outline btn-sm" onClick={() => navigate('/admin/map')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Map size={14} /> View on Campus Map

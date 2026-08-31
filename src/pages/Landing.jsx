@@ -78,9 +78,9 @@ export default function Landing() {
               <Droplets size={30} color="#fff" />
             </div>
           </div>
-          <h1>I2IT <span className="accent">AquaManage</span></h1>
+          <h1>IIIT <span className="accent">AquaManage</span></h1>
           <p>
-            Smart water management platform for I2IT Hinjewadi campus — monitor usage,
+            Smart water management platform for IIIT Hinjewadi campus — monitor usage,
             track rainwater harvesting, detect leaks, and respond to issues in real time.
           </p>
 

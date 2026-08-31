@@ -15,13 +15,13 @@ export default function MapView() {
     <div className="app-layout">
       <Sidebar role="admin" />
       <div className="main-content">
-        <Topbar title="Campus Map — I2IT Hinjewadi" subtitle="Live view of all issues and tanks across I2IT campus" />
+        <Topbar title="Campus Map — IIIT Hinjewadi" subtitle="Live view of all issues and tanks across IIIT campus" />
         <div className="page-body">
           <div className="page-header">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2>I2IT Campus Map</h2>
-                <p>Interactive map of I2IT Hinjewadi campus. Click any pin for details. Buildings, leak pins, and tank levels shown.</p>
+                <h2>IIIT Campus Map</h2>
+                <p>Interactive map of IIIT Hinjewadi campus. Click any pin for details. Buildings, leak pins, and tank levels shown.</p>
               </div>
               <button
                 className="btn btn-outline btn-sm"

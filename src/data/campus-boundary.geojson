@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "I2IT Campus Boundary — Detailed Polygon",
+        "name": "IIIT Campus Boundary — Detailed Polygon",
         "source": "Traced from satellite imagery"
       },
       "geometry": {
@@ -38,7 +38,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "I2IT Main Entrance / Academic Block",
+        "name": "IIIT Main Entrance / Academic Block",
         "source": "Google Places",
         "place_id": "ChIJM4S33eW7wjsR0Uu4zo0H_J8"
       },
@@ -50,7 +50,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "I2IT Campus Southern Edge",
+        "name": "IIIT Campus Southern Edge",
         "source": "Google Places",
         "place_id": "ChIJ8SegG-a7wjsRLga6gsjd_e0"
       },

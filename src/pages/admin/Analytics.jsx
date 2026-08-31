@@ -86,7 +86,7 @@ export default function Analytics() {
     <div className="app-layout">
       <Sidebar role="admin" />
       <div className="main-content">
-        <Topbar title="Analytics & Reports — I2IT" subtitle="Historical trends and exportable reports" />
+        <Topbar title="Analytics & Reports — IIIT" subtitle="Historical trends and exportable reports" />
         <div className="page-body">
           <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/dashboard')}>
             <ChevronLeft size={14} /> Back to Dashboard

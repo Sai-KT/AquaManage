@@ -40,7 +40,7 @@ export default function WaterUsage() {
     }],
   };
 
-  // Realistic I2IT hourly pattern:
+  // Realistic IIIT hourly pattern:
   // Low early morning (hostels only), spike at 8am college open,
   // lunch peak, evening hostel peak, drop at night
   const hourlyLine = {
@@ -65,7 +65,7 @@ export default function WaterUsage() {
     <div className="app-layout">
       <Sidebar role="admin" />
       <div className="main-content">
-        <Topbar title="Water Usage — I2IT Campus" subtitle="Campus-wide consumption across all zones" />
+        <Topbar title="Water Usage — IIIT Campus" subtitle="Campus-wide consumption across all zones" />
         <div className="page-body">
           <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/dashboard')}>
             <ChevronLeft size={14} /> Back to Dashboard
@@ -74,7 +74,7 @@ export default function WaterUsage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2>Water Usage Monitoring</h2>
-                <p>Track consumption patterns across I2IT campus zones: Academic Block, PPCRC, Hostels, and Canteen</p>
+                <p>Track consumption patterns across IIIT campus zones: Academic Block, PPCRC, Hostels, and Canteen</p>
               </div>
               <button className="btn btn-outline btn-sm" onClick={() => navigate('/admin/analytics')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <FileText size={14} /> Full Analytics
@@ -151,7 +151,7 @@ export default function WaterUsage() {
                   {waterUsageByZone.labels.map((zone, i) => {
                     const usage = waterUsageByZone[period][i];
                     const share = Math.round((usage / totalUsage) * 100);
-                    // Realistic trends for I2IT zones
+                    // Realistic trends for IIIT zones
                     const trends = ['+8%', '+14%', '+3%', '+5%', '+2%'];
                     const benchmarks = ['Normal', 'High Lab Usage', 'Normal', 'Normal', 'Normal'];
                     const trendUp = trends[i].startsWith('+');

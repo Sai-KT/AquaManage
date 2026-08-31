@@ -146,7 +146,7 @@ export default function Alerts() {
                   <div className="card-title"><Settings size={16} /> Alert Thresholds</div>
                 </div>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--navy-500)', marginBottom: 16, lineHeight: 1.6 }}>
-                  Configure when the system triggers automatic alerts for I2IT campus.
+                  Configure when the system triggers automatic alerts for IIIT campus.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {thresholds.map((t) => (

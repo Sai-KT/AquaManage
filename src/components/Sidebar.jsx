@@ -103,7 +103,7 @@ function AdminSidebar({ user, location, navigate, logout }) {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#fff', letterSpacing: '-0.2px' }}>AquaManage</div>
-              <div style={{ fontSize: '0.5625rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>I2IT Hinjewadi</div>
+              <div style={{ fontSize: '0.5625rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>IIIT Hinjewadi</div>
             </div>
           </div>
           <button
@@ -468,7 +468,7 @@ function StudentSidebar({ user, location, navigate, logout }) {
             <span style={{ fontSize: '0.5625rem', fontWeight: 800, color: '#34d399', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Campus Eco Tip</span>
           </div>
           <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.32)', lineHeight: 1.5, margin: 0 }}>
-            Reporting a single leak saves up to 10,000 litres per day at I2IT.
+            Reporting a single leak saves up to 10,000 litres per day at IIIT.
           </p>
         </div>
       </nav>

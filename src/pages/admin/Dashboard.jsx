@@ -132,7 +132,7 @@ export default function AdminDashboard() {
       <Sidebar role="admin" />
       <div className="main-content">
         <Topbar
-          title="Admin Dashboard — I2IT Hinjewadi"
+          title="Admin Dashboard — IIIT Hinjewadi"
           subtitle={`Last updated: ${new Date().toLocaleTimeString()}`}
         />
         <div className="page-body">
@@ -268,7 +268,7 @@ export default function AdminDashboard() {
               <div className="card-header">
                 <div className="card-title">
                   <Droplets size={17} style={{ color: 'var(--teal-600)' }} />
-                  Daily Usage by Zone — I2IT
+                  Daily Usage by Zone — IIIT
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--navy-400)' }}>Click for details</span>

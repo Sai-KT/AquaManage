@@ -87,7 +87,7 @@ export default function ReportIssue() {
               </div>
               <h2 style={{ color: 'var(--navy-900)', marginBottom: 10 }}>Issue Reported Successfully!</h2>
               <p style={{ color: 'var(--navy-500)', marginBottom: 8, fontSize: '0.9375rem', lineHeight: 1.6 }}>
-                Thank you for keeping the I2IT campus water system healthy!
+                Thank you for keeping the IIIT campus water system healthy!
                 Your report has been logged and our maintenance team will respond soon.
               </p>
               <div style={{
@@ -135,7 +135,7 @@ export default function ReportIssue() {
     <div className="app-layout">
       <Sidebar role="student" />
       <div className="main-content">
-        <Topbar title="Report an Issue" subtitle="Help keep I2IT campus water systems healthy" />
+        <Topbar title="Report an Issue" subtitle="Help keep IIIT campus water systems healthy" />
         <div className="page-body">
           <HeroBanner role="student" />
 
@@ -167,7 +167,7 @@ export default function ReportIssue() {
                     onChange={handleChange('zone')}
                     style={{ borderColor: errors.zone ? 'var(--red-500)' : undefined }}
                   >
-                    <option value="">Select I2IT building/zone...</option>
+                    <option value="">Select IIIT building/zone...</option>
                     {campusZones.map((z) => <option key={z} value={z}>{z}</option>)}
                   </select>
                   {errors.zone && <div style={{ fontSize: '0.75rem', color: 'var(--red-500)', marginTop: 4 }}>{errors.zone}</div>}
@@ -295,7 +295,7 @@ export default function ReportIssue() {
             {/* Info Sidebar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="card" style={{ background: 'var(--green-50)', border: '1px solid var(--green-300)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--green-800)', marginBottom: 12 }}>💡 I2IT Reporting Tips</div>
+                <div style={{ fontWeight: 700, color: 'var(--green-800)', marginBottom: 12 }}>💡 IIIT Reporting Tips</div>
                 {[
                   'Specify the building: Academic Block, PPCRC, Mithila/Vikramshila Hostel, or Canteen',
                   'Mention the floor number for quicker response',
