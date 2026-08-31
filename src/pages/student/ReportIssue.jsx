@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
 import Topbar from '../../components/Topbar';
 import { Upload, MapPin, AlertTriangle, CheckCircle, X, FileText, Video } from 'lucide-react';
-import { campusZones, issueTypes } from '../../data/mockData';
-
-let reportCounter = 10; // for generating IDs
+import { issueTypes } from '../../data/mockData';
+import studentService from '../../services/studentService';
 
 export default function ReportIssue() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState({ type: '', zone: '', location: '', description: '', photo: null, video: null });
+  const [zonesList, setZonesList] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [videoDragOver, setVideoDragOver] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
   const [videoName, setVideoName] = useState('');
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    studentService.getCampusZones().then(res => {
+      if (res.data) setZonesList(res.data);
+    });
+  }, []);
 
   const handleChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -50,12 +60,34 @@ export default function ReportIssue() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const id = `LK-0${reportCounter++}`;
-    setSubmittedId(id);
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const res = await studentService.submitReport({
+        type: form.type,
+        zone: form.zone,
+        location: form.location,
+        description: form.description,
+        photoFile: form.photo,
+        videoFile: form.video,
+        user,
+      });
+
+      if (res && res.success) {
+        setSubmittedId(res.reportId);
+        setSubmitted(true);
+      } else {
+        setSubmitError(res?.error || 'Failed to submit report. Please try again.');
+      }
+    } catch (err) {
+      setSubmitError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -168,7 +200,9 @@ export default function ReportIssue() {
                     style={{ borderColor: errors.zone ? 'var(--red-500)' : undefined }}
                   >
                     <option value="">Select IIIT building/zone...</option>
-                    {campusZones.map((z) => <option key={z} value={z}>{z}</option>)}
+                    {(zonesList.length > 0 ? zonesList : ['Academic Block', 'PPCRC', 'Mithila Hostel', 'Vikramshila Hostel', 'Canteen', 'Campus Garden']).map((z) => (
+                      <option key={z} value={z}>{z}</option>
+                    ))}
                   </select>
                   {errors.zone && <div style={{ fontSize: '0.75rem', color: 'var(--red-500)', marginTop: 4 }}>{errors.zone}</div>}
                 </div>
@@ -192,13 +226,13 @@ export default function ReportIssue() {
 
                 {/* Description */}
                 <div className="form-group">
-                  <label className="form-label">Description <span>*</span></label>
+                  <label className="form-label">Description *</label>
                   <textarea
-                    className="form-textarea"
-                    placeholder="Describe the issue — e.g. 'Water leaking from PPCRC ceiling near lab entrance, forming a puddle on the floor...'"
+                    className="form-input"
+                    rows={4}
+                    placeholder="Describe the issue in detail — what is leaking, how much water is wasting, is there flooding?"
                     value={form.description}
                     onChange={handleChange('description')}
-                    rows={4}
                     style={{ borderColor: errors.description ? 'var(--red-500)' : undefined }}
                   />
                   {errors.description && <div style={{ fontSize: '0.75rem', color: 'var(--red-500)', marginTop: 4 }}>{errors.description}</div>}
@@ -206,16 +240,20 @@ export default function ReportIssue() {
 
                 {/* Photo Upload */}
                 <div className="form-group">
-                  <label className="form-label">Photo (Optional)</label>
+                  <label className="form-label">Attach Photo (Optional but recommended)</label>
                   {photoPreview ? (
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <img src={photoPreview} alt="Preview" style={{ maxHeight: 160, borderRadius: 10, border: '2px solid var(--green-300)' }} />
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '2px solid var(--green-300)' }}
+                      />
                       <button
                         type="button"
                         onClick={() => { setPhotoPreview(null); setForm(f => ({ ...f, photo: null })); }}
-                        style={{ position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: '50%', background: 'var(--red-500)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', cursor: 'pointer' }}
+                        style={{ position: 'absolute', top: 8, right: 8, background: 'var(--red-500)', color: '#fff', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        <X size={12} />
+                        <X size={14} />
                       </button>
                     </div>
                   ) : (
@@ -229,7 +267,7 @@ export default function ReportIssue() {
                     >
                       <Upload size={28} style={{ color: 'var(--navy-400)', margin: '0 auto' }} />
                       <p>Drag & drop a photo, or <strong style={{ color: 'var(--green-600)' }}>browse</strong></p>
-                      <span>JPG, PNG up to 5MB</span>
+                      <span>PNG, JPG up to 10MB</span>
                       <input id="photo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handlePhoto(e.target.files[0])} />
                     </div>
                   )}
@@ -237,9 +275,7 @@ export default function ReportIssue() {
 
                 {/* Video Upload */}
                 <div className="form-group">
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Video size={14} style={{ color: 'var(--navy-500)' }} /> Video (Optional)
-                  </label>
+                  <label className="form-label">Attach Video (Optional)</label>
                   {videoPreview ? (
                     <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                       <video
@@ -281,13 +317,21 @@ export default function ReportIssue() {
                   )}
                 </div>
 
+                {submitError && (
+                  <div style={{ padding: '10px 14px', background: 'var(--red-100)', color: 'var(--red-700)', borderRadius: 8, fontSize: '0.8125rem', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <AlertTriangle size={14} />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="btn btn-primary btn-lg"
-                  style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+                  style={{ width: '100%', justifyContent: 'center', marginTop: 8, opacity: isSubmitting ? 0.8 : 1, cursor: isSubmitting ? 'wait' : 'pointer' }}
                 >
                   <AlertTriangle size={17} />
-                  Submit Report
+                  {isSubmitting ? 'Submitting to System...' : 'Submit Report'}
                 </button>
               </form>
             </div>

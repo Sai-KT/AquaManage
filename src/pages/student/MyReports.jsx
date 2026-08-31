@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { CheckCircle, Clock, Loader, AlertTriangle, Plus } from 'lucide-react';
-import { myReports } from '../../data/mockData';
+import { CheckCircle, Clock, Loader, AlertTriangle, Plus, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import studentService from '../../services/studentService';
 
 const steps = ['Submitted', 'Under Review', 'In Progress', 'Resolved'];
 
@@ -16,6 +17,38 @@ function getStepIndex(status) {
 
 export default function MyReports() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchReports = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    setError('');
+    try {
+      const res = await studentService.getMyReports(user);
+      if (res && res.success) {
+        setReports(res.reports || []);
+      } else {
+        setError(res?.error || 'Failed to load your reports.');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred while loading reports.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports(true);
+  }, [user]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchReports(false);
+  };
 
   return (
     <div className="app-layout">
@@ -24,37 +57,76 @@ export default function MyReports() {
         <Topbar title="My Reports" subtitle="Track the status of your water issue submissions" />
         <div className="page-body">
           <div className="page-header">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <h2>My Reports</h2>
-                <p>You have submitted {myReports.length} reports. Click any card to see full details.</p>
+                <p>
+                  {isLoading ? 'Loading your reports...' : `You have submitted ${reports.length} report${reports.length === 1 ? '' : 's'}. Click any card to see full details.`}
+                </p>
               </div>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => navigate('/student/report')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                <Plus size={15} /> Report New Issue
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing || isLoading}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  title="Refresh Reports"
+                >
+                  <RefreshCw size={14} className={isRefreshing ? 'spin-icon' : ''} />
+                  <span>Refresh</span>
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => navigate('/student/report')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={15} /> Report New Issue
+                </button>
+              </div>
             </div>
           </div>
 
-          {myReports.length === 0 ? (
-            <div className="card empty-state">
-              <AlertTriangle size={40} />
-              <h4>No reports yet</h4>
-              <p>You haven't submitted any issues yet.</p>
+          {error && (
+            <div style={{ padding: '12px 16px', background: 'var(--red-100)', color: 'var(--red-700)', borderRadius: 10, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {[1, 2].map((n) => (
+                <div key={n} className="card" style={{ padding: '28px', opacity: 0.7 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <div style={{ width: 80, height: 24, borderRadius: 6, background: 'var(--navy-200)', animation: 'pulse 1.5s infinite' }} />
+                    <div style={{ width: 100, height: 24, borderRadius: 12, background: 'var(--navy-200)', animation: 'pulse 1.5s infinite' }} />
+                  </div>
+                  <div style={{ width: '40%', height: 20, borderRadius: 6, background: 'var(--navy-200)', marginBottom: 12, animation: 'pulse 1.5s infinite' }} />
+                  <div style={{ width: '90%', height: 16, borderRadius: 6, background: 'var(--navy-100)', marginBottom: 20, animation: 'pulse 1.5s infinite' }} />
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                    <Loader size={24} className="spin-icon" style={{ color: 'var(--teal-600)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="card empty-state" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <AlertTriangle size={44} style={{ color: 'var(--teal-600)', margin: '0 auto 12px' }} />
+              <h4 style={{ fontSize: '1.125rem', marginBottom: 6 }}>No reports yet</h4>
+              <p style={{ color: 'var(--navy-500)', maxWidth: 360, margin: '0 auto 20px' }}>
+                You haven't submitted any water leakage or wastage reports yet. Spot a leak on campus?
+              </p>
               <button
                 className="btn btn-primary btn-sm"
-                style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 onClick={() => navigate('/student/report')}
               >
-                <Plus size={14} /> Report an Issue
+                <Plus size={14} /> Report an Issue Now
               </button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {myReports.map((report) => {
+              {reports.map((report) => {
                 const currentStep = getStepIndex(report.status);
                 return (
                   <div key={report.id} className="card">
@@ -70,6 +142,9 @@ export default function MyReports() {
                             {report.id}
                           </span>
                           <span className={`badge ${report.status}`}>{report.status.replace('_', ' ')}</span>
+                          {report.priority && (
+                            <span className={`badge ${report.priority}`}>{report.priority}</span>
+                          )}
                         </div>
                         <h3 style={{ marginBottom: 4 }}>{report.type}</h3>
                         <div style={{ fontSize: '0.8125rem', color: 'var(--navy-400)' }}>
@@ -83,9 +158,29 @@ export default function MyReports() {
                       )}
                     </div>
 
-                    <p style={{ fontSize: '0.875rem', color: 'var(--navy-600)', marginBottom: 24, lineHeight: 1.6 }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--navy-600)', marginBottom: 20, lineHeight: 1.6 }}>
                       {report.description}
                     </p>
+
+                    {/* Attached Media */}
+                    {(report.photo || report.video) && (
+                      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+                        {report.photo && (
+                          <a href={report.photo} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--navy-100)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--navy-700)', fontWeight: 600 }}>
+                              <ImageIcon size={14} style={{ color: 'var(--teal-600)' }} /> View Attached Photo
+                            </div>
+                          </a>
+                        )}
+                        {report.video && (
+                          <a href={report.video} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--navy-100)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--navy-700)', fontWeight: 600 }}>
+                              📹 View Attached Video
+                            </div>
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {/* Status Steps */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8 }}>
@@ -140,7 +235,7 @@ export default function MyReports() {
           )}
 
           {/* Bottom CTA */}
-          <div style={{ marginTop: 24, padding: '20px 24px', background: 'var(--green-50)', borderRadius: 16, border: '1px solid var(--green-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ marginTop: 24, padding: '20px 24px', background: 'var(--green-50)', borderRadius: 16, border: '1px solid var(--green-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, color: 'var(--green-800)', marginBottom: 4 }}>See another issue on campus?</div>
               <div style={{ fontSize: '0.8125rem', color: 'var(--green-700)' }}>Help keep IIIT water systems efficient — every report counts!</div>
