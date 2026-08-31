@@ -325,9 +325,14 @@ export default function AdminLogin() {
                     outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s', caretColor: '#34d399',
                   }}
                 />
-                <button type="button" onClick={() => setShowPwd(v => !v)}
-                  style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4 }}>
-                  {showPwd ? <EyeOff size={13} /> : <Eye size={13} />}
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(v => !v)}
+                  onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+                  style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.55)', padding: 4, transition: 'color 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
                 {password && (
                   <div style={{ position: 'absolute', right: 38, top: '50%', transform: 'translateY(-50%)', width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
