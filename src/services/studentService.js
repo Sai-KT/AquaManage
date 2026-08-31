@@ -72,7 +72,16 @@ export const studentService = {
       };
     }
 
-    // Upload files if Supabase is active
+    if (!isSupabaseConfigured || !supabase) {
+      const errMsg = 'Supabase environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) are missing in .env. Please add them to persist reports.';
+      console.error('[studentService]', errMsg);
+      return {
+        success: false,
+        error: errMsg,
+      };
+    }
+
+    // Upload files if attached
     if (photoFile) {
       photoUrl = await this.uploadMedia(photoFile, 'photos');
     }
@@ -80,82 +89,98 @@ export const studentService = {
       videoUrl = await this.uploadMedia(videoFile, 'videos');
     }
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        // Securely retrieve the authenticated user session to prevent impersonation
-        const { data: authData } = await supabase.auth.getUser();
-        const verifiedAuthUser = authData?.user;
+    try {
+      // Securely retrieve the authenticated user session
+      const { data: authData } = await supabase.auth.getUser();
+      const verifiedAuthUser = authData?.user;
 
-        // Auto-assign priority based on issue category
-        let priority = 'medium';
-        if (type === 'Pipe Burst') priority = 'critical';
-        else if (type === 'Pipe Leak' || type === 'Overflow') priority = 'high';
-        else if (type === 'Tap Wastage') priority = 'medium';
-        else priority = 'low';
+      // Auto-assign priority based on issue category
+      let priority = 'medium';
+      if (type === 'Pipe Burst') priority = 'critical';
+      else if (type === 'Pipe Leak' || type === 'Overflow') priority = 'high';
+      else if (type === 'Tap Wastage') priority = 'medium';
+      else priority = 'low';
 
-        // Resolve zone_id
-        let zoneId = zone.toLowerCase().replace(/[^a-z0-9]/g, '');
+      // Robust zone_id resolution matching campus_zones primary keys
+      const ZONE_MAPPING = {
+        'academic block': 'academic',
+        'academic': 'academic',
+        'ppcrc': 'ppcrc',
+        'mithila hostel': 'mithila',
+        'mithila': 'mithila',
+        'vikramshila hostel': 'vikramshila',
+        'vikramshila': 'vikramshila',
+        'canteen': 'canteen',
+        'campus garden': 'garden',
+        'garden': 'garden',
+      };
+      const cleanZoneKey = (zone || '').trim().toLowerCase();
+      let zoneId = ZONE_MAPPING[cleanZoneKey] || null;
+
+      if (!zoneId) {
         const { data: zoneData } = await supabase
           .from('campus_zones')
           .select('id')
           .ilike('name', zone)
           .maybeSingle();
-
         if (zoneData?.id) zoneId = zoneData.id;
-
-        const payload = {
-          type,
-          zone_id: zoneId,
-          location_detail: location || `${zone} — Campus Area`,
-          description: description.trim(),
-          reporter_name: verifiedAuthUser?.user_metadata?.name || user?.name || 'Student',
-          reporter_id: verifiedAuthUser?.id || (user?.id && user.id.length > 20 ? user.id : null),
-          photo_url: photoUrl,
-          video_url: videoUrl,
-          status: 'pending',
-          priority,
-        };
-
-        const { data, error } = await supabase
-          .from('leak_reports')
-          .insert([payload])
-          .select('id, type, location_detail, zone_id, status, priority, created_at')
-          .single();
-
-        if (error) throw error;
-
-        // Add automated system alert for technicians/admins
-        try {
-          await supabase.from('alerts').insert([{
-            type: priority === 'critical' ? 'critical' : 'warning',
-            icon: priority === 'critical' ? 'AlertTriangle' : 'Droplets',
-            title: `New Report: ${data.id} (${type})`,
-            message: `${description.slice(0, 80)}... Location: ${location || zone}`,
-          }]);
-        } catch (e) {
-          // non-fatal alert insert
-        }
-
-        return {
-          success: true,
-          reportId: data.id,
-          data,
-        };
-      } catch (err) {
-        console.warn('[studentService] Supabase report insert failed, generating fallback:', err.message);
-        return {
-          success: false,
-          error: err.message || 'Database error while logging report.',
-        };
       }
-    }
 
-    // Fallback if Supabase not configured
-    const fallbackId = `LK-0${Math.floor(10 + Math.random() * 90)}`;
-    return {
-      success: true,
-      reportId: fallbackId,
-    };
+      const reporterId = verifiedAuthUser?.id || (user?.id && user.id.length > 20 && user.id.includes('-') ? user.id : null);
+      const reporterName = verifiedAuthUser?.user_metadata?.name || user?.name || 'Student';
+
+      const payload = {
+        type,
+        zone_id: zoneId,
+        location_detail: location || `${zone} — Campus Area`,
+        description: description.trim(),
+        reporter_name: reporterName,
+        reporter_id: reporterId,
+        photo_url: photoUrl,
+        video_url: videoUrl,
+        status: 'pending',
+        priority,
+      };
+
+      console.log('[studentService] Inserting report into Supabase table "leak_reports":', payload);
+
+      const { data, error } = await supabase
+        .from('leak_reports')
+        .insert([payload])
+        .select('id, type, location_detail, zone_id, status, priority, created_at')
+        .single();
+
+      if (error) {
+        console.error('[studentService] Supabase insert failed:', error);
+        throw error;
+      }
+
+      console.log('[studentService] Report created successfully with ID:', data.id);
+
+      // Add automated system alert for technicians/admins
+      try {
+        await supabase.from('alerts').insert([{
+          type: priority === 'critical' ? 'critical' : 'warning',
+          icon: priority === 'critical' ? 'AlertTriangle' : 'Droplets',
+          title: `New Report: ${data.id} (${type})`,
+          message: `${description.slice(0, 80)}... Location: ${location || zone}`,
+        }]);
+      } catch (e) {
+        // non-fatal alert insert
+      }
+
+      return {
+        success: true,
+        reportId: data.id,
+        data,
+      };
+    } catch (err) {
+      console.error('[studentService] Exception during report submission:', err);
+      return {
+        success: false,
+        error: err.message || 'Database error while saving report to Supabase.',
+      };
+    }
   },
 
   // ── 4. Fetch Student's Submitted Reports ────────────────────────────────────
