@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
 import Topbar from '../../components/Topbar';
-import { CheckCircle, Clock, MapPin, MessageSquare, ChevronDown, ChevronUp, Wrench } from 'lucide-react';
-import { maintenanceTasks } from '../../data/mockData';
+import { CheckCircle, Clock, MapPin, MessageSquare, ChevronDown, ChevronUp, Wrench, RefreshCw, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { maintenanceTasks as defaultTasks } from '../../data/mockData';
+import maintenanceService from '../../services/maintenanceService';
 
 const priorityColors = {
   critical: { bg: 'var(--red-100)', color: 'var(--red-600)', border: 'var(--red-500)' },
@@ -12,17 +14,27 @@ const priorityColors = {
   low:      { bg: 'var(--navy-100)', color: 'var(--navy-600)', border: 'var(--navy-400)' },
 };
 
-function TaskCard({ task }) {
+function TaskCard({ task, onStatusChange, onAddLog }) {
   const [open, setOpen] = useState(false);
   const [logInput, setLogInput] = useState('');
-  const [logs, setLogs] = useState(task.workLog);
+  const [logs, setLogs] = useState(task.workLog || []);
   const [status, setStatus] = useState(task.status);
+  const [isUpdating, setIsUpdating] = useState(false);
   const pc = priorityColors[task.priority] || priorityColors.medium;
 
-  const addLog = () => {
+  const handleAddLog = async () => {
     if (!logInput.trim()) return;
-    setLogs([...logs, logInput.trim()]);
+    const note = logInput.trim();
+    setLogs(prev => [...prev, `${note} (Just now)`]);
     setLogInput('');
+    if (onAddLog) await onAddLog(task.id, note);
+  };
+
+  const handleStatusUpdate = async (newStatus) => {
+    setStatus(newStatus);
+    setIsUpdating(true);
+    if (onStatusChange) await onStatusChange(task.id, newStatus);
+    setIsUpdating(false);
   };
 
   const statusOptions = ['pending', 'in_progress', 'resolved'];
@@ -64,6 +76,26 @@ function TaskCard({ task }) {
             </div>
           </div>
 
+          {/* Attached Media Evidence */}
+          {(task.photo || task.video) && (
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+              {task.photo && (
+                <a href={task.photo} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--navy-100)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--navy-700)', fontWeight: 600 }}>
+                    <ImageIcon size={14} style={{ color: 'var(--teal-600)' }} /> View Attached Photo
+                  </div>
+                </a>
+              )}
+              {task.video && (
+                <a href={task.video} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--navy-100)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--navy-700)', fontWeight: 600 }}>
+                    📹 View Attached Video
+                  </div>
+                </a>
+              )}
+            </div>
+          )}
+
           <div className="divider" />
 
           {/* Update Status */}
@@ -73,8 +105,9 @@ function TaskCard({ task }) {
               {statusOptions.map((s) => (
                 <button
                   key={s}
+                  disabled={isUpdating}
                   className={`btn btn-sm ${status === s ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setStatus(s)}
+                  onClick={() => handleStatusUpdate(s)}
                   style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}
                 >
                   {s === 'in_progress' ? 'In Progress' : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -107,10 +140,10 @@ function TaskCard({ task }) {
                 placeholder="Add a work note (e.g. 'Temporary patch applied')..."
                 value={logInput}
                 onChange={(e) => setLogInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addLog()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddLog()}
                 style={{ flex: 1 }}
               />
-              <button className="btn btn-primary btn-sm" onClick={addLog}>Add</button>
+              <button className="btn btn-primary btn-sm" onClick={handleAddLog}>Add</button>
             </div>
           </div>
         </div>
@@ -120,8 +153,38 @@ function TaskCard({ task }) {
 }
 
 export default function TaskQueue() {
-  const critical = maintenanceTasks.filter(t => t.priority === 'critical');
-  const other = maintenanceTasks.filter(t => t.priority !== 'critical');
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState(defaultTasks);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadTasks = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    const res = await maintenanceService.getAssignedTasks(user);
+    if (res && res.success && res.tasks) {
+      setTasks(res.tasks);
+    }
+    setIsLoading(false);
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    loadTasks(true);
+  }, [user]);
+
+  const handleStatusChange = async (reportId, newStatus) => {
+    await maintenanceService.updateStatus(reportId, newStatus, user);
+    if (newStatus === 'resolved') {
+      setTasks(prev => prev.filter(t => t.id !== reportId));
+    }
+  };
+
+  const handleAddLog = async (reportId, note) => {
+    await maintenanceService.addWorkLogNote(reportId, note, user);
+  };
+
+  const critical = tasks.filter(t => t.priority === 'critical');
+  const other = tasks.filter(t => t.priority !== 'critical');
 
   return (
     <div className="app-layout">
@@ -129,24 +192,62 @@ export default function TaskQueue() {
       <div className="main-content">
         <Topbar title="Task Queue" subtitle="Your assigned maintenance tasks" />
         <div className="page-body">
-          <HeroBanner role="maintenance" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <HeroBanner role="maintenance" />
+          </div>
 
-          {critical.length > 0 && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--red-600)', fontWeight: 700, fontSize: '0.875rem' }}>
-                🚨 Critical — Immediate Action Required
-              </div>
-              {critical.map(t => <TaskCard key={t.id} task={t} />)}
-            </div>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => { setIsRefreshing(true); loadTasks(false); }}
+              disabled={isRefreshing || isLoading}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'spin-icon' : ''} />
+              <span>Refresh Tasks</span>
+            </button>
+          </div>
 
-          {other.length > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--navy-600)', fontWeight: 700, fontSize: '0.875rem' }}>
-                <Clock size={14} /> Standard Tasks
-              </div>
-              {other.map(t => <TaskCard key={t.id} task={t} />)}
+          {tasks.length === 0 ? (
+            <div className="card empty-state" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <CheckCircle size={44} style={{ color: 'var(--green-600)', margin: '0 auto 12px' }} />
+              <h4>All Clear!</h4>
+              <p style={{ color: 'var(--navy-500)' }}>No pending maintenance tasks in your queue right now.</p>
             </div>
+          ) : (
+            <>
+              {critical.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--red-600)', fontWeight: 700, fontSize: '0.875rem' }}>
+                    🚨 Critical — Immediate Action Required ({critical.length})
+                  </div>
+                  {critical.map(t => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      onStatusChange={handleStatusChange}
+                      onAddLog={handleAddLog}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {other.length > 0 && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--navy-600)', fontWeight: 700, fontSize: '0.875rem' }}>
+                    <Clock size={14} /> Standard Tasks ({other.length})
+                  </div>
+                  {other.map(t => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      onStatusChange={handleStatusChange}
+                      onAddLog={handleAddLog}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

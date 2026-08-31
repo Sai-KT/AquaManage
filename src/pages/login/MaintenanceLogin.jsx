@@ -28,11 +28,15 @@ export default function MaintenanceLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    const result = login('maintenance', empId, password);
-    setLoading(false);
-    if (result.success) navigate('/maintenance/tasks');
-    else setError(result.error);
+    try {
+      const result = await login('maintenance', empId, password);
+      setLoading(false);
+      if (result.success) navigate('/maintenance/tasks');
+      else setError(result.error || 'Failed to authenticate maintenance staff.');
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'An unexpected error occurred during login.');
+    }
   };
 
   return (
