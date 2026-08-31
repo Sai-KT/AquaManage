@@ -26,6 +26,7 @@ export default function StudentLogin() {
   const [irnNo, setIrnNo] = useState('');
   const [focusedField, setFocusedField] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const canvasRef = useRef(null);
 
@@ -140,7 +141,7 @@ export default function StudentLogin() {
     }
   }, [user, navigate]);
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     if (e) e.preventDefault();
     if (!name.trim()) {
       setError('Please enter your full name (compulsory).');
@@ -151,8 +152,20 @@ export default function StudentLogin() {
       return;
     }
     setError('');
-    loginStudent(name, irnNo);
-    navigate('/student/report');
+    setIsLoading(true);
+
+    try {
+      const res = await loginStudent(name, irnNo);
+      if (res && !res.success) {
+        setError(res.error || 'Failed to authenticate. Please check your credentials.');
+        setIsLoading(false);
+      } else {
+        navigate('/student/report');
+      }
+    } catch (err) {
+      setError(err.message || 'An unexpected error occurred during sign in.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -353,22 +366,32 @@ export default function StudentLogin() {
             {/* CTA button */}
             <button
               type="submit"
+              disabled={isLoading}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               style={{
                 width: '100%', padding: '14px',
-                background: 'linear-gradient(135deg, #0284c7, #0ea5e9)',
+                background: isLoading ? 'rgba(14,165,233,0.5)' : 'linear-gradient(135deg, #0284c7, #0ea5e9)',
                 border: 'none', borderRadius: 12,
                 color: '#fff', fontWeight: 700, fontSize: '0.9375rem',
-                cursor: 'pointer', letterSpacing: '0.2px',
+                cursor: isLoading ? 'wait' : 'pointer', letterSpacing: '0.2px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: isHovered ? '0 8px 32px rgba(14,165,233,0.55)' : '0 4px 20px rgba(14,165,233,0.35)',
-                transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                boxShadow: isHovered && !isLoading ? '0 8px 32px rgba(14,165,233,0.55)' : '0 4px 20px rgba(14,165,233,0.35)',
+                transform: isHovered && !isLoading ? 'translateY(-2px)' : 'translateY(0)',
                 transition: 'all 0.22s ease',
+                opacity: isLoading ? 0.8 : 1,
               }}
             >
-              Continue to Student Portal
-              <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
+              {isLoading ? (
+                <>
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue to Student Portal</span>
+                  <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
+                </>
+              )}
             </button>
 
 
