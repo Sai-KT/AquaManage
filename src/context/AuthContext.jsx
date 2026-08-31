@@ -12,7 +12,8 @@ const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes idle timeout for Admin 
 // ── Hardcoded credentials for demo ─────────────────────────────────────────
 const CREDENTIALS = {
   admin: [
-    { username: 'director@iiit.edu.in', password: 'Director@99', name: 'Prof. A. Kulkarni', role: 'admin' },
+    { username: 'director@iiit.ac.in', password: 'Director@99',  name: 'Prof. A. Kulkarni', role: 'admin' },
+    { username: 'hod@iiit.ac.in',      password: 'HoD@Admin2024', name: 'Dr. R. Sharma',     role: 'admin' },
   ],
   maintenance: [
     { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar',   role: 'maintenance' },
