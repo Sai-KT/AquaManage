@@ -328,14 +328,14 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(v => !v)}
-                  onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
-                  style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.55)', padding: 4, transition: 'color 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#6ee7b7'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#34d399'}
+                  style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#34d399', padding: 4, transition: 'color 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
                 {password && (
-                  <div style={{ position: 'absolute', right: 38, top: '50%', transform: 'translateY(-50%)', width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
+                  <div style={{ position: 'absolute', right: 44, top: '50%', transform: 'translateY(-50%)', width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
                 )}
               </div>
             </div>
