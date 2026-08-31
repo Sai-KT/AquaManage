@@ -10,8 +10,8 @@ export function ThemeProvider({ children }) {
     try {
       const stored = localStorage.getItem(THEME_KEY);
       if (stored) return stored === 'dark';
-      // Default: respect OS preference
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Default to Light Mode
+      return false;
     } catch {
       return false;
     }
