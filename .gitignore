@@ -22,10 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Server Data & Uploads
-server/node_modules
-server/data/*.db
-server/data/*.db-journal
-server/uploads/*
-!server/uploads/.gitkeep
