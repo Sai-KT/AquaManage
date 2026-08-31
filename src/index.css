@@ -1509,7 +1509,13 @@ tbody tr:hover { background: var(--green-50); }
   --shadow-lg: 0 10px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* ── Body & layout ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   ── 1. GLOBAL BASE
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] html {
+  background: #0d1117;
+}
+
 [data-theme="dark"] body {
   color: #cdd9e5;
   background: #0d1117;
@@ -1519,14 +1525,67 @@ tbody tr:hover { background: var(--green-50); }
   background: #0d1117;
 }
 
+/* All headings */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: #e6edf3;
+}
+
+/* Body text / paragraphs */
+[data-theme="dark"] p {
+  color: #adbac7;
+}
+
+/* Inline code / monospace */
+[data-theme="dark"] code {
+  background: rgba(255,255,255,0.07);
+  color: #34d399;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* Native <select> option items */
+[data-theme="dark"] option {
+  background: #1c2128;
+  color: #e6edf3;
+}
+
+/* Horizontal rules */
+[data-theme="dark"] hr {
+  border-color: rgba(255,255,255,0.07);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ── 2. LAYOUT
+   ═══════════════════════════════════════════════════════ */
 [data-theme="dark"] .app-layout {
   background: #0d1117;
 }
 
-/* ── Topbar ─────────────────────────────────────────────── */
+[data-theme="dark"] .page-body {
+  background: #0d1117;
+}
+
+[data-theme="dark"] .page-header h2 {
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .page-header p {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .divider {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ── 3. TOPBAR
+   ═══════════════════════════════════════════════════════ */
 [data-theme="dark"] .topbar {
   background: #161b22;
-  border-bottom-color: rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 [data-theme="dark"] .topbar-title {
@@ -1566,49 +1625,134 @@ tbody tr:hover { background: var(--green-50); }
 }
 
 [data-theme="dark"] .topbar-search-box input::placeholder {
-  color: #768390;
+  color: #4b5563;
 }
 
-/* ── Page header ────────────────────────────────────────── */
-[data-theme="dark"] .page-header h2 {
-  color: #e6edf3;
+[data-theme="dark"] .topbar-theme-btn:hover {
+  background: rgba(251,191,36,0.1) !important;
+  color: #fbbf24 !important;
 }
 
-[data-theme="dark"] .page-header p {
+/* ═══════════════════════════════════════════════════════
+   ── 4. SIDEBAR
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .sidebar {
+  background: #111827;
+  border-right-color: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .sidebar-admin       { border-right-color: rgba(16,185,129,0.2); }
+[data-theme="dark"] .sidebar-maintenance { border-right-color: rgba(245,158,11,0.2); }
+[data-theme="dark"] .sidebar-student     { border-right-color: rgba(14,165,233,0.2); }
+
+[data-theme="dark"] .nav-section-label {
+  color: #4b5563;
+}
+
+[data-theme="dark"] .nav-item {
   color: #8b949e;
 }
 
-/* ── Cards ──────────────────────────────────────────────── */
+[data-theme="dark"] .nav-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .nav-item-icon-wrap {
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .nav-item:hover .nav-item-icon-wrap {
+  background: rgba(255,255,255,0.09);
+}
+
+[data-theme="dark"] .user-name {
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .user-email {
+  color: #768390;
+}
+
+[data-theme="dark"] .sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .sidebar-backdrop {
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(4px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ── 5. CARDS
+   ═══════════════════════════════════════════════════════ */
 [data-theme="dark"] .card {
   background: #1c2128;
   border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.35);
+  border-color: rgba(255,255,255,0.12);
 }
 
 [data-theme="dark"] .card-title {
   color: #cdd9e5;
 }
 
-/* ── Stat Cards ─────────────────────────────────────────── */
+/* ── Stat Cards ─────────────────────────────────────── */
 [data-theme="dark"] .stat-card {
   background: #1c2128;
   border-color: rgba(255,255,255,0.07);
 }
 
-[data-theme="dark"] .stat-card-value {
-  color: #e6edf3;
+[data-theme="dark"] .stat-card:hover {
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
 }
 
-[data-theme="dark"] .stat-card-label {
-  color: #8b949e;
+[data-theme="dark"] .stat-card-value  { color: #e6edf3; }
+[data-theme="dark"] .stat-card-label  { color: #8b949e; }
+
+[data-theme="dark"] .stat-card-change.up   { color: #f87171; }
+[data-theme="dark"] .stat-card-change.down { color: #34d399; }
+[data-theme="dark"] .stat-card-change.good { color: #34d399; }
+
+[data-theme="dark"] .stat-card-icon.green { background: rgba(16,185,129,0.15); color: #34d399; }
+[data-theme="dark"] .stat-card-icon.teal  { background: rgba(14,165,233,0.15); color: #38bdf8; }
+[data-theme="dark"] .stat-card-icon.amber { background: rgba(245,158,11,0.15); color: #fbbf24; }
+[data-theme="dark"] .stat-card-icon.red   { background: rgba(239,68,68,0.15);  color: #f87171; }
+
+/* ── Task Cards ─────────────────────────────────────── */
+[data-theme="dark"] .task-card {
+  background: #1c2128;
+  border-color: rgba(255,255,255,0.07);
 }
 
-[data-theme="dark"] .stat-card-icon.green { background: rgba(16,185,129,0.15); }
-[data-theme="dark"] .stat-card-icon.teal  { background: rgba(14,165,233,0.15); }
-[data-theme="dark"] .stat-card-icon.amber { background: rgba(245,158,11,0.15); }
-[data-theme="dark"] .stat-card-icon.red   { background: rgba(239,68,68,0.15); }
+[data-theme="dark"] .task-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+}
 
-/* ── Badges ─────────────────────────────────────────────── */
-[data-theme="dark"] .badge.pending     { background: rgba(245,158,11,0.15); color: #fbbf24; }
+[data-theme="dark"] .task-card-header {
+  background: #21262d;
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .task-card-body {
+  background: #1c2128;
+  color: #adbac7;
+}
+
+[data-theme="dark"] .task-card-footer {
+  border-top-color: rgba(255,255,255,0.06);
+  background: #1c2128;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ── 6. BADGES
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .badge.pending     { background: rgba(245,158,11,0.15);  color: #fbbf24; }
 [data-theme="dark"] .badge.in_progress { background: rgba(14,165,233,0.15);  color: #38bdf8; }
 [data-theme="dark"] .badge.resolved    { background: rgba(16,185,129,0.15);  color: #34d399; }
 [data-theme="dark"] .badge.critical    { background: rgba(239,68,68,0.15);   color: #f87171; }
@@ -1616,10 +1760,21 @@ tbody tr:hover { background: var(--green-50); }
 [data-theme="dark"] .badge.medium      { background: rgba(14,165,233,0.12);  color: #38bdf8; }
 [data-theme="dark"] .badge.low         { background: rgba(255,255,255,0.07); color: #8b949e; }
 
-/* ── Buttons ────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   ── 7. BUTTONS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 2px 12px rgba(16,185,129,0.4);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(16,185,129,0.55);
+}
+
 [data-theme="dark"] .btn-secondary {
   background: rgba(255,255,255,0.07);
   color: #cdd9e5;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 [data-theme="dark"] .btn-secondary:hover {
