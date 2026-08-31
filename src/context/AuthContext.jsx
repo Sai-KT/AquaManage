@@ -1,37 +1,40 @@
 // ─── Authentication Context ──────────────────────────────────────────────────
+// Session is stored in sessionStorage (tab-isolated) so each browser tab can
+// hold a different role simultaneously — e.g. student in Tab 1, admin in Tab 2.
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = 'aquamanage_user';
+const STORAGE_KEY    = 'aquamanage_user';
 const LAST_ACTIVE_KEY = 'aquamanage_last_active';
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes inactivity timeout for Admin & Maintenance
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes idle timeout for Admin & Maintenance
 
 // ── Hardcoded credentials for demo ─────────────────────────────────────────
 const CREDENTIALS = {
   admin: [
-    { username: 'director@i2it.edu.in', password: 'Director@99', name: 'Prof. A. Kulkarni', role: 'admin' },
+    { username: 'director@iiit.edu.in', password: 'Director@99', name: 'Prof. A. Kulkarni', role: 'admin' },
   ],
   maintenance: [
-    { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar', role: 'maintenance' },
-    { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh', role: 'maintenance' },
-    { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan', role: 'maintenance' },
+    { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar',   role: 'maintenance' },
+    { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh',      role: 'maintenance' },
+    { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan',       role: 'maintenance' },
   ],
 };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      // sessionStorage is tab-scoped: each tab reads only its own session
+      const stored = sessionStorage.getItem(STORAGE_KEY);
       if (!stored) return null;
       const parsedUser = JSON.parse(stored);
 
-      // Check inactivity for admin and maintenance on initial app launch / page refresh
+      // Check inactivity for admin and maintenance on page refresh within the same tab
       if (parsedUser?.role === 'admin' || parsedUser?.role === 'maintenance') {
-        const lastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+        const lastActive = sessionStorage.getItem(LAST_ACTIVE_KEY);
         if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_TIMEOUT) {
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(LAST_ACTIVE_KEY);
+          sessionStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(LAST_ACTIVE_KEY);
           return null;
         }
       }
@@ -43,13 +46,13 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(LAST_ACTIVE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(LAST_ACTIVE_KEY);
   }, []);
 
   const updateLastActive = useCallback(() => {
     if (user && (user.role === 'admin' || user.role === 'maintenance')) {
-      localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+      sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
     }
   }, [user]);
 
@@ -59,16 +62,14 @@ export function AuthProvider({ children }) {
 
     updateLastActive();
 
-    const handleUserActivity = () => {
-      updateLastActive();
-    };
+    const handleUserActivity = () => updateLastActive();
 
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     events.forEach((evt) => window.addEventListener(evt, handleUserActivity));
 
     // Check inactivity every 10 seconds
     const interval = setInterval(() => {
-      const lastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+      const lastActive = sessionStorage.getItem(LAST_ACTIVE_KEY);
       if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_TIMEOUT) {
         logout();
       }
@@ -90,9 +91,9 @@ export function AuthProvider({ children }) {
     if (found) {
       const userData = { name: found.name, role: found.role, username: found.username };
       setUser(userData);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
       if (role === 'admin' || role === 'maintenance') {
-        localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+        sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
       }
       return { success: true };
     }
@@ -101,15 +102,15 @@ export function AuthProvider({ children }) {
 
   const loginStudent = (name, irnNo) => {
     const cleanName = (name || '').trim();
-    const cleanIrn = (irnNo || '').trim();
+    const cleanIrn  = (irnNo || '').trim();
     const userData = {
-      name: cleanName || 'Student',
-      irnNo: cleanIrn,
-      role: 'student',
+      name:     cleanName || 'Student',
+      irnNo:    cleanIrn,
+      role:     'student',
       username: cleanName || 'Student',
     };
     setUser(userData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
   };
 
   return (
