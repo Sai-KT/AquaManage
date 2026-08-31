@@ -280,12 +280,13 @@ export default function Topbar({ title, subtitle }) {
       </div>
 
       {/* ── Right Actions ────────────────────────────────────────────── */}
-      <div className="topbar-actions" style={{ position: 'relative' }}>
+      <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
 
         {/* ── 1. Full Interactive Search Bar / Palette ───────────────── */}
         <div ref={searchContainerRef} style={{ position: 'relative' }}>
+          {/* Desktop Search Input */}
           <div
-            className="topbar-search-box"
+            className="topbar-search-box desktop-only"
             onClick={() => setSearchOpen(true)}
             style={{
               display: 'flex',
@@ -297,7 +298,7 @@ export default function Topbar({ title, subtitle }) {
               border: '1px solid var(--navy-200)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              width: 220,
+              width: 210,
             }}
           >
             <Search size={14} style={{ color: 'var(--navy-400)', flexShrink: 0 }} />
@@ -354,149 +355,241 @@ export default function Topbar({ title, subtitle }) {
             )}
           </div>
 
-          {/* Search Dropdown / Palette Popover */}
+          {/* Mobile Search Icon Trigger Button */}
+          <button
+            className="topbar-btn mobile-only"
+            onClick={() => setSearchOpen(true)}
+            title="Search"
+            aria-label="Search"
+            style={{ cursor: 'pointer' }}
+          >
+            <Search size={16} />
+          </button>
+
+          {/* Search Dropdown / Palette Popover (Responsive Modal on Mobile, Popover on Desktop) */}
           {searchOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: 'min(480px, 92vw)',
-                maxHeight: '440px',
-                background: isDark ? '#161b22' : '#ffffff',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'var(--navy-200)'}`,
-                borderRadius: 12,
-                boxShadow: isDark ? '0 16px 40px rgba(0,0,0,0.65)' : '0 12px 36px rgba(0,0,0,0.14)',
-                zIndex: 1000,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                animation: 'fadeUp 0.18s ease both',
-              }}
-            >
-              {/* Category Filter Pills */}
+            <>
+              {/* Mobile backdrop */}
               <div
+                className="search-mobile-backdrop"
+                onClick={() => setSearchOpen(false)}
                 style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.65)',
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                  zIndex: 9998,
+                }}
+              />
+              <div
+                className="topbar-search-modal"
+                style={{
+                  position: 'fixed',
+                  top: 'min(72px, 12vh)',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 'min(540px, calc(100vw - 24px))',
+                  maxHeight: 'min(520px, 80vh)',
+                  background: isDark ? '#161b22' : '#ffffff',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'var(--navy-200)'}`,
+                  borderRadius: 14,
+                  boxShadow: isDark ? '0 20px 60px rgba(0,0,0,0.8)' : '0 16px 45px rgba(0,0,0,0.18)',
+                  zIndex: 9999,
                   display: 'flex',
-                  gap: 6,
-                  padding: '10px 14px',
-                  borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
-                  overflowX: 'auto',
-                  background: isDark ? '#1c2128' : '#f8fafc',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  animation: 'fadeUp 0.18s ease both',
                 }}
               >
-                {categories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      setActiveCategory(cat);
+                {/* Search Header with Input */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 16px',
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'var(--navy-100)'}`,
+                    background: isDark ? '#1c2128' : '#f8fafc',
+                  }}
+                >
+                  <Search size={18} style={{ color: 'var(--green-500)', flexShrink: 0 }} />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search pages, leak issues, tanks, zones, actions..."
+                    value={searchQuery}
+                    onChange={e => {
+                      setSearchQuery(e.target.value);
                       setSelectedIndex(0);
                     }}
+                    onKeyDown={handleSearchKeyDown}
                     style={{
-                      padding: '4px 10px',
-                      borderRadius: 20,
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '0.9375rem',
+                      fontWeight: 500,
+                      color: isDark ? '#e6edf3' : 'var(--navy-900)',
+                      width: '100%',
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--navy-400)', display: 'flex' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(false)}
+                    style={{
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'var(--navy-200)',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '4px 8px',
                       fontSize: '0.6875rem',
                       fontWeight: 600,
-                      border: 'none',
+                      color: 'var(--navy-600)',
                       cursor: 'pointer',
-                      background: activeCategory === cat ? 'var(--green-500)' : isDark ? 'rgba(255,255,255,0.07)' : 'var(--navy-200)',
-                      color: activeCategory === cat ? '#fff' : 'var(--navy-600)',
-                      transition: 'all 0.15s ease',
-                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                     }}
                   >
-                    {cat}
+                    Esc
                   </button>
-                ))}
-              </div>
+                </div>
 
-              {/* Results List */}
-              <div style={{ overflowY: 'auto', flex: 1, padding: '6px' }}>
-                {filteredSearchResults.length === 0 ? (
-                  <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--navy-400)' }}>
-                    <Search size={28} style={{ opacity: 0.3, margin: '0 auto 8px' }} />
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--navy-600)' }}>No results found</div>
-                    <div style={{ fontSize: '0.75rem', marginTop: 4 }}>Try searching for "leak", "tank", "usage", or "report"</div>
-                  </div>
-                ) : (
-                  filteredSearchResults.map((item, idx) => {
-                    const IconComponent = ICON_MAP[item.icon] || FilePlus;
-                    const isSelected = idx === selectedIndex;
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => executeSearchItem(item)}
-                        onMouseEnter={() => setSelectedIndex(idx)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 12,
-                          padding: '10px 12px',
-                          borderRadius: 8,
-                          cursor: 'pointer',
-                          background: isSelected ? (isDark ? 'rgba(255,255,255,0.07)' : 'var(--navy-100)') : 'transparent',
-                          transition: 'background 0.12s ease',
-                        }}
-                      >
+                {/* Category Filter Pills */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 6,
+                    padding: '8px 14px',
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
+                    overflowX: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    background: isDark ? '#161b22' : '#ffffff',
+                  }}
+                >
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        setActiveCategory(cat);
+                        setSelectedIndex(0);
+                      }}
+                      style={{
+                        padding: '4px 11px',
+                        borderRadius: 20,
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: activeCategory === cat ? 'var(--green-500)' : isDark ? 'rgba(255,255,255,0.07)' : 'var(--navy-100)',
+                        color: activeCategory === cat ? '#fff' : 'var(--navy-600)',
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Results List */}
+                <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch', flex: 1, padding: '8px' }}>
+                  {filteredSearchResults.length === 0 ? (
+                    <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--navy-400)' }}>
+                      <Search size={32} style={{ opacity: 0.3, margin: '0 auto 10px' }} />
+                      <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--navy-600)' }}>No matches found</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: 4 }}>Try searching for "leak", "tank", "usage", or "map"</div>
+                    </div>
+                  ) : (
+                    filteredSearchResults.map((item, idx) => {
+                      const IconComponent = ICON_MAP[item.icon] || FilePlus;
+                      const isSelected = idx === selectedIndex;
+                      return (
                         <div
+                          key={item.id}
+                          onClick={() => executeSearchItem(item)}
+                          onMouseEnter={() => setSelectedIndex(idx)}
                           style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 8,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            background: isDark ? 'rgba(255,255,255,0.05)' : 'var(--navy-200)',
-                            color: 'var(--green-500)',
-                            flexShrink: 0,
+                            gap: 12,
+                            padding: '11px 12px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            background: isSelected ? (isDark ? 'rgba(255,255,255,0.08)' : 'var(--navy-100)') : 'transparent',
+                            transition: 'background 0.12s ease',
+                            minHeight: 46,
                           }}
                         >
-                          <IconComponent size={16} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--navy-800)' }}>
-                              {item.title}
-                            </span>
-                            <span style={{ fontSize: '0.625rem', padding: '1px 5px', borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)', color: 'var(--navy-500)' }}>
-                              {item.category}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.6875rem', color: 'var(--navy-500)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.desc}
-                          </div>
-                        </div>
-                        {item.badge && (
-                          <span
-                            className={`badge ${item.badgeType === 'critical' ? 'critical' : item.badgeType === 'high' ? 'high' : item.badgeType === 'good' ? 'resolved' : 'medium'}`}
-                            style={{ fontSize: '0.625rem', padding: '2px 6px' }}
+                          <div
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 8,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-200)',
+                              color: 'var(--green-500)',
+                              flexShrink: 0,
+                            }}
                           >
-                            {item.badge}
-                          </span>
-                        )}
-                        <ChevronRight size={14} style={{ color: 'var(--navy-400)', opacity: isSelected ? 1 : 0.4 }} />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                            <IconComponent size={17} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: isDark ? '#e6edf3' : 'var(--navy-800)' }}>
+                                {item.title}
+                              </span>
+                              <span style={{ fontSize: '0.625rem', padding: '1px 5px', borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)', color: 'var(--navy-500)' }}>
+                                {item.category}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--navy-500)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {item.desc}
+                            </div>
+                          </div>
+                          {item.badge && (
+                            <span
+                              className={`badge ${item.badgeType === 'critical' ? 'critical' : item.badgeType === 'high' ? 'high' : item.badgeType === 'good' ? 'resolved' : 'medium'}`}
+                              style={{ fontSize: '0.625rem', padding: '2px 7px', flexShrink: 0 }}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                          <ChevronRight size={15} style={{ color: 'var(--navy-400)', opacity: isSelected ? 1 : 0.4, flexShrink: 0 }} />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
 
-              {/* Popover Footer */}
-              <div
-                style={{
-                  padding: '8px 14px',
-                  borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
-                  fontSize: '0.6875rem',
-                  color: 'var(--navy-400)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  background: isDark ? '#1c2128' : '#f8fafc',
-                }}
-              >
-                <span>Use <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>↑</kbd> <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>↓</kbd> to navigate</span>
-                <span>Press <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>Enter</kbd> to select</span>
+                {/* Popover Footer */}
+                <div
+                  style={{
+                    padding: '9px 16px',
+                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
+                    fontSize: '0.6875rem',
+                    color: 'var(--navy-400)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: isDark ? '#1c2128' : '#f8fafc',
+                  }}
+                >
+                  <span>Use <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>↑</kbd> <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>↓</kbd> to navigate</span>
+                  <span>Tap or press <kbd style={{ padding: '1px 4px', background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 3 }}>Enter</kbd> to open</span>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
