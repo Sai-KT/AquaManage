@@ -107,9 +107,9 @@ export default function AdminDashboard() {
       {
         label: 'Usage (L)',
         data: waterUsageByZone.daily,
-        backgroundColor: [
-          '#10b981','#0ea5e9','#f59e0b','#8b5cf6','#ef4444','#0284c7','#34d399'
-        ],
+        backgroundColor: theme.zoneBarBg,
+        borderColor: theme.zoneBarBorders,
+        borderWidth: 1.5,
         borderRadius: 6,
       },
     ],

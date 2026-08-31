@@ -15,6 +15,34 @@ export function getChartTheme(isDark) {
     resolvedGreen: '#10b981',
     pendingRed: isDark ? 'rgba(239, 68, 68, 0.25)' : '#fee2e2',
     pendingBorderRed: isDark ? '#f87171' : '#ef4444',
+    zoneBarBg: isDark
+      ? [
+          'rgba(16, 185, 129, 0.75)',
+          'rgba(14, 165, 233, 0.75)',
+          'rgba(245, 158, 11, 0.75)',
+          'rgba(139, 92, 246, 0.75)',
+          'rgba(239, 68, 68, 0.75)',
+          'rgba(2, 132, 199, 0.75)',
+          'rgba(52, 211, 153, 0.75)',
+        ]
+      : [
+          'rgba(16, 185, 129, 0.85)',
+          'rgba(14, 165, 233, 0.85)',
+          'rgba(245, 158, 11, 0.85)',
+          'rgba(139, 92, 246, 0.85)',
+          'rgba(239, 68, 68, 0.85)',
+          'rgba(2, 132, 199, 0.85)',
+          'rgba(52, 211, 153, 0.85)',
+        ],
+    zoneBarBorders: [
+      '#10b981',
+      '#0ea5e9',
+      '#f59e0b',
+      '#8b5cf6',
+      '#ef4444',
+      '#0284c7',
+      '#34d399',
+    ],
   };
 }
 
