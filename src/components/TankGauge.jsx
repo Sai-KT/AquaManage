@@ -1,14 +1,29 @@
 import React from 'react';
-
-const colorMap = {
-  good:     { stroke: '#10b981', track: '#d1fae5', text: '#065f46' },
-  warning:  { stroke: '#f59e0b', track: '#fef3c7', text: '#92400e' },
-  critical: { stroke: '#ef4444', track: '#fee2e2', text: '#991b1b' },
-};
+import { useTheme } from '../context/ThemeContext';
 
 export default function TankGauge({ tank }) {
+  const { isDark } = useTheme();
   const pct = Math.round((tank.current / tank.capacity) * 100);
   const status = tank.status;
+
+  const colorMap = {
+    good: {
+      stroke: '#10b981',
+      track: isDark ? 'rgba(255, 255, 255, 0.08)' : '#d1fae5',
+      text: isDark ? '#34d399' : '#065f46',
+    },
+    warning: {
+      stroke: '#f59e0b',
+      track: isDark ? 'rgba(255, 255, 255, 0.08)' : '#fef3c7',
+      text: isDark ? '#fbbf24' : '#92400e',
+    },
+    critical: {
+      stroke: '#ef4444',
+      track: isDark ? 'rgba(255, 255, 255, 0.08)' : '#fee2e2',
+      text: isDark ? '#f87171' : '#991b1b',
+    },
+  };
+
   const colors = colorMap[status] || colorMap.good;
 
   const r = 42;
