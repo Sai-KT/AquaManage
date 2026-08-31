@@ -64,6 +64,14 @@ export const studentService = {
     let photoUrl = null;
     let videoUrl = null;
 
+    // Validate inputs
+    if (!type || !zone || !description || description.trim().length < 10) {
+      return {
+        success: false,
+        error: 'Please provide a valid issue type, campus zone, and description of at least 10 characters.',
+      };
+    }
+
     // Upload files if Supabase is active
     if (photoFile) {
       photoUrl = await this.uploadMedia(photoFile, 'photos');
@@ -74,7 +82,18 @@ export const studentService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        // Find zone_id from zone name
+        // Securely retrieve the authenticated user session to prevent impersonation
+        const { data: authData } = await supabase.auth.getUser();
+        const verifiedAuthUser = authData?.user;
+
+        // Auto-assign priority based on issue category
+        let priority = 'medium';
+        if (type === 'Pipe Burst') priority = 'critical';
+        else if (type === 'Pipe Leak' || type === 'Overflow') priority = 'high';
+        else if (type === 'Tap Wastage') priority = 'medium';
+        else priority = 'low';
+
+        // Resolve zone_id
         let zoneId = zone.toLowerCase().replace(/[^a-z0-9]/g, '');
         const { data: zoneData } = await supabase
           .from('campus_zones')
@@ -88,33 +107,33 @@ export const studentService = {
           type,
           zone_id: zoneId,
           location_detail: location || `${zone} — Campus Area`,
-          description,
-          reporter_name: user?.name || 'Student',
-          reporter_id: user?.id && user.id.includes('-') && user.id.length > 20 ? user.id : null,
+          description: description.trim(),
+          reporter_name: verifiedAuthUser?.user_metadata?.name || user?.name || 'Student',
+          reporter_id: verifiedAuthUser?.id || (user?.id && user.id.length > 20 ? user.id : null),
           photo_url: photoUrl,
           video_url: videoUrl,
           status: 'pending',
-          priority: 'medium',
+          priority,
         };
 
         const { data, error } = await supabase
           .from('leak_reports')
           .insert([payload])
-          .select('id, type, location_detail, zone_id, status, created_at')
+          .select('id, type, location_detail, zone_id, status, priority, created_at')
           .single();
 
         if (error) throw error;
 
-        // Also add automated alert
+        // Add automated system alert for technicians/admins
         try {
           await supabase.from('alerts').insert([{
-            type: 'warning',
-            icon: 'Droplets',
+            type: priority === 'critical' ? 'critical' : 'warning',
+            icon: priority === 'critical' ? 'AlertTriangle' : 'Droplets',
             title: `New Report: ${data.id} (${type})`,
             message: `${description.slice(0, 80)}... Location: ${location || zone}`,
           }]);
         } catch (e) {
-          // ignore alert insert failure
+          // non-fatal alert insert
         }
 
         return {
@@ -124,6 +143,10 @@ export const studentService = {
         };
       } catch (err) {
         console.warn('[studentService] Supabase report insert failed, generating fallback:', err.message);
+        return {
+          success: false,
+          error: err.message || 'Database error while logging report.',
+        };
       }
     }
 
@@ -137,8 +160,11 @@ export const studentService = {
 
   // ── 4. Fetch Student's Submitted Reports ────────────────────────────────────
   async getMyReports(user) {
-    if (isSupabaseConfigured && supabase && user) {
+    if (isSupabaseConfigured && supabase) {
       try {
+        const { data: authData } = await supabase.auth.getUser();
+        const verifiedAuthUser = authData?.user;
+
         let query = supabase
           .from('leak_reports')
           .select(`
@@ -157,10 +183,12 @@ export const studentService = {
             resolved_at
           `);
 
-        // Filter by user ID if valid UUID, or reporter_name
-        if (user.id && user.id.length > 20) {
+        // Filter securely by authenticated UUID or verified student metadata
+        if (verifiedAuthUser?.id) {
+          query = query.or(`reporter_id.eq.${verifiedAuthUser.id},reporter_name.eq.${verifiedAuthUser.user_metadata?.name || user?.name}`);
+        } else if (user?.id && user.id.length > 20) {
           query = query.or(`reporter_id.eq.${user.id},reporter_name.eq.${user.name}`);
-        } else if (user.name) {
+        } else if (user?.name) {
           query = query.ilike('reporter_name', `%${user.name}%`);
         }
 
@@ -168,7 +196,7 @@ export const studentService = {
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
+        if (data) {
           const formatted = data.map(r => ({
             id: r.id,
             type: r.type,
