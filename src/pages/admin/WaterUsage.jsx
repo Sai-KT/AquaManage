@@ -8,25 +8,19 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
   PointElement, LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
+import { useTheme } from '../../context/ThemeContext';
+import { getBaseChartOpts } from '../../utils/chartConfig';
 import { waterUsageByZone, campusStats } from '../../data/mockData';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
-
-const baseOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-  scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-  },
-};
 
 // 5 zones: Academic, PPCRC, Mithila, Vikramshila, Canteen
 const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ef4444'];
 
 export default function WaterUsage() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const baseOpts = getBaseChartOpts(isDark);
   const [period, setPeriod] = useState('daily');
 
   const usageData = {
@@ -49,11 +43,13 @@ export default function WaterUsage() {
       label: 'Litres/hr',
       data: [480, 1200, 3800, 4200, 5100, 3600, 4800, 6200, 3400, 820],
       borderColor: '#0ea5e9',
-      backgroundColor: 'rgba(14,165,233,0.1)',
+      backgroundColor: isDark ? 'rgba(14,165,233,0.14)' : 'rgba(14,165,233,0.1)',
       fill: true,
       borderWidth: 2.5,
       tension: 0.4,
       pointBackgroundColor: '#0ea5e9',
+      pointBorderColor: isDark ? '#1c2128' : '#ffffff',
+      pointBorderWidth: 2,
       pointRadius: 4,
     }],
   };

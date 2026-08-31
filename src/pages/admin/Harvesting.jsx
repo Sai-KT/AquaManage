@@ -9,22 +9,30 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, BarElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
+import { useTheme } from '../../context/ThemeContext';
+import { getBaseChartOpts, getChartTheme } from '../../utils/chartConfig';
 import { tankData, harvestingTrend, monthlyHarvesting, campusStats } from '../../data/mockData';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
-const chartOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { position: 'top', labels: { font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false } },
-  scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-  },
-};
-
 export default function Harvesting() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const theme = getChartTheme(isDark);
+  const chartOpts = getBaseChartOpts(isDark, {
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: theme.tickColor,
+          font: { size: 11, family: "'Inter', sans-serif" },
+          usePointStyle: true,
+        },
+      },
+    },
+  });
+
   const [view, setView] = useState('weekly');
 
   const weeklyData = {
@@ -34,18 +42,20 @@ export default function Harvesting() {
         label: 'Collected (L)',
         data: harvestingTrend.collected,
         borderColor: '#10b981',
-        backgroundColor: 'rgba(16,185,129,0.12)',
+        backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)',
         borderWidth: 2.5,
         fill: true,
         tension: 0.4,
         pointBackgroundColor: '#10b981',
+        pointBorderColor: isDark ? '#1c2128' : '#ffffff',
+        pointBorderWidth: 2,
         pointRadius: 5,
         pointHoverRadius: 7,
       },
       {
         label: 'Target (L)',
         data: harvestingTrend.target,
-        borderColor: '#94a3b8',
+        borderColor: theme.targetBorderColor,
         borderDash: [6, 4],
         borderWidth: 1.5,
         fill: false,
@@ -61,7 +71,7 @@ export default function Harvesting() {
       {
         label: 'Monthly Collection (L)',
         data: monthlyHarvesting.collected,
-        backgroundColor: 'rgba(16,185,129,0.7)',
+        backgroundColor: isDark ? 'rgba(16,185,129,0.85)' : 'rgba(16,185,129,0.7)',
         borderColor: '#10b981',
         borderWidth: 2,
         borderRadius: 8,

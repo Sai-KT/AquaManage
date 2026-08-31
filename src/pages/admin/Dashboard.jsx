@@ -14,24 +14,19 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
+import { useTheme } from '../../context/ThemeContext';
+import { getBaseChartOpts, getChartTheme } from '../../utils/chartConfig';
 import {
   campusStats, tankData, harvestingTrend, waterUsageByZone, alerts
 } from '../../data/mockData';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
-const chartOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-  scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-  },
-};
-
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const theme = getChartTheme(isDark);
+  const chartOpts = getBaseChartOpts(isDark);
 
   const statCards = [
     {
@@ -83,17 +78,20 @@ export default function AdminDashboard() {
         label: 'Collected (L)',
         data: harvestingTrend.collected,
         borderColor: '#10b981',
-        backgroundColor: 'rgba(16,185,129,0.1)',
+        backgroundColor: isDark ? 'rgba(16,185,129,0.14)' : 'rgba(16,185,129,0.1)',
         borderWidth: 2.5,
         fill: true,
         tension: 0.4,
         pointBackgroundColor: '#10b981',
+        pointBorderColor: isDark ? '#1c2128' : '#ffffff',
+        pointBorderWidth: 2,
         pointRadius: 4,
+        pointHoverRadius: 6,
       },
       {
         label: 'Target (L)',
         data: harvestingTrend.target,
-        borderColor: '#94a3b8',
+        borderColor: theme.targetBorderColor,
         borderDash: [6, 4],
         borderWidth: 1.5,
         fill: false,
@@ -121,8 +119,8 @@ export default function AdminDashboard() {
     labels: ['Resolved', 'Pending'],
     datasets: [{
       data: [campusStats.resolvedIssues, campusStats.pendingIssues],
-      backgroundColor: ['#10b981', '#fee2e2'],
-      borderColor: ['#10b981', '#ef4444'],
+      backgroundColor: [theme.resolvedGreen, theme.pendingRed],
+      borderColor: [theme.resolvedGreen, theme.pendingBorderRed],
       borderWidth: 2,
     }],
   };
@@ -171,23 +169,30 @@ export default function AdminDashboard() {
           {/* ── Quick Links Strip ────────────────────────────────────────── */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
             {[
-              { label: 'Pending Issues', count: campusStats.pendingIssues, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: '#fef3c7' },
+              { label: 'Pending Issues', count: campusStats.pendingIssues, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: 'var(--amber-100)' },
               { label: 'In Progress',    count: leakReportsInProgress(), path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
               { label: 'Critical Alerts', count: alerts.filter(a=>a.type==='critical').length, path: '/admin/alerts?type=critical', color: 'var(--red-600)', bg: 'var(--red-100)' },
-              { label: 'Usage Analytics', count: null, path: '/admin/usage', color: 'var(--green-700)', bg: 'var(--green-100)' },
-              { label: 'Full Analytics',  count: null, path: '/admin/analytics', color: 'var(--navy-700)', bg: 'var(--navy-100)' },
+              { label: 'Usage Analytics', count: null, path: '/admin/usage', color: 'var(--green-600)', bg: 'var(--green-100)' },
+              { label: 'Full Analytics',  count: null, path: '/admin/analytics', color: 'var(--navy-600)', bg: 'var(--navy-100)' },
             ].map((item) => (
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  padding: '9px 15px', borderRadius: 8, border: '1px solid var(--navy-200)', cursor: 'pointer',
                   background: item.bg, color: item.color, fontWeight: 600, fontSize: '0.8125rem',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}
               >
                 {item.count !== null && (
                   <span style={{ fontWeight: 800, fontSize: '1rem' }}>{item.count}</span>
@@ -242,7 +247,24 @@ export default function AdminDashboard() {
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } },
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            color: theme.bodyColor,
+                            font: { size: 11, family: "'Inter', sans-serif" },
+                            padding: 12,
+                            usePointStyle: true,
+                          },
+                        },
+                        tooltip: {
+                          backgroundColor: theme.tooltipBg,
+                          titleColor: theme.titleColor,
+                          bodyColor: theme.bodyColor,
+                          borderColor: theme.tooltipBorder,
+                          borderWidth: 1,
+                          padding: 10,
+                          cornerRadius: 8,
+                        },
                       },
                       cutout: '65%',
                     }}

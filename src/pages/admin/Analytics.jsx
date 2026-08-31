@@ -8,25 +8,30 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, BarElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
+import { useTheme } from '../../context/ThemeContext';
+import { getBaseChartOpts, getChartTheme } from '../../utils/chartConfig';
 import { analyticsData } from '../../data/mockData';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
-const lineOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { position: 'top', labels: { font: { size: 11 }, usePointStyle: true } },
-    tooltip: { mode: 'index', intersect: false },
-  },
-  scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
-  },
-};
-
 export default function Analytics() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const theme = getChartTheme(isDark);
+  const lineOpts = getBaseChartOpts(isDark, {
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: theme.tickColor,
+          font: { size: 11, family: "'Inter', sans-serif" },
+          usePointStyle: true,
+        },
+      },
+    },
+  });
+
   const [range, setRange] = useState('7m');
 
   const usageVsHarvest = {
@@ -36,22 +41,26 @@ export default function Analytics() {
         label: 'Total Usage (L)',
         data: analyticsData.usage,
         borderColor: '#0ea5e9',
-        backgroundColor: 'rgba(14,165,233,0.08)',
+        backgroundColor: isDark ? 'rgba(14,165,233,0.12)' : 'rgba(14,165,233,0.08)',
         fill: true,
         tension: 0.4,
         borderWidth: 2.5,
         pointBackgroundColor: '#0ea5e9',
+        pointBorderColor: isDark ? '#1c2128' : '#ffffff',
+        pointBorderWidth: 2,
         pointRadius: 4,
       },
       {
         label: 'Harvested (L)',
         data: analyticsData.harvested,
         borderColor: '#10b981',
-        backgroundColor: 'rgba(16,185,129,0.08)',
+        backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)',
         fill: true,
         tension: 0.4,
         borderWidth: 2.5,
         pointBackgroundColor: '#10b981',
+        pointBorderColor: isDark ? '#1c2128' : '#ffffff',
+        pointBorderWidth: 2,
         pointRadius: 4,
       },
     ],
