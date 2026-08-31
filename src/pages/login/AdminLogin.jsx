@@ -283,7 +283,7 @@ export default function AdminLogin() {
               <div style={{ position: 'relative' }}>
                 <User size={13} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: activeField === 'email' ? '#34d399' : 'rgba(255,255,255,0.16)', transition: 'color 0.2s' }} />
                 <input
-                  type="text" placeholder="" value={email}
+                  type="text" placeholder="username@iiit.ac.in" value={email}
                   onChange={e => setEmail(e.target.value)} required autoFocus
                   onFocus={() => setActiveField('email')} onBlur={() => setActiveField(null)}
                   style={{
