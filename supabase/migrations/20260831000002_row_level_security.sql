@@ -98,11 +98,11 @@ CREATE POLICY "Leak reports viewable by all authenticated users"
   TO authenticated
   USING (true);
 
--- Authenticated users (Students/Staff) can submit reports
+-- Authenticated users (Students/Staff) can submit reports, bound to their own identity
 CREATE POLICY "Authenticated users can submit leak reports"
   ON public.leak_reports FOR INSERT
   TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (reporter_id IS NULL OR reporter_id = auth.uid() OR public.is_admin());
 
 -- Staff can update any report (assign technician, change status/priority)
 CREATE POLICY "Staff can update any leak report"
@@ -133,7 +133,7 @@ CREATE POLICY "Work logs viewable by all authenticated users"
 CREATE POLICY "Staff can insert work logs"
   ON public.work_logs FOR INSERT
   TO authenticated
-  WITH CHECK (public.is_staff());
+  WITH CHECK (public.is_staff() AND (technician_id IS NULL OR technician_id = auth.uid() OR public.is_admin()));
 
 CREATE POLICY "Admins can manage work logs"
   ON public.work_logs FOR ALL

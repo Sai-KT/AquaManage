@@ -32,6 +32,8 @@ import Landing          from './pages/Landing';
 function RootRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login/student" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === 'maintenance') return <Navigate to="/maintenance/tasks" replace />;
   return <Navigate to="/student/report" replace />;
 }
 
@@ -63,10 +65,10 @@ export default function App() {
           <Route path="/maintenance/tasks"     element={<ProtectedRoute requiredRole="maintenance"><TaskQueue /></ProtectedRoute>} />
           <Route path="/maintenance/completed" element={<ProtectedRoute requiredRole="maintenance"><CompletedTasks /></ProtectedRoute>} />
 
-          {/* ── Student Routes (protected: any authenticated user) ────────── */}
-          <Route path="/student/report"     element={<ProtectedRoute><ReportIssue /></ProtectedRoute>} />
-          <Route path="/student/myreports"  element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
-          <Route path="/student/harvesting" element={<ProtectedRoute><StudentHarvesting /></ProtectedRoute>} />
+          {/* ── Student Routes (protected: role = student) ────────────────── */}
+          <Route path="/student/report"     element={<ProtectedRoute requiredRole="student"><ReportIssue /></ProtectedRoute>} />
+          <Route path="/student/myreports"  element={<ProtectedRoute requiredRole="student"><MyReports /></ProtectedRoute>} />
+          <Route path="/student/harvesting" element={<ProtectedRoute requiredRole="student"><StudentHarvesting /></ProtectedRoute>} />
 
           {/* Unknown URL → smart root redirect */}
           <Route path="*" element={<RootRedirect />} />
