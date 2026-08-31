@@ -1305,19 +1305,26 @@ tbody tr:hover { background: var(--green-50); }
   }
 }
 
+.desktop-only { display: flex !important; }
+.mobile-only  { display: none !important; }
+
 @media (max-width: 768px) {
   :root { --sidebar-w: 0px; }
+
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: flex !important; }
 
   .topbar-mobile-toggle {
     display: flex !important;
   }
 
-  .topbar-search-box {
-    display: none !important;
+  .topbar {
+    padding: 0 12px !important;
+    gap: 8px !important;
   }
 
-  .topbar {
-    padding: 0 14px !important;
+  .topbar-actions {
+    gap: 4px !important;
   }
 
   .sidebar-backdrop {
