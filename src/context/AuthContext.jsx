@@ -10,7 +10,6 @@ const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes inactivity timeout for 
 // ── Hardcoded credentials for demo ─────────────────────────────────────────
 const CREDENTIALS = {
   admin: [
-    { username: 'admin@i2it.edu.in', password: 'Admin@1234', name: 'Dr. Sonali Patil', role: 'admin' },
     { username: 'director@i2it.edu.in', password: 'Director@99', name: 'Prof. A. Kulkarni', role: 'admin' },
   ],
   maintenance: [

@@ -370,28 +370,7 @@ export default function AdminLogin() {
               )}
             </button>
 
-            {/* Demo Credentials Hint */}
-            <div style={{
-              marginTop: 18, padding: '10px 12px',
-              background: 'rgba(16,185,129,0.06)',
-              border: '1px solid rgba(16,185,129,0.15)',
-              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-                Demo: <code style={{ color: '#34d399', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>admin@i2it.edu.in</code> / <code style={{ color: '#34d399', background: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>Admin@1234</code>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setEmail('admin@i2it.edu.in'); setPassword('Admin@1234'); }}
-                style={{
-                  background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
-                  borderRadius: 5, color: '#34d399', fontSize: '0.65rem', fontWeight: 700,
-                  padding: '3px 8px', cursor: 'pointer',
-                }}
-              >
-                Auto-fill
-              </button>
-            </div>
+
           </form>
 
           {/* Portal Switcher */}
