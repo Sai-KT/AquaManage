@@ -1731,3 +1731,14 @@ tbody tr:hover { background: var(--green-50); }
 
 /* ── Map wrapper ─────────────────────────────────────────────────────────── */
 [data-theme="dark"] .map-wrapper { border-color: rgba(255,255,255,0.07); }
+
+/* ── Stat Card Top Accent Stripes & Progress Bars (Exact natural hues) ───── */
+[data-theme="dark"] .stat-card.red::before   { background: #ef4444; opacity: 0.85; }
+[data-theme="dark"] .stat-card.green::before { background: #10b981; opacity: 0.85; }
+[data-theme="dark"] .stat-card.teal::before  { background: #0ea5e9; opacity: 0.85; }
+[data-theme="dark"] .stat-card.amber::before { background: #f59e0b; opacity: 0.85; }
+
+[data-theme="dark"] .progress-fill.red   { background: #ef4444; }
+[data-theme="dark"] .progress-fill.green { background: #10b981; }
+[data-theme="dark"] .progress-fill.teal  { background: #0ea5e9; }
+[data-theme="dark"] .progress-fill.amber { background: #f59e0b; }
