@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
@@ -17,8 +17,9 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseChartOpts, getChartTheme } from '../../utils/chartConfig';
 import {
-  campusStats, tankData, harvestingTrend, waterUsageByZone, alerts
+  campusStats as defaultStats, tankData as defaultTanks, harvestingTrend, waterUsageByZone, alerts
 } from '../../data/mockData';
+import adminService from '../../services/adminService';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
@@ -28,10 +29,24 @@ export default function AdminDashboard() {
   const theme = getChartTheme(isDark);
   const chartOpts = getBaseChartOpts(isDark);
 
+  const [stats, setStats] = useState(defaultStats);
+  const [tanks, setTanks] = useState(defaultTanks);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    adminService.getDashboardOverview().then((res) => {
+      if (res && res.success) {
+        if (res.stats) setStats(res.stats);
+        if (res.tanks) setTanks(res.tanks);
+      }
+      setIsLoading(false);
+    });
+  }, []);
+
   const statCards = [
     {
       label: 'Active Leaks',
-      value: campusStats.activeLeaks,
+      value: stats.activeLeaks,
       sub: '+2 since yesterday',
       subDir: 'up',
       icon: AlertTriangle,
@@ -41,7 +56,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'Water Saved Today',
-      value: `${(campusStats.waterSavedToday / 1000).toFixed(1)}kL`,
+      value: `${(stats.waterSavedToday / 1000).toFixed(1)}kL`,
       sub: 'via rainwater harvesting',
       subDir: 'good',
       icon: CloudRain,
@@ -51,7 +66,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'Alerts Today',
-      value: campusStats.alertsToday,
+      value: stats.alertsToday,
       sub: '2 unacknowledged',
       subDir: 'up',
       icon: Activity,
@@ -61,8 +76,8 @@ export default function AdminDashboard() {
     },
     {
       label: 'Resolved Issues',
-      value: campusStats.resolvedIssues,
-      sub: `${campusStats.pendingIssues} still pending`,
+      value: stats.resolvedIssues,
+      sub: `${stats.pendingIssues} still pending`,
       subDir: 'good',
       icon: CheckCircle,
       color: 'green',
@@ -316,7 +331,7 @@ export default function AdminDashboard() {
                 <ChevronRight size={15} style={{ color: 'var(--navy-400)' }} />
               </div>
               <div className="tank-gauges-grid">
-                {tankData.map((t) => <TankGauge key={t.id} tank={t} />)}
+                {tanks.map((t) => <TankGauge key={t.id} tank={t} />)}
               </div>
             </div>
           </div>

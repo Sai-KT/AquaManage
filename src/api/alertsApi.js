@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../services/supabase';
-import { initialAlerts } from '../data/mockData';
+import { alerts as initialAlerts } from '../data/mockData';
 
 export const alertsApi = {
   /**

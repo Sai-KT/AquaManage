@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import AlertPanel from '../../components/AlertPanel';
-import { Bell, CheckCheck, Settings, ChevronLeft } from 'lucide-react';
-import { alerts } from '../../data/mockData';
+import { Bell, CheckCheck, Settings, ChevronLeft, RefreshCw } from 'lucide-react';
+import { alerts as defaultAlerts } from '../../data/mockData';
+import adminService from '../../services/adminService';
+import alertsApi from '../../api/alertsApi';
 
 export default function Alerts() {
   const navigate = useNavigate();
@@ -12,7 +14,22 @@ export default function Alerts() {
   const urlType = searchParams.get('type') || 'all';
 
   const [filter, setFilter] = useState(urlType);
-  const [alertList, setAlertList] = useState(alerts);
+  const [alertList, setAlertList] = useState(defaultAlerts);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadAlerts = async () => {
+    setIsLoading(true);
+    const res = await adminService.getAlerts();
+    if (res && res.success && res.alerts) {
+      setAlertList(res.alerts);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadAlerts();
+  }, []);
+
   const unread = alertList.filter((a) => !a.read).length;
 
   const filtered = filter === 'all'
@@ -21,8 +38,9 @@ export default function Alerts() {
       ? alertList.filter((a) => !a.read)
       : alertList.filter((a) => a.type === filter);
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     setAlertList(prev => prev.map(a => ({ ...a, read: true })));
+    await alertsApi.markAllAsRead();
   };
 
   const thresholds = [

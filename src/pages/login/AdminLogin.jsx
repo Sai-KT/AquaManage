@@ -57,11 +57,15 @@ export default function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    const result = login('admin', email, password);
-    setLoading(false);
-    if (result.success) navigate('/admin/dashboard');
-    else setError(result.error);
+    try {
+      const result = await login('admin', email, password);
+      setLoading(false);
+      if (result.success) navigate('/admin/dashboard');
+      else setError(result.error || 'Failed to authenticate admin.');
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'An unexpected authentication error occurred.');
+    }
   };
 
   const timeStr = time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });

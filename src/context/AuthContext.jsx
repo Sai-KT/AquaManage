@@ -95,10 +95,62 @@ export function AuthProvider({ children }) {
     };
   }, [user, updateLastActive, logout]);
 
-  // Admin & Maintenance login
-  const login = (role, username, password) => {
+  // Admin & Maintenance login with Supabase Auth & Role-based Authorization
+  const login = async (role, username, password) => {
     const cleanUsername = (username || '').trim();
     const cleanPassword = (password || '').trim();
+
+    if (!cleanUsername || !cleanPassword) {
+      return { success: false, error: 'Username and password are required.' };
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const email = cleanUsername.includes('@')
+          ? cleanUsername
+          : `${cleanUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}@aquamanage.local`;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: cleanPassword,
+        });
+
+        if (!error && data?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          const userRole = profile?.role || data.user.user_metadata?.role || role;
+
+          // Enforce role authorization: student cannot log in as admin
+          if (userRole !== role && userRole !== 'admin') {
+            return {
+              success: false,
+              error: `Access denied. Your account does not have "${role}" administrative permissions.`,
+            };
+          }
+
+          const userData = {
+            id: data.user.id,
+            name: profile?.name || data.user.user_metadata?.name || cleanUsername,
+            role: userRole,
+            username: cleanUsername,
+            email: data.user.email,
+          };
+
+          setUser(userData);
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+          sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+          return { success: true, user: userData };
+        }
+      } catch (err) {
+        console.warn('[AuthContext] Supabase remote auth failed, checking credentials:', err.message);
+      }
+    }
+
+    // Verified credentials fallback for demo & offline testing
     const list = CREDENTIALS[role] || [];
     const found = list.find(
       (c) => c.username.trim().toLowerCase() === cleanUsername.toLowerCase() && c.password.trim() === cleanPassword

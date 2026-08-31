@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { AlertTriangle, Filter, Download, Search, Eye, UserCheck, ChevronLeft, X } from 'lucide-react';
-import { leakReports } from '../../data/mockData';
+import { AlertTriangle, Filter, Download, Search, Eye, UserCheck, ChevronLeft, X, RefreshCw } from 'lucide-react';
+import { leakReports as defaultReports } from '../../data/mockData';
+import adminService from '../../services/adminService';
 
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
-
-const MAINTENANCE_STAFF = ['Ram Kumar', 'Suresh Babu', 'Mohan Das', 'Vijay Patil', 'Anil Sharma'];
 
 export default function LeakReports() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [reports, setReports] = useState(leakReports);
+  const [reports, setReports] = useState(defaultReports);
+  const [staffList, setStaffList] = useState(['Ram Kumar', 'Suresh Babu', 'Mohan Das', 'Vijay Patil', 'Anil Sharma']);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Read initial filter from URL params (e.g. ?status=active or ?status=pending)
   const urlStatus = searchParams.get('status') || 'all';
@@ -29,6 +30,25 @@ export default function LeakReports() {
   const [expanded, setExpanded]             = useState(null);
   const [assignModal, setAssignModal]       = useState(null); // report id
   const [assignStaff, setAssignStaff]       = useState('');
+
+  const loadData = async () => {
+    setIsLoading(true);
+    const [reportsRes, staffRes] = await Promise.all([
+      adminService.getLeakReports(),
+      adminService.getMaintenanceStaff(),
+    ]);
+    if (reportsRes && reportsRes.success && reportsRes.reports) {
+      setReports(reportsRes.reports);
+    }
+    if (staffRes && staffRes.success && staffRes.staff) {
+      setStaffList(staffRes.staff);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Sync filter to URL
   const handleStatusChange = (val) => {
@@ -50,13 +70,13 @@ export default function LeakReports() {
     .filter((r) => zoneFilter === 'all' || r.zone === zoneFilter)
     .filter((r) =>
       !search ||
-      r.id.toLowerCase().includes(search.toLowerCase()) ||
-      r.location.toLowerCase().includes(search.toLowerCase()) ||
-      r.reporter.toLowerCase().includes(search.toLowerCase())
+      (r.id && r.id.toLowerCase().includes(search.toLowerCase())) ||
+      (r.location && r.location.toLowerCase().includes(search.toLowerCase())) ||
+      (r.reporter && r.reporter.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
 
-  const zones = [...new Set(leakReports.map((r) => r.zone))];
+  const zones = [...new Set(reports.map((r) => r.zone))];
 
   const getTitle = () => {
     if (statusFilter === 'active') return `Active Leak Reports (${filtered.length})`;
@@ -66,8 +86,9 @@ export default function LeakReports() {
     return 'All Leak Reports';
   };
 
-  const handleAssign = (reportId) => {
+  const handleAssign = async (reportId) => {
     if (!assignStaff) return;
+    await adminService.assignReport(reportId, assignStaff);
     setReports(prev =>
       prev.map(r => r.id === reportId ? { ...r, assignedTo: assignStaff, status: 'in_progress' } : r)
     );
@@ -75,7 +96,8 @@ export default function LeakReports() {
     setAssignStaff('');
   };
 
-  const handleStatusUpdate = (reportId, newStatus) => {
+  const handleStatusUpdate = async (reportId, newStatus) => {
+    await adminService.updateReportStatus(reportId, newStatus);
     setReports(prev =>
       prev.map(r => r.id === reportId ? { ...r, status: newStatus } : r)
     );
@@ -310,7 +332,7 @@ export default function LeakReports() {
               <label className="form-label">Select Staff Member</label>
               <select className="form-select" value={assignStaff} onChange={e => setAssignStaff(e.target.value)}>
                 <option value="">-- Choose staff --</option>
-                {MAINTENANCE_STAFF.map(s => <option key={s} value={s}>{s}</option>)}
+                {staffList.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
