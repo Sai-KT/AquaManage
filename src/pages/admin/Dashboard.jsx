@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   const resolvedRatio = {
     labels: ['Resolved', 'Pending'],
     datasets: [{
-      data: [campusStats.resolvedIssues, campusStats.pendingIssues],
+      data: [stats.resolvedIssues || 0, stats.pendingIssues || 0],
       backgroundColor: [theme.resolvedGreen, theme.pendingRed],
       borderColor: [theme.resolvedGreen, theme.pendingBorderRed],
       borderWidth: 2,
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
           {/* ── Quick Links Strip ────────────────────────────────────────── */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
             {[
-              { label: 'Pending Issues', count: campusStats.pendingIssues, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: 'var(--amber-100)' },
+              { label: 'Pending Issues', count: stats.pendingIssues || 0, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: 'var(--amber-100)' },
               { label: 'In Progress',    count: leakReportsInProgress(), path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
               { label: 'Critical Alerts', count: alerts.filter(a=>a.type==='critical').length, path: '/admin/alerts?type=critical', color: 'var(--red-600)', bg: 'var(--red-100)' },
               { label: 'Usage Analytics', count: null, path: '/admin/usage', color: 'var(--green-600)', bg: 'var(--green-100)' },
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
               </div>
               <div style={{ textAlign: 'center', marginTop: 8 }}>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-600)' }}>
-                  {Math.round((campusStats.resolvedIssues / (campusStats.resolvedIssues + campusStats.pendingIssues)) * 100)}%
+                  {Math.round(((stats.resolvedIssues || 0) / Math.max((stats.resolvedIssues || 0) + (stats.pendingIssues || 0), 1)) * 100)}%
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--navy-500)' }}>Resolution Rate</div>
               </div>
