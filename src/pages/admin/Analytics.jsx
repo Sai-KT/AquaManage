@@ -95,6 +95,26 @@ export default function Analytics() {
     { label: 'Total Resolved', value: analyticsData.leaksResolved.reduce((a,b)=>a+b), icon: CheckCircle, color: 'green' },
   ];
 
+  const handleExportReport = () => {
+    const headers = ['Month', 'Total Usage (L)', 'Harvested (L)', 'Leaks Reported', 'Leaks Resolved', 'Net Campus Deficit (L)'];
+    const rows = analyticsData.labels.map((m, idx) => {
+      const usage = analyticsData.usage[idx] || 0;
+      const harvested = analyticsData.harvested[idx] || 0;
+      const reported = analyticsData.leaksReported[idx] || 0;
+      const resolved = analyticsData.leaksResolved[idx] || 0;
+      const deficit = usage - harvested;
+      return [m, usage, harvested, reported, resolved, deficit];
+    });
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `iiit_water_analytics_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="app-layout">
       <Sidebar role="admin" />
@@ -105,16 +125,24 @@ export default function Analytics() {
             <ChevronLeft size={14} /> Back to Dashboard
           </button>
           <div className="page-header">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <h2>Analytics & Reports</h2>
                 <p>Long-term trends in water usage, harvesting performance, and issue management.</p>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-secondary btn-sm">
-                  <Calendar size={13} /> Date Range
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setRange(r => r === '7m' ? '12m' : '7m')}
+                  title="Toggle reporting period"
+                >
+                  <Calendar size={13} /> {range === '7m' ? 'Last 7 Months' : 'Last 12 Months'}
                 </button>
-                <button className="btn btn-primary btn-sm">
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleExportReport}
+                  title="Download CSV report of water analytics"
+                >
                   <Download size={13} /> Export Report
                 </button>
               </div>

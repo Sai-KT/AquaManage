@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, Search, RefreshCw, Menu, Sun, Moon,
-  X, ChevronRight, Command, SlidersHorizontal,
+  X, ChevronRight, Command,
   LayoutDashboard, Map, AlertTriangle, CloudRain, Droplets,
   BarChart2, Wrench, CheckCircle2, FilePlus, ListOrdered,
   Database, Building2, AlertCircle, PlusCircle, Compass,
-  Activity, Wifi, Server, Check, ArrowRight
+  Activity, Wifi, Server, ArrowRight
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import ProfileModal from './ProfileModal';
 import {
   tankData, leakReports, alerts as mockAlerts, i2itBuildings
 } from '../data/mockData';
@@ -47,6 +48,9 @@ export default function Topbar({ title, subtitle }) {
   const [lastPingTime, setLastPingTime] = useState('24ms');
   const liveRef = useRef(null);
 
+  // Profile modal state
+  const [profileOpen, setProfileOpen] = useState(false);
+
   // Refresh animation & toast state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -67,6 +71,7 @@ export default function Topbar({ title, subtitle }) {
         setSearchOpen(false);
         setNotifOpen(false);
         setLiveOpen(false);
+        setProfileOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -126,7 +131,7 @@ export default function Topbar({ title, subtitle }) {
 
   // ── Build Full Search Index across all features ─────────────────────────
   const allSearchItems = useMemo(() => {
-    const pages = [
+    const rawPages = [
       // Admin
       { id: 'p-admin-dash', category: 'Navigation', title: 'Admin Dashboard', desc: 'Main telemetry, stats, and campus overview', path: '/admin/dashboard', icon: 'LayoutDashboard', roles: ['admin'] },
       { id: 'p-admin-map', category: 'Navigation', title: 'Campus Map', desc: 'Interactive live map with pins and tanks', path: '/admin/map', icon: 'Map', roles: ['admin', 'maintenance', 'student'] },
@@ -145,6 +150,8 @@ export default function Topbar({ title, subtitle }) {
       { id: 'p-stud-myreports', category: 'Navigation', title: 'My Submitted Reports', desc: 'Track your reported issues and resolutions', path: '/student/myreports', icon: 'ListOrdered', roles: ['student', 'admin'] },
       { id: 'p-stud-harvest', category: 'Navigation', title: 'Campus Harvesting Status', desc: 'Student view of rainwater harvesting', path: '/student/harvesting', icon: 'CloudRain', roles: ['student', 'admin'] },
     ];
+
+    const pages = rawPages.filter(p => !p.roles || p.roles.includes(role));
 
     // Tanks
     const tanks = tankData.map(t => ({
@@ -944,7 +951,72 @@ export default function Topbar({ title, subtitle }) {
           )}
         </div>
 
+        {/* ── 6. User Profile Button & Trigger ── */}
+        <button
+          onClick={() => setProfileOpen(true)}
+          title={`Signed in as ${user?.name || 'User'} (${role}) - View Profile`}
+          aria-label="View user profile"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 10px 4px 6px',
+            borderRadius: 20,
+            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.05)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'}`,
+            cursor: 'pointer',
+            marginLeft: 4,
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.08)';
+            e.currentTarget.style.borderColor = role === 'admin' ? '#10b981' : role === 'maintenance' ? '#f59e0b' : '#0ea5e9';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.05)';
+            e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)';
+          }}
+        >
+          <div
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: '50%',
+              background: role === 'admin'
+                ? 'linear-gradient(135deg, #10b981, #059669)'
+                : role === 'maintenance'
+                ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+              color: '#fff',
+              fontSize: '0.6875rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+            }}
+          >
+            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+          </div>
+          <span
+            style={{
+              fontSize: '0.78125rem',
+              fontWeight: 600,
+              color: 'var(--navy-800)',
+              maxWidth: 90,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {user?.name ? user.name.split(' ')[0] : 'User'}
+          </span>
+        </button>
+
       </div>
+
+      {/* ── Profile Details Modal ────────────────────────────────────── */}
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
 
       {/* ── Toast Notification Banner ─────────────────────────────────── */}
       {toastMessage && (

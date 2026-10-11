@@ -20,8 +20,8 @@ export default function ProtectedRoute({ children, requiredRole }) {
   }
 
   // Logged in but wrong role → send to their authorized landing page
-  if (requiredRole && user.role !== requiredRole) {
-    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  // Note: Admins have supervisory access to inspect student and maintenance views
+  if (requiredRole && user.role !== requiredRole && user.role !== 'admin') {
     if (user.role === 'maintenance') return <Navigate to="/maintenance/tasks" replace />;
     return <Navigate to="/student/report" replace />;
   }

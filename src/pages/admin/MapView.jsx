@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import CampusMap from '../../components/CampusMap';
-import { Map, Droplets, AlertTriangle, ChevronRight, Building } from 'lucide-react';
+import { Droplets, AlertTriangle, ChevronRight, Building } from 'lucide-react';
 import { mapPins, i2itBuildings } from '../../data/mockData';
 
 export default function MapView() {

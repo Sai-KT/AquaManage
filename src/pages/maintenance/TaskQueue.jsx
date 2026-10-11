@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
 import Topbar from '../../components/Topbar';
-import { CheckCircle, Clock, MapPin, MessageSquare, ChevronDown, ChevronUp, Wrench, RefreshCw, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, MessageSquare, ChevronDown, ChevronUp, Wrench, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { maintenanceTasks as defaultTasks } from '../../data/mockData';
 import maintenanceService from '../../services/maintenanceService';
 

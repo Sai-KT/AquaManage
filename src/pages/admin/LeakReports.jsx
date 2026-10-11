@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { AlertTriangle, Filter, Download, Search, Eye, UserCheck, ChevronLeft, X, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Download, Search, Eye, UserCheck, ChevronLeft, X, RefreshCw } from 'lucide-react';
 import { leakReports as defaultReports } from '../../data/mockData';
 import adminService from '../../services/adminService';
 
@@ -103,6 +103,31 @@ export default function LeakReports() {
     );
   };
 
+  const handleExportCSV = () => {
+    if (!filtered.length) return;
+    const headers = ['Report ID', 'Type', 'Location', 'Zone', 'Reporter', 'Date', 'Priority', 'Status', 'Assigned Staff', 'Description'];
+    const rows = filtered.map(r => [
+      `"${r.id || ''}"`,
+      `"${(r.type || '').replace(/"/g, '""')}"`,
+      `"${(r.location || '').replace(/"/g, '""')}"`,
+      `"${(r.zone || '').replace(/"/g, '""')}"`,
+      `"${(r.reporter || '').replace(/"/g, '""')}"`,
+      `"${r.date || ''}"`,
+      `"${r.priority || ''}"`,
+      `"${r.status || ''}"`,
+      `"${(r.assignedTo || 'Unassigned').replace(/"/g, '""')}"`,
+      `"${(r.description || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `iiit_leak_reports_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="app-layout">
       <Sidebar role="admin" />
@@ -127,9 +152,25 @@ export default function LeakReports() {
                 <h2>{getTitle()}</h2>
                 <p>Manage and track all water issue reports across IIIT campus. Assign to maintenance staff as needed.</p>
               </div>
-              <button className="btn btn-secondary btn-sm">
-                <Download size={14} /> Export CSV
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={loadData}
+                  disabled={isLoading}
+                  title="Refresh Reports"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  <RefreshCw size={14} className={isLoading ? 'spin-icon' : ''} />
+                  <span>Refresh</span>
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleExportCSV}
+                  title="Download CSV export of currently filtered leak reports"
+                >
+                  <Download size={14} /> Export CSV
+                </button>
+              </div>
             </div>
           </div>
 

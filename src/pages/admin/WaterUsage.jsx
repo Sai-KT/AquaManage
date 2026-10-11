@@ -10,9 +10,19 @@ import {
 } from 'chart.js';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseChartOpts, getChartTheme } from '../../utils/chartConfig';
-import { waterUsageByZone, campusStats } from '../../data/mockData';
+import { waterUsageByZone } from '../../data/mockData';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+
+const ZONE_COLORS = [
+  '#10b981',
+  '#0ea5e9',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ef4444',
+  '#0284c7',
+  '#34d399',
+];
 
 export default function WaterUsage() {
   const navigate = useNavigate();
@@ -20,6 +30,7 @@ export default function WaterUsage() {
   const theme = getChartTheme(isDark);
   const baseOpts = getBaseChartOpts(isDark);
   const [period, setPeriod] = useState('daily');
+  const zoneColors = theme.zoneBarBorders || ZONE_COLORS;
 
   const usageData = {
     labels: waterUsageByZone.labels,
@@ -81,7 +92,12 @@ export default function WaterUsage() {
           {/* KPIs */}
           <div className="stat-cards-grid" style={{ marginBottom: 24 }}>
             {[
-              { label: 'Total Usage Today',   value: `${(campusStats.totalUsageToday / 1000).toFixed(1)} kL`, icon: Droplets, color: 'teal' },
+              {
+                label: period === 'daily' ? 'Total Usage Today' : `Total ${period.charAt(0).toUpperCase() + period.slice(1)} Usage`,
+                value: `${(totalUsage / 1000).toFixed(1)} kL`,
+                icon: Droplets,
+                color: 'teal',
+              },
               { label: 'Highest Usage Zone',  value: highestZone, icon: Zap, color: 'amber' },
               { label: 'Peak Hour (7pm)',      value: '6.2 kL/hr', icon: TrendingUp, color: 'green' },
               { label: 'Avg. per Zone',        value: `${(totalUsage / waterUsageByZone.labels.length / 1000).toFixed(1)} kL`, icon: BarChart3, color: 'green' },
@@ -150,8 +166,9 @@ export default function WaterUsage() {
                     // Realistic trends for IIIT zones
                     const trends = ['+8%', '+14%', '+3%', '+5%', '+2%'];
                     const benchmarks = ['Normal', 'High Lab Usage', 'Normal', 'Normal', 'Normal'];
-                    const trendUp = trends[i].startsWith('+');
-                    const trendVal = parseInt(trends[i]);
+                    const currentTrend = trends[i % trends.length];
+                    const currentBenchmark = benchmarks[i % benchmarks.length];
+                    const trendVal = parseInt(currentTrend, 10);
                     const isHigh = trendVal > 10;
                     return (
                       <tr key={zone}>
@@ -160,18 +177,18 @@ export default function WaterUsage() {
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div className="progress-bar" style={{ width: 100, height: 6 }}>
-                              <div className="progress-fill teal" style={{ width: `${share}%`, background: COLORS[i] }} />
+                              <div className="progress-fill teal" style={{ width: `${share}%`, background: zoneColors[i % zoneColors.length] }} />
                             </div>
                             <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{share}%</span>
                           </div>
                         </td>
                         <td>
                           <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: isHigh ? 'var(--red-500)' : 'var(--green-600)' }}>
-                            {trends[i]}
+                            {currentTrend}
                           </span>
                         </td>
                         <td>
-                          <span className={`badge ${isHigh ? 'high' : 'resolved'}`}>{benchmarks[i]}</span>
+                          <span className={`badge ${isHigh ? 'high' : 'resolved'}`}>{currentBenchmark}</span>
                         </td>
                       </tr>
                     );

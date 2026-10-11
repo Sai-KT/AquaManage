@@ -7,6 +7,7 @@ import {
   AlertTriangle, Shield, ChevronRight,
   BookOpen, Leaf, HardHat, X,
 } from 'lucide-react';
+import ProfileModal from './ProfileModal';
 
 // ─── Navigation configs ───────────────────────────────────────────────────────
 const navConfigs = {
@@ -70,7 +71,7 @@ const navConfigs = {
 //  ADMIN SIDEBAR
 //  Theme: Deep emerald security-ops. Left accent bar, hex icon, monospace label.
 // ─────────────────────────────────────────────────────────────────────────────
-function AdminSidebar({ user, location, navigate, logout }) {
+function AdminSidebar({ user, location, navigate, logout, onOpenProfile }) {
   const cfg = navConfigs.admin;
 
   return (
@@ -118,11 +119,35 @@ function AdminSidebar({ user, location, navigate, logout }) {
         </div>
 
         {/* Admin identity card */}
-        <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div
+          onClick={onOpenProfile}
+          title="Click to view Administrator Profile Details"
+          role="button"
+          tabIndex={0}
+          style={{
+            background: 'rgba(16,185,129,0.07)',
+            border: '1px solid rgba(16,185,129,0.15)',
+            borderRadius: 10,
+            padding: '10px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            cursor: 'pointer',
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(16,185,129,0.14)';
+            e.currentTarget.style.borderColor = 'rgba(16,185,129,0.35)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(16,185,129,0.07)';
+            e.currentTarget.style.borderColor = 'rgba(16,185,129,0.15)';
+          }}
+        >
           <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Shield size={16} style={{ color: '#34d399' }} />
           </div>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'Admin'}</div>
             <div style={{ fontSize: '0.5625rem', color: 'rgba(52,211,153,0.6)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>System Administrator</div>
           </div>
@@ -207,7 +232,7 @@ function AdminSidebar({ user, location, navigate, logout }) {
 //  MAINTENANCE SIDEBAR
 //  Theme: Industrial amber. Full amber top header, task-count strip, bold cards.
 // ─────────────────────────────────────────────────────────────────────────────
-function MaintenanceSidebar({ user, location, navigate, logout }) {
+function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile }) {
   const cfg = navConfigs.maintenance;
 
   return (
@@ -257,11 +282,35 @@ function MaintenanceSidebar({ user, location, navigate, logout }) {
           </div>
 
           {/* Staff ID card */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 9, padding: '8px 10px' }}>
+          <div
+            onClick={onOpenProfile}
+            title="Click to view Staff Profile Details"
+            role="button"
+            tabIndex={0}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'rgba(0,0,0,0.25)',
+              border: '1px solid rgba(251,191,36,0.2)',
+              borderRadius: 9,
+              padding: '8px 10px',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(0,0,0,0.4)';
+              e.currentTarget.style.borderColor = 'rgba(251,191,36,0.45)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(0,0,0,0.25)';
+              e.currentTarget.style.borderColor = 'rgba(251,191,36,0.2)';
+            }}
+          >
             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <HardHat size={15} style={{ color: '#fbbf24' }} />
             </div>
-            <div style={{ minWidth: 0 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'Staff'}</div>
               <div style={{ fontSize: '0.5625rem', color: 'rgba(251,191,36,0.6)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Field Technician</div>
             </div>
@@ -350,7 +399,7 @@ function MaintenanceSidebar({ user, location, navigate, logout }) {
 //  Theme: Fresh ocean blue. Rounded pill nav items, campus-community feel,
 //         eco badge, friendly avatar, gradient background.
 // ─────────────────────────────────────────────────────────────────────────────
-function StudentSidebar({ user, location, navigate, logout }) {
+function StudentSidebar({ user, location, navigate, logout, onOpenProfile }) {
   const cfg = navConfigs.student;
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
 
@@ -400,7 +449,29 @@ function StudentSidebar({ user, location, navigate, logout }) {
         </div>
 
         {/* Avatar + greeting card */}
-        <div style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.15)', borderRadius: 14, padding: '12px 14px', textAlign: 'center' }}>
+        <div
+          onClick={onOpenProfile}
+          title="Click to view Student Profile Details"
+          role="button"
+          tabIndex={0}
+          style={{
+            background: 'rgba(14,165,233,0.08)',
+            border: '1px solid rgba(14,165,233,0.15)',
+            borderRadius: 14,
+            padding: '12px 14px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(14,165,233,0.15)';
+            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.35)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(14,165,233,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.15)';
+          }}
+        >
           <div style={{
             width: 48, height: 48, borderRadius: '50%',
             background: 'linear-gradient(135deg,rgba(14,165,233,0.3),rgba(16,185,129,0.2))',
@@ -416,6 +487,21 @@ function StudentSidebar({ user, location, navigate, logout }) {
             <span style={{ fontSize: '0.5625rem', fontWeight: 700, color: '#34d399', letterSpacing: '0.5px' }}>Eco Contributor</span>
           </div>
         </div>
+
+        {/* If an Admin is previewing Student portal, show return button */}
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => navigate('/admin/dashboard')}
+            style={{
+              marginTop: 10, width: '100%', padding: '6px 10px',
+              background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)',
+              borderRadius: 8, color: '#34d399', fontSize: '0.72rem', fontWeight: 700,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}
+          >
+            <Shield size={12} /> Return to Admin Console
+          </button>
+        )}
       </div>
 
       {/* ── Nav ── */}
@@ -507,6 +593,7 @@ export default function Sidebar({ role = 'admin' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
+  const [profileOpen, setProfileOpen] = React.useState(false);
 
   const handleNavigate = (path) => {
     document.body.classList.remove('sidebar-mobile-open');
@@ -518,7 +605,13 @@ export default function Sidebar({ role = 'admin' }) {
     logout();
   };
 
-  const props = { user, location, navigate: handleNavigate, logout: handleLogout };
+  const props = {
+    user,
+    location,
+    navigate: handleNavigate,
+    logout: handleLogout,
+    onOpenProfile: () => setProfileOpen(true),
+  };
 
   return (
     <>
@@ -529,6 +622,7 @@ export default function Sidebar({ role = 'admin' }) {
       {role === 'admin' && <AdminSidebar {...props} />}
       {role === 'maintenance' && <MaintenanceSidebar {...props} />}
       {role !== 'admin' && role !== 'maintenance' && <StudentSidebar {...props} />}
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   );
 }

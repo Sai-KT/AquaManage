@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import AlertPanel from '../../components/AlertPanel';
 import { Bell, CheckCheck, Settings, ChevronLeft, RefreshCw } from 'lucide-react';
 import { alerts as defaultAlerts } from '../../data/mockData';
 import adminService from '../../services/adminService';
@@ -71,9 +70,21 @@ export default function Alerts() {
                 <h2>Alerts</h2>
                 <p>System-generated alerts for threshold breaches, usage spikes, and new issue reports.</p>
               </div>
-              <button className="btn btn-secondary btn-sm" onClick={markAllRead}>
-                <CheckCheck size={14} /> Mark All Read
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={loadAlerts}
+                  disabled={isLoading}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  title="Refresh Alerts"
+                >
+                  <RefreshCw size={14} className={isLoading ? 'spin-icon' : ''} />
+                  <span>Refresh</span>
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={markAllRead}>
+                  <CheckCheck size={14} /> Mark All Read
+                </button>
+              </div>
             </div>
           </div>
 

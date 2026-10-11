@@ -193,12 +193,26 @@ function MaintenanceHero({ user }) {
           {/* Quick status chips */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             {[
-              { label: '3 Active Tasks', color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
-              { label: '1 Critical',     color: '#f87171', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.2)' },
+              { label: '3 Active Tasks', color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', path: '/maintenance/tasks' },
+              { label: '1 Critical',     color: '#f87171', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.2)', path: '/maintenance/tasks' },
             ].map(chip => (
-              <div key={chip.label} style={{ background: chip.bg, border: `1px solid ${chip.border}`, borderRadius: 6, padding: '4px 10px', fontSize: '0.6875rem', fontWeight: 700, color: chip.color }}>
+              <button
+                key={chip.label}
+                onClick={() => navigate(chip.path)}
+                style={{
+                  background: chip.bg,
+                  border: `1px solid ${chip.border}`,
+                  borderRadius: 6,
+                  padding: '4px 10px',
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  color: chip.color,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
                 {chip.label}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -245,7 +259,7 @@ function StudentHero({ user }) {
 
       <div className="hero-banner-inner" style={{ position: 'relative', zIndex: 1, padding: '28px 36px' }}>
         {/* Top row */}
-        <div className="hero-banner-inner" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
           <div className="hero-banner-left" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(14,165,233,0.12)', border: '1.5px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 28px rgba(14,165,233,0.14)', animation: 'logoBounce 3s ease-in-out infinite', flexShrink: 0 }}>
               <BookOpen size={26} style={{ color: '#38bdf8' }} />
