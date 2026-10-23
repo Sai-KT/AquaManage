@@ -5,9 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:all": "node scripts/dev-all.js",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:schema": "npm --prefix backend run db:schema",
+    "db:seed": "npm --prefix backend run db:seed",
+    "db:clear": "npm --prefix backend run db:clear",
+    "db:verify": "npm --prefix backend run db:verify",
+    "test:backend": "npm --prefix backend run test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
