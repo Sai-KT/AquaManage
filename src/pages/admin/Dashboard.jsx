@@ -7,7 +7,7 @@ import AlertPanel from '../../components/AlertPanel';
 import TankGauge from '../../components/TankGauge';
 import {
   Activity, Droplets, AlertTriangle, CheckCircle, CloudRain,
-  ArrowUpRight, ArrowDownRight, ChevronRight, Map
+  ArrowUpRight, ArrowDownRight, ChevronRight
 } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -31,7 +31,6 @@ export default function AdminDashboard() {
 
   const [stats, setStats] = useState(defaultStats);
   const [tanks, setTanks] = useState(defaultTanks);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     adminService.getDashboardOverview().then((res) => {
@@ -39,7 +38,6 @@ export default function AdminDashboard() {
         if (res.stats) setStats(res.stats);
         if (res.tanks) setTanks(res.tanks);
       }
-      setIsLoading(false);
     });
   }, []);
 
@@ -185,7 +183,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
             {[
               { label: 'Pending Issues', count: stats.pendingIssues || 0, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: 'var(--amber-100)' },
-              { label: 'In Progress',    count: leakReportsInProgress(), path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
+              { label: 'In Progress',    count: stats.inProgressIssues ?? 3, path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
               { label: 'Critical Alerts', count: alerts.filter(a=>a.type==='critical').length, path: '/admin/alerts?type=critical', color: 'var(--red-600)', bg: 'var(--red-100)' },
               { label: 'Usage Analytics', count: null, path: '/admin/usage', color: 'var(--green-600)', bg: 'var(--green-100)' },
               { label: 'Full Analytics',  count: null, path: '/admin/analytics', color: 'var(--navy-600)', bg: 'var(--navy-100)' },
@@ -360,7 +358,3 @@ export default function AdminDashboard() {
   );
 }
 
-// helper (avoids importing full leakReports in this file)
-function leakReportsInProgress() {
-  return 3; // LK-001, LK-003, LK-007
-}

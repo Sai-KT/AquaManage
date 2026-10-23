@@ -149,64 +149,6 @@ const BUILDINGS = [
 // All issue & tank pins — coordinates chosen to be clearly inside the polygon.
 // Each pin is placed at or very near its associated building.
 const ALL_PINS = [
-  // ── Leak reports ──
-  {
-    id: 'LK-001', type: 'leak',
-    // Academic Block ground floor — near main entrance
-    lat: 18.58485, lng: 73.73762,
-    label: 'LK-001: Pipe Leak',
-    location: 'Academic Block — Ground Floor Washroom',
-    status: 'in_progress', priority: 'high',
-  },
-  {
-    id: 'LK-002', type: 'leak',
-    // PPCRC 2nd floor lab — critical burst
-    lat: 18.58512, lng: 73.73730,
-    label: 'LK-002: Pipe Burst',
-    location: 'PPCRC — 2nd Floor Research Lab',
-    status: 'in_progress', priority: 'critical',
-  },
-  {
-    id: 'LK-003', type: 'leak',
-    // Mithila Hostel Block B — tap left running
-    lat: 18.58395, lng: 73.73808,
-    label: 'LK-003: Tap Wastage',
-    location: 'Mithila Hostel — Block B, Floor 2',
-    status: 'pending', priority: 'medium',
-  },
-  {
-    id: 'LK-004', type: 'leak',
-    // Vikramshila Hostel — floor 1 washroom
-    lat: 18.58360, lng: 73.73760,
-    label: 'LK-004: Tap Wastage',
-    location: 'Vikramshila Hostel — Floor 1 Washroom',
-    status: 'in_progress', priority: 'low',
-  },
-  {
-    id: 'LK-005', type: 'leak',
-    // Canteen — drainage blocked
-    lat: 18.58422, lng: 73.73695,
-    label: 'LK-005: Blocked Drain',
-    location: 'Canteen — Kitchen Drainage',
-    status: 'pending', priority: 'medium',
-  },
-  {
-    id: 'LK-006', type: 'leak',
-    // Academic Block 3rd floor corridor
-    lat: 18.58502, lng: 73.73780,
-    label: 'LK-006: Pipe Leak',
-    location: 'Academic Block — 3rd Floor Corridor',
-    status: 'pending', priority: 'high',
-  },
-  {
-    id: 'LK-007', type: 'leak',
-    // PPCRC ground floor
-    lat: 18.58495, lng: 73.73715,
-    label: 'LK-007: Overflow',
-    location: 'PPCRC — Ground Floor Pantry',
-    status: 'pending', priority: 'medium',
-  },
-
   // ── Rainwater harvesting tanks (rooftop) ──
   {
     id: 'TANK-A', type: 'harvesting',

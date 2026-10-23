@@ -89,20 +89,28 @@ export default function MapView() {
                       <tr><th>ID</th><th>Location</th><th>Priority</th><th>Status</th></tr>
                     </thead>
                     <tbody>
-                      {leakPins.map((pin) => (
-                        <tr
-                          key={pin.id}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => navigate('/admin/reports?status=active')}
-                        >
-                          <td style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: 'var(--teal-700)', fontWeight: 700 }}>
-                            {pin.label.split(':')[0]}
+                      {leakPins.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--navy-400)', fontSize: '0.875rem' }}>
+                            No active leak issues on campus map.
                           </td>
-                          <td style={{ fontSize: '0.8125rem' }}>{pin.location}</td>
-                          <td><span className={`badge ${pin.priority}`}>{pin.priority}</span></td>
-                          <td><span className={`badge ${pin.status}`}>{pin.status?.replace('_', ' ')}</span></td>
                         </tr>
-                      ))}
+                      ) : (
+                        leakPins.map((pin) => (
+                          <tr
+                            key={pin.id}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => navigate('/admin/reports?status=active')}
+                          >
+                            <td style={{ fontFamily: 'monospace', fontSize: '0.8125rem', color: 'var(--teal-700)', fontWeight: 700 }}>
+                              {pin.label.split(':')[0]}
+                            </td>
+                            <td style={{ fontSize: '0.8125rem' }}>{pin.location}</td>
+                            <td><span className={`badge ${pin.priority}`}>{pin.priority}</span></td>
+                            <td><span className={`badge ${pin.status}`}>{pin.status?.replace('_', ' ')}</span></td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

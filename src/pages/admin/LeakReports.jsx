@@ -251,14 +251,14 @@ export default function LeakReports() {
                 </thead>
                 <tbody>
                   {filtered.map((r) => (
-                    <React.Fragment key={r.id}>
-                      <tr
-                        onClick={() => setExpanded(expanded === r.id ? null : r.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td><strong style={{ color: 'var(--teal-700)', fontFamily: 'monospace', fontSize: '0.8125rem' }}>{r.id}</strong></td>
-                        <td>{r.type}</td>
-                        <td style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.location}</td>
+                      <React.Fragment key={r.id}>
+                        <tr
+                          onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <td><strong style={{ color: 'var(--teal-700)', fontFamily: 'monospace', fontSize: '0.8125rem' }}>{r.id}</strong></td>
+                          <td>{r.type}</td>
+                          <td style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.location}</td>
                         <td>{r.reporter}</td>
                         <td style={{ color: 'var(--navy-400)', fontSize: '0.8125rem' }}>{r.date}</td>
                         <td><span className={`badge ${r.priority}`}>{r.priority}</span></td>

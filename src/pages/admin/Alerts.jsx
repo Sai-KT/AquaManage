@@ -5,7 +5,6 @@ import Topbar from '../../components/Topbar';
 import { Bell, CheckCheck, Settings, ChevronLeft, RefreshCw } from 'lucide-react';
 import { alerts as defaultAlerts } from '../../data/mockData';
 import adminService from '../../services/adminService';
-import alertsApi from '../../api/alertsApi';
 
 export default function Alerts() {
   const navigate = useNavigate();
@@ -39,7 +38,7 @@ export default function Alerts() {
 
   const markAllRead = async () => {
     setAlertList(prev => prev.map(a => ({ ...a, read: true })));
-    await alertsApi.markAllAsRead();
+    await adminService.markAllAlertsRead();
   };
 
   const thresholds = [
