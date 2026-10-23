@@ -1,23 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../services/supabase';
+import apiClient from '../services/apiClient';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY    = 'aquamanage_user';
+const STORAGE_KEY = 'aquamanage_user';
 const LAST_ACTIVE_KEY = 'aquamanage_last_active';
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes idle timeout for Admin & Maintenance
 
-// Helper to generate normalized student email & deterministic credential for Supabase Auth
-const getStudentEmail = (irnNo) => {
-  const clean = (irnNo || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  return `${clean}@student.aquamanage.local`;
-};
-
-const getStudentPassword = (irnNo) => {
-  return `Student#${(irnNo || '').trim().toLowerCase()}!2026`;
-};
-
-// ── Hardcoded credentials for demo ─────────────────────────────────────────
+// ── Fallback credentials for offline demo reliability ─────────────────────────
 const CREDENTIALS = {
   admin: [
     { username: 'director@iiit.ac.in', password: 'Director@99',  name: 'Prof. A. Kulkarni', role: 'admin' },
@@ -25,8 +15,8 @@ const CREDENTIALS = {
   ],
   maintenance: [
     { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar',   role: 'maintenance' },
-    { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh',      role: 'maintenance' },
-    { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan',       role: 'maintenance' },
+    { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh Babu', role: 'maintenance' },
+    { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan Das',   role: 'maintenance' },
   ],
 };
 
@@ -37,7 +27,6 @@ export function AuthProvider({ children }) {
       if (!stored) return null;
       const parsedUser = JSON.parse(stored);
 
-      // Check inactivity for admin and maintenance on page refresh within the same tab
       if (parsedUser?.role === 'admin' || parsedUser?.role === 'maintenance') {
         const lastActive = sessionStorage.getItem(LAST_ACTIVE_KEY);
         if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_TIMEOUT) {
@@ -56,12 +45,10 @@ export function AuthProvider({ children }) {
     setUser(null);
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(LAST_ACTIVE_KEY);
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.auth.signOut();
-      } catch (e) {
-        // ignore sign out errors
-      }
+    try {
+      await apiClient.post('/auth/logout');
+    } catch {
+      // non-fatal
     }
   }, []);
 
@@ -71,12 +58,26 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  // Sync session with local backend on initial load
+  useEffect(() => {
+    apiClient
+      .get('/auth/me')
+      .then((res) => {
+        if (res && res.success && res.user) {
+          setUser(res.user);
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+        }
+      })
+      .catch(() => {
+        // Backend not yet running or no active cookie session
+      });
+  }, []);
+
   // Monitor user activity and handle 15-min idle timeout for Admin & Maintenance
   useEffect(() => {
     if (!user || (user.role !== 'admin' && user.role !== 'maintenance')) return;
 
     updateLastActive();
-
     const handleUserActivity = () => updateLastActive();
 
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
@@ -95,7 +96,7 @@ export function AuthProvider({ children }) {
     };
   }, [user, updateLastActive, logout]);
 
-  // Admin & Maintenance login with Supabase Auth & Role-based Authorization
+  // ── Universal Login (Admin & Maintenance) ───────────────────────────────────
   const login = async (role, username, password) => {
     const cleanUsername = (username || '').trim();
     const cleanPassword = (password || '').trim();
@@ -104,70 +105,57 @@ export function AuthProvider({ children }) {
       return { success: false, error: 'Username and password are required.' };
     }
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const email = cleanUsername.includes('@')
-          ? cleanUsername
-          : `${cleanUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}@aquamanage.local`;
+    try {
+      // 1. Authenticate against local Express backend
+      const res = await apiClient.post('/auth/login', {
+        role,
+        username: cleanUsername,
+        password: cleanPassword,
+      });
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password: cleanPassword,
-        });
+      if (res && res.success && res.user) {
+        const userData = {
+          id: res.user.id,
+          name: res.user.name,
+          role: res.user.role,
+          username: cleanUsername,
+          email: res.user.email,
+          employee_id: res.user.employee_id,
+        };
 
-        if (!error && data?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .maybeSingle();
-
-          const userRole = profile?.role || data.user.user_metadata?.role || role;
-
-          // Enforce role authorization: student cannot log in as admin
-          if (userRole !== role && userRole !== 'admin') {
-            return {
-              success: false,
-              error: `Access denied. Your account does not have "${role}" administrative permissions.`,
-            };
-          }
-
-          const userData = {
-            id: data.user.id,
-            name: profile?.name || data.user.user_metadata?.name || cleanUsername,
-            role: userRole,
-            username: cleanUsername,
-            email: data.user.email,
-          };
-
-          setUser(userData);
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-          sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
-          return { success: true, user: userData };
-        }
-      } catch (err) {
-        console.warn('[AuthContext] Supabase remote auth failed, checking credentials:', err.message);
+        setUser(userData);
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+        return { success: true, user: userData };
       }
+    } catch (err) {
+      // If server returned a 401/403 validation error, pass message to user
+      if (err.status === 401 || err.status === 403 || err.status === 400) {
+        return { success: false, error: err.message };
+      }
+
+      console.warn('[AuthContext] Local backend unreachable, testing fallback credentials:', err.message);
     }
 
-    // Verified credentials fallback for demo & offline testing
+    // 2. Offline fallback credentials for demo reliability if backend is starting
     const list = CREDENTIALS[role] || [];
     const found = list.find(
       (c) => c.username.trim().toLowerCase() === cleanUsername.toLowerCase() && c.password.trim() === cleanPassword
     );
     if (found) {
-      const userData = { name: found.name, role: found.role, username: found.username };
+      const userData = { id: 999, name: found.name, role: found.role, username: found.username };
       setUser(userData);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
       if (role === 'admin' || role === 'maintenance') {
         sessionStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
       }
-      return { success: true };
+      return { success: true, user: userData };
     }
+
     return { success: false, error: 'Invalid credentials. Please check your username and password.' };
   };
 
-  // ── Student Login with Supabase Auth ─────────────────────────────────────────
+  // ── Student Login ───────────────────────────────────────────────────────────
   const loginStudent = async (name, irnNo) => {
     const cleanName = (name || '').trim();
     const cleanIrn  = (irnNo || '').trim();
@@ -179,68 +167,43 @@ export function AuthProvider({ children }) {
       return { success: false, error: 'Please enter your IRN No. / PRN No.' };
     }
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const email = getStudentEmail(cleanIrn);
-        const password = getStudentPassword(cleanIrn);
+    try {
+      const res = await apiClient.post('/auth/login', {
+        role: 'student',
+        name: cleanName,
+        irnNo: cleanIrn,
+      });
 
-        // 1. Try signing in with existing credentials
-        let { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        // 2. If student does not exist yet in Supabase Auth, register them
-        if (error && (error.message.toLowerCase().includes('invalid login credentials') || error.message.toLowerCase().includes('user not found'))) {
-          const signUpRes = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                name: cleanName,
-                identifier_no: cleanIrn,
-                role: 'student',
-              },
-            },
-          });
-
-          if (signUpRes.error) {
-            return { success: false, error: signUpRes.error.message };
-          }
-          data = signUpRes.data;
-        } else if (error) {
-          return { success: false, error: error.message };
-        }
-
-        const authUser = data?.user;
+      if (res && res.success && res.user) {
         const userData = {
-          id: authUser?.id || `stud-${cleanIrn}`,
-          name: cleanName,
+          id: res.user.id,
+          name: res.user.name,
           irnNo: cleanIrn,
+          student_id: cleanIrn,
           role: 'student',
           username: cleanName,
-          email: authUser?.email || email,
         };
 
         setUser(userData);
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
         return { success: true, user: userData };
-      } catch (err) {
-        return { success: false, error: err.message || 'Authentication failed. Please try again.' };
       }
-    } else {
-      // Fallback session when Supabase env variables are not yet configured
-      const userData = {
-        id: `stud-${cleanIrn}`,
-        name: cleanName,
-        irnNo: cleanIrn,
-        role: 'student',
-        username: cleanName,
-      };
-      setUser(userData);
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-      return { success: true, user: userData };
+    } catch (err) {
+      console.warn('[AuthContext] Local backend error on student login, using local session:', err.message);
     }
+
+    // Fallback session
+    const userData = {
+      id: `stud-${cleanIrn}`,
+      name: cleanName,
+      irnNo: cleanIrn,
+      student_id: cleanIrn,
+      role: 'student',
+      username: cleanName,
+    };
+    setUser(userData);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    return { success: true, user: userData };
   };
 
   return (
@@ -255,3 +218,4 @@ export function useAuth() {
 }
 
 export { CREDENTIALS };
+export default AuthContext;
