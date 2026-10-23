@@ -1,0 +1,26 @@
+{
+  "name": "aquamanage-backend",
+  "version": "1.0.0",
+  "description": "AquaManage Local Node.js Express & MySQL Backend",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:schema": "node database/run-schema.js",
+    "db:seed": "node database/seed.js",
+    "db:clear": "node database/clear-complaints.js",
+    "db:verify": "node database/verify.js",
+    "test": "node tests/run-tests.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.12.0"
+  }
+}
