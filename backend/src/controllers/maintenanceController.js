@@ -8,16 +8,23 @@ export const maintenanceController = {
     try {
       const user = req.session.user;
 
-      const tasks = await query(
-        `SELECT r.id, r.category AS type, r.location, r.zone_name AS zone,
+      let sql = `
+        SELECT r.id, r.category AS type, r.location, r.zone_name AS zone,
                 r.priority, r.status, r.description, r.reporter_name AS reporter,
                 r.photo_url AS photo, r.video_url AS video, r.created_at
          FROM leak_reports r
          WHERE r.status != 'resolved'
-           AND (r.assigned_to = ? OR r.assigned_name LIKE ? OR r.assigned_to IS NULL)
-         ORDER BY FIELD(r.priority, 'critical', 'high', 'medium', 'low'), r.created_at ASC`,
-        [user.id, `%${user.name}%`]
-      );
+      `;
+      const params = [];
+
+      if (user.role !== 'admin') {
+        sql += ' AND (r.assigned_to = ? OR r.assigned_name LIKE ?)';
+        params.push(user.id, `%${user.name}%`);
+      }
+
+      sql += " ORDER BY FIELD(r.priority, 'critical', 'high', 'medium', 'low'), r.created_at ASC";
+
+      const tasks = await query(sql, params);
 
       // Fetch work logs for each task
       const reportIds = tasks.map((t) => t.id);
@@ -125,6 +132,27 @@ export const maintenanceController = {
         return res.status(400).json({ success: false, message: 'Invalid status requested.' });
       }
 
+      // Verify report existence and technician assignment
+      const existingReports = await query(
+        'SELECT id, assigned_to, assigned_name, status FROM leak_reports WHERE id = ?',
+        [id]
+      );
+
+      if (existingReports.length === 0) {
+        return res.status(404).json({ success: false, message: `Report "${id}" not found.` });
+      }
+
+      const report = existingReports[0];
+      const isAssigned = (report.assigned_to && report.assigned_to === techUser.id) ||
+                         (report.assigned_name && report.assigned_name.toLowerCase().includes(techUser.name.toLowerCase()));
+
+      if (techUser.role !== 'admin' && !isAssigned) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are only authorized to update tasks assigned directly to you.',
+        });
+      }
+
       await withTransaction(async (conn) => {
         let sql = `
           UPDATE leak_reports
@@ -180,6 +208,27 @@ export const maintenanceController = {
 
       if (!note || !note.trim()) {
         return res.status(400).json({ success: false, message: 'Work log note cannot be empty.' });
+      }
+
+      // Verify report existence and technician assignment
+      const existingReports = await query(
+        'SELECT id, assigned_to, assigned_name, status FROM leak_reports WHERE id = ?',
+        [id]
+      );
+
+      if (existingReports.length === 0) {
+        return res.status(404).json({ success: false, message: `Report "${id}" not found.` });
+      }
+
+      const report = existingReports[0];
+      const isAssigned = (report.assigned_to && report.assigned_to === techUser.id) ||
+                         (report.assigned_name && report.assigned_name.toLowerCase().includes(techUser.name.toLowerCase()));
+
+      if (techUser.role !== 'admin' && !isAssigned) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are only authorized to add notes to tasks assigned directly to you.',
+        });
       }
 
       const log = await withTransaction(async (conn) => {

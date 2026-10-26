@@ -143,6 +143,28 @@ export const studentController = {
   async getReportHistory(req, res, next) {
     try {
       const { id } = req.params;
+      const user = req.session.user;
+
+      // Student ownership check: students can only view history of their own reports
+      if (user.role === 'student') {
+        const owner = await query(
+          'SELECT student_id, reporter_name FROM leak_reports WHERE id = ?',
+          [id]
+        );
+        if (owner.length === 0) {
+          return res.status(404).json({ success: false, message: 'Report not found.' });
+        }
+        const isOwner =
+          (owner[0].student_id && owner[0].student_id === user.id) ||
+          (owner[0].reporter_name && owner[0].reporter_name.toLowerCase() === user.name.toLowerCase());
+        if (!isOwner) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: You are only authorized to view history for your own reports.',
+          });
+        }
+      }
+
       const history = await query(
         `SELECT id, report_id, actor_name, action, previous_status, new_status, notes, created_at
          FROM report_history
