@@ -191,6 +191,7 @@ export function AuthProvider({ children }) {
           name: res.user.name,
           student_id: res.user.student_id,
           email: res.user.email,
+          department: res.user.department || '',
           role: 'student',
           username: res.user.student_id || res.user.name,
         };
@@ -212,8 +213,18 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // ── Update Current User In Memory & Storage ────────────────────────────────
+  const updateCurrentUser = (updates) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, loginStudent, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, loginStudent, logout, updateCurrentUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

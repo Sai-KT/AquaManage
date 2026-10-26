@@ -149,6 +149,7 @@ export default function Topbar({ title, subtitle }) {
       { id: 'p-stud-report', category: 'Navigation', title: 'Report a Leak', desc: 'Submit a new water wastage or leak incident', path: '/student/report', icon: 'FilePlus', roles: ['student', 'admin', 'maintenance'] },
       { id: 'p-stud-myreports', category: 'Navigation', title: 'My Submitted Reports', desc: 'Track your reported issues and resolutions', path: '/student/myreports', icon: 'ListOrdered', roles: ['student', 'admin'] },
       { id: 'p-stud-harvest', category: 'Navigation', title: 'Campus Harvesting Status', desc: 'Student view of rainwater harvesting', path: '/student/harvesting', icon: 'CloudRain', roles: ['student', 'admin'] },
+      { id: 'p-stud-profile', category: 'Navigation', title: 'My Student Profile', desc: 'Manage your student profile, academic department, and password', path: '/student/profile', icon: 'User', roles: ['student'] },
     ];
 
     const pages = rawPages.filter(p => !p.roles || p.roles.includes(role));

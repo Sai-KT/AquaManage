@@ -10,10 +10,11 @@ export const dashboardController = {
       const [allCounts] = await query(`
         SELECT
           COUNT(*) AS totalComplaints,
-          SUM(CASE WHEN status IN ('reported', 'assigned', 'in_progress') THEN 1 ELSE 0 END) AS activeLeaks,
-          SUM(CASE WHEN status IN ('reported', 'assigned') THEN 1 ELSE 0 END) AS pendingIssues,
+          SUM(CASE WHEN status IN ('reported', 'assigned', 'in_progress', 'reopened') THEN 1 ELSE 0 END) AS activeLeaks,
+          SUM(CASE WHEN status IN ('reported', 'assigned', 'reopened') THEN 1 ELSE 0 END) AS pendingIssues,
           SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) AS inProgressIssues,
-          SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) AS resolvedIssues
+          SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) AS resolvedIssues,
+          SUM(CASE WHEN status = 'reopened' THEN 1 ELSE 0 END) AS reopenedIssues
         FROM leak_reports
       `);
 

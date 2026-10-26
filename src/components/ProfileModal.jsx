@@ -441,6 +441,26 @@ export default function ProfileModal({ isOpen, onClose }) {
               {role === 'student' && (
                 <>
                   <button
+                    onClick={() => { onClose(); navigate('/student/profile'); }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, rgba(14,165,233,0.15), rgba(16,185,129,0.1))',
+                      border: '1px solid rgba(14,165,233,0.3)',
+                      color: '#0ea5e9',
+                      fontSize: '0.8125rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>Manage Student Profile & Security</span>
+                    <ArrowRight size={13} />
+                  </button>
+                  <button
                     onClick={() => { onClose(); navigate('/student/report'); }}
                     style={{
                       width: '100%',

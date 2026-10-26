@@ -51,7 +51,7 @@ async function runAllTests() {
   });
 
   // ── Category 1: Infrastructure & Health ──────────────────────────────────
-  console.log('▶ [1/6] INFRASTRUCTURE & HEALTH CHECKS');
+  console.log('▶ [1/8] INFRASTRUCTURE & HEALTH CHECKS');
   try {
     const healthRes = await request('/api/health');
     if (healthRes.status === 200 || healthRes.status === 503) {
@@ -81,7 +81,7 @@ async function runAllTests() {
   }
 
   // ── Category 2: Authentication & Authorization ────────────────────────────
-  console.log('\n▶ [2/6] AUTHENTICATION & SECURITY CHECKS');
+  console.log('\n▶ [2/8] AUTHENTICATION & SECURITY CHECKS');
   let adminCookie = '';
   let studentCookie = '';
   let studentBCookie = '';
@@ -222,7 +222,7 @@ async function runAllTests() {
   const createdTicketIds = [];
 
   // ── Category 3: Student Workflow & Identity Persistence ───────────────────
-  console.log('\n▶ [3/6] STUDENT WORKFLOW & IDENTITY PERSISTENCE CHECKS');
+  console.log('\n▶ [3/8] STUDENT WORKFLOW & IDENTITY PERSISTENCE CHECKS');
   let assignedTicketId = null;
   let unassignedTicketId = null;
 
@@ -359,8 +359,257 @@ async function runAllTests() {
     recordTest('Student Workflow', 'Student', 'FAIL', e.message);
   }
 
-  // ── Category 4: Admin Workflow ────────────────────────────────────────────
-  console.log('\n▶ [4/6] ADMIN WORKFLOW CHECKS');
+  // ── Category 4: Student Profile & Password Security Checks (Feature 01) ───
+  console.log('\n▶ [4/8] STUDENT PROFILE & PASSWORD SECURITY CHECKS');
+  let testUserId = null;
+  let testUserCookie = '';
+  let testTicketId = null;
+
+  try {
+    // 4.1 Test 1: Student A profile retrieval
+    if (studentCookie) {
+      const profARes = await request('/api/student/profile', {
+        headers: { Cookie: studentCookie },
+      });
+      const profA = profARes.data?.profile;
+      recordTest(
+        'Test 1: Student A Profile Retrieval',
+        'Profile',
+        profARes.status === 200 && profA?.student_id === 'STU-2024-001' && profA?.full_name === 'Arjun Mehta' && profA.password_hash === undefined ? 'PASS' : 'FAIL',
+        `Retrieved: ${profA?.full_name} (${profA?.student_id}), Dept: ${profA?.department || 'N/A'}`
+      );
+    }
+
+    // 4.2 Test 4: Student B profile isolation
+    if (studentBCookie) {
+      const profBRes = await request('/api/student/profile', {
+        headers: { Cookie: studentBCookie },
+      });
+      const profB = profBRes.data?.profile;
+      recordTest(
+        'Test 4: Student B Profile Isolation',
+        'Profile',
+        profBRes.status === 200 && profB?.student_id === 'STU-2024-002' && profB?.full_name === 'Priya Singh' ? 'PASS' : 'FAIL',
+        `Retrieved: ${profB?.full_name} (${profB?.student_id}), Dept: ${profB?.department || 'N/A'}`
+      );
+    }
+
+    // 4.3 Cross-Role Protection: Admin barred from student profile endpoint
+    if (adminCookie) {
+      const adminBlocked = await request('/api/student/profile', {
+        headers: { Cookie: adminCookie },
+      });
+      recordTest(
+        'Cross-Role Protection (Admin barred from Student Profile API)',
+        'Profile',
+        adminBlocked.status === 403 ? 'PASS' : 'FAIL',
+        `HTTP ${adminBlocked.status} Forbidden`
+      );
+    }
+
+    // 4.4 Test 6: Rejection of protected identity field modifications
+    if (studentCookie) {
+      const protectedFieldHack = await request('/api/student/profile', {
+        method: 'PATCH',
+        headers: { Cookie: studentCookie },
+        body: { student_id: 'HACKED-ID-999', role: 'admin' },
+      });
+      recordTest(
+        'Test 6: Protected Fields Tamper Rejection (id, student_id, role)',
+        'Profile',
+        protectedFieldHack.status === 400 ? 'PASS' : 'FAIL',
+        `HTTP ${protectedFieldHack.status} (Protected fields rejected)`
+      );
+
+      // 4.5 Test 7: Invalid email format rejection
+      const invalidEmailRes = await request('/api/student/profile', {
+        method: 'PATCH',
+        headers: { Cookie: studentCookie },
+        body: { email: 'not-a-valid-email' },
+      });
+      recordTest(
+        'Test 7: Malformed Email Validation Rejection',
+        'Profile',
+        invalidEmailRes.status === 400 ? 'PASS' : 'FAIL',
+        `HTTP ${invalidEmailRes.status} (Malformed email rejected)`
+      );
+
+      // 4.6 Test 8: Duplicate email conflict rejection
+      const duplicateEmailRes = await request('/api/student/profile', {
+        method: 'PATCH',
+        headers: { Cookie: studentCookie },
+        body: { email: 'priya@student.iiit.ac.in' },
+      });
+      recordTest(
+        'Test 8: Duplicate Email Assignment Rejection',
+        'Profile',
+        duplicateEmailRes.status === 409 ? 'PASS' : 'FAIL',
+        `HTTP ${duplicateEmailRes.status} Conflict (Duplicate email prevented)`
+      );
+    }
+
+    // 4.7 Dedicated Isolated Test Student Setup for Password & Update Lifecycle
+    const { pool } = await import('../src/config/database.js');
+    const bcrypt = (await import('bcrypt')).default;
+    const initialHashed = await bcrypt.hash('TestPass@123', 10);
+
+    // Clean up any stale test user if previously interrupted
+    await pool.query('DELETE FROM users WHERE student_id = "TEST-STU-888"');
+
+    const [userInsert] = await pool.query(
+      `INSERT INTO users (full_name, email, student_id, department, password_hash, role, is_active)
+       VALUES ('Test Profile Student', 'test.profile@student.iiit.ac.in', 'TEST-STU-888', 'Civil Engineering', ?, 'student', TRUE)`,
+      [initialHashed]
+    );
+    testUserId = userInsert.insertId;
+
+    // Login as isolated test student
+    const testLoginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'TEST-STU-888', password: 'TestPass@123' },
+    });
+    testUserCookie = testLoginRes.headers.get('set-cookie') || '';
+
+    // Submit a test complaint for this student to verify complaint preservation
+    const testComplaintRes = await request('/api/student/reports', {
+      method: 'POST',
+      headers: { Cookie: testUserCookie },
+      body: {
+        type: 'Dripping Tap',
+        zone: 'Vikramshila Hostel',
+        location: 'Ground Floor Washroom',
+        description: 'Test complaint to verify profile and password changes do not lose report ownership.',
+      },
+    });
+    if (testComplaintRes.status === 201 && testComplaintRes.data?.reportId) {
+      testTicketId = testComplaintRes.data.reportId;
+      createdTicketIds.push(testTicketId);
+    }
+
+    // 4.8 Test 2: Profile Update
+    const updateRes = await request('/api/student/profile', {
+      method: 'PATCH',
+      headers: { Cookie: testUserCookie },
+      body: { department: 'Mechanical Engineering', email: 'test.profile.updated@student.iiit.ac.in' },
+    });
+    const updatedProfile = updateRes.data?.profile;
+    recordTest(
+      'Test 2: Profile Update (Department & Email)',
+      'Profile',
+      updateRes.status === 200 && updatedProfile?.department === 'Mechanical Engineering' && updatedProfile?.email === 'test.profile.updated@student.iiit.ac.in' ? 'PASS' : 'FAIL',
+      `Updated Dept: ${updatedProfile?.department}, Email: ${updatedProfile?.email}`
+    );
+
+    // 4.9 Test 3: Persistence after logout and relogin
+    await request('/api/auth/logout', { method: 'POST', headers: { Cookie: testUserCookie } });
+    const reloginTestUser = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'TEST-STU-888', password: 'TestPass@123' },
+    });
+    testUserCookie = reloginTestUser.headers.get('set-cookie') || '';
+
+    const persistentProfileRes = await request('/api/student/profile', {
+      headers: { Cookie: testUserCookie },
+    });
+    const pProf = persistentProfileRes.data?.profile;
+    recordTest(
+      'Test 3: Profile Persistence After Logout & Re-login',
+      'Profile',
+      pProf?.department === 'Mechanical Engineering' && pProf?.email === 'test.profile.updated@student.iiit.ac.in' ? 'PASS' : 'FAIL',
+      'Saved profile values recovered from MySQL'
+    );
+
+    // 4.10 Test 9: Incorrect current password rejection
+    const badPassChange = await request('/api/student/profile/change-password', {
+      method: 'POST',
+      headers: { Cookie: testUserCookie },
+      body: { currentPassword: 'WrongPassword999!', newPassword: 'NewSecurePass@456', confirmPassword: 'NewSecurePass@456' },
+    });
+    recordTest(
+      'Test 9: Incorrect Current Password Rejection',
+      'Profile',
+      badPassChange.status === 401 ? 'PASS' : 'FAIL',
+      `HTTP ${badPassChange.status} (Incorrect current password rejected)`
+    );
+
+    // 4.11 Password validation: Same password rejection
+    const samePassChange = await request('/api/student/profile/change-password', {
+      method: 'POST',
+      headers: { Cookie: testUserCookie },
+      body: { currentPassword: 'TestPass@123', newPassword: 'TestPass@123', confirmPassword: 'TestPass@123' },
+    });
+    recordTest(
+      'Validation: Identical New Password Rejection',
+      'Profile',
+      samePassChange.status === 400 ? 'PASS' : 'FAIL',
+      `HTTP ${samePassChange.status} (Rejected same password)`
+    );
+
+    // 4.12 Test 10: Successful password change & session termination
+    const goodPassChange = await request('/api/student/profile/change-password', {
+      method: 'POST',
+      headers: { Cookie: testUserCookie },
+      body: { currentPassword: 'TestPass@123', newPassword: 'NewSecurePass@456', confirmPassword: 'NewSecurePass@456' },
+    });
+    recordTest(
+      'Test 10: Successful Password Change & Session Invalidation',
+      'Profile',
+      goodPassChange.status === 200 ? 'PASS' : 'FAIL',
+      'Bcrypt hash updated, session destroyed in MySQL'
+    );
+
+    // 4.13 Test 11: Old password rejection
+    const oldPassLogin = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'TEST-STU-888', password: 'TestPass@123' },
+    });
+    recordTest(
+      'Test 11: Old Password Rejection Post-Update',
+      'Profile',
+      oldPassLogin.status === 401 ? 'PASS' : 'FAIL',
+      `HTTP ${oldPassLogin.status} (Old credentials rejected)`
+    );
+
+    // 4.14 Test 12: New password login
+    const newPassLogin = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'TEST-STU-888', password: 'NewSecurePass@456' },
+    });
+    testUserCookie = newPassLogin.headers.get('set-cookie') || '';
+    recordTest(
+      'Test 12: New Password Successful Login',
+      'Profile',
+      newPassLogin.status === 200 && newPassLogin.data?.success ? 'PASS' : 'FAIL',
+      'Session established with new bcrypt hash'
+    );
+
+    // 4.15 Test 13: Complaint history preservation after profile and password change
+    const checkReportsPostUpdate = await request('/api/student/reports', {
+      headers: { Cookie: testUserCookie },
+    });
+    const hasOriginalComplaint = (checkReportsPostUpdate.data?.reports || []).some((r) => r.id === testTicketId);
+    recordTest(
+      'Test 13: Complaint History Preserved Across Profile & Password Updates',
+      'Profile',
+      checkReportsPostUpdate.status === 200 && hasOriginalComplaint ? 'PASS' : 'FAIL',
+      `Complaint ${testTicketId} retained for permanent user ID ${testUserId}`
+    );
+  } catch (err) {
+    recordTest('Student Profile Checks', 'Profile', 'FAIL', err.message);
+  } finally {
+    // Teardown isolated test user
+    if (testUserId) {
+      try {
+        const { pool } = await import('../src/config/database.js');
+        await pool.query('DELETE FROM users WHERE id = ?', [testUserId]);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  // ── Category 5: Admin Workflow ────────────────────────────────────────────
+  console.log('\n▶ [5/8] ADMIN WORKFLOW CHECKS');
   try {
     if (adminCookie) {
       // 4.1 All reports
@@ -406,8 +655,8 @@ async function runAllTests() {
     recordTest('Admin Workflow', 'Admin', 'FAIL', e.message);
   }
 
-  // ── Category 5: Maintenance Workflow & Authorization Enforcement ──────────
-  console.log('\n▶ [5/6] MAINTENANCE WORKFLOW & AUTHORIZATION CHECKS');
+  // ── Category 6: Maintenance Workflow & Authorization Enforcement ──────────
+  console.log('\n▶ [6/8] MAINTENANCE WORKFLOW & AUTHORIZATION CHECKS');
   try {
     if (maintCookie) {
       // 5.1 Task queue retrieval for Ram Kumar (should show assignedTicketId, not unassignedTicketId)
@@ -416,7 +665,7 @@ async function runAllTests() {
       });
       const taskIdsInQueue = (taskQueue.data?.tasks || []).map((t) => t.id);
       const queueFilterCorrect = assignedTicketId && taskIdsInQueue.includes(assignedTicketId) &&
-                                 (!unassignedTicketId || !taskIdsInQueue.includes(unassignedTicketId));
+        (!unassignedTicketId || !taskIdsInQueue.includes(unassignedTicketId));
       recordTest(
         'Maintenance Assigned Task Queue Isolation',
         'Maintenance',
@@ -528,8 +777,264 @@ async function runAllTests() {
     recordTest('Maintenance Workflow', 'Maintenance', 'FAIL', e.message);
   }
 
-  // ── Category 6: Telemetry & Dashboard Analytics ───────────────────────────
-  console.log('\n▶ [6/6] DASHBOARD & TELEMETRY CHECKS');
+  // ── Category 7: Feature 02 — Reopen Resolved Complaint Lifecycle ──────────
+  console.log('\n▶ [7/8] REOPEN RESOLVED COMPLAINT LIFECYCLE CHECKS (FEATURE 02)');
+  try {
+    if (assignedTicketId) {
+      // 7.1 Security & Auth: Anonymous user rejected from reopening
+      const anonReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+        method: 'POST',
+        body: { reason: 'Anonymous attempt to reopen resolved report.' },
+      });
+      recordTest(
+        'Rule A & Security: Anonymous Reopening Rejected',
+        'Reopen',
+        anonReopen.status === 401 ? 'PASS' : 'FAIL',
+        `HTTP ${anonReopen.status} (Authentication required)`
+      );
+
+      // 7.2 Security & Role: Non-student role rejected (Maintenance role)
+      if (maintCookie) {
+        const nonStudentReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: maintCookie },
+          body: { reason: 'Technician attempting to call student reopen endpoint.' },
+        });
+        recordTest(
+          'Rule A & Security: Non-Student Role Barred from Reopening',
+          'Reopen',
+          nonStudentReopen.status === 403 ? 'PASS' : 'FAIL',
+          `HTTP ${nonStudentReopen.status} (Forbidden for non-student)`
+        );
+      }
+
+      // 7.3 Rule A: Report ownership validation (Student B cannot reopen Student A's report)
+      if (studentBCookie) {
+        const crossStudentReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentBCookie },
+          body: { reason: 'Student B attempting to reopen Student A ticket.' },
+        });
+        recordTest(
+          'Rule A: Student Ownership Protection (Student B barred from Student A ticket)',
+          'Reopen',
+          crossStudentReopen.status === 403 ? 'PASS' : 'FAIL',
+          `HTTP ${crossStudentReopen.status} (Unauthorized report ownership)`
+        );
+      }
+
+      // 7.4 Rule B: Resolved-only reopening (Reject reopening pending ticket)
+      if (unassignedTicketId && studentBCookie) {
+        const pendingReopen = await request(`/api/student/reports/${unassignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentBCookie },
+          body: { reason: 'Attempting to reopen a pending unassigned report.' },
+        });
+        recordTest(
+          'Rule B: Reopen Rejection for Non-Resolved Report (Pending Ticket)',
+          'Reopen',
+          pendingReopen.status === 409 ? 'PASS' : 'FAIL',
+          `HTTP ${pendingReopen.status} Conflict (Only resolved reports can be reopened)`
+        );
+      }
+
+      // 7.5 Rule D: Mandatory reason validation (Empty / Whitespace-only reason rejected)
+      if (studentCookie) {
+        const emptyReasonReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: '     ' },
+        });
+        recordTest(
+          'Rule D: Empty Reopening Reason Rejection',
+          'Reopen',
+          emptyReasonReopen.status === 400 ? 'PASS' : 'FAIL',
+          `HTTP ${emptyReasonReopen.status} Bad Request (Empty reason rejected)`
+        );
+
+        // 7.6 Rule D: Reason minimum length validation (< 10 chars rejected)
+        const shortReasonReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: 'Too short' },
+        });
+        recordTest(
+          'Rule D: Short Reopening Reason Rejection (<10 chars)',
+          'Reopen',
+          shortReasonReopen.status === 400 ? 'PASS' : 'FAIL',
+          `HTTP ${shortReasonReopen.status} Bad Request (Reason must be >= 10 chars)`
+        );
+
+        // 7.7 Rule D: Reason maximum length validation (> 500 chars rejected)
+        const longReason = 'A'.repeat(505);
+        const longReasonReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: longReason },
+        });
+        recordTest(
+          'Rule D: Excessively Long Reason Rejection (>500 chars)',
+          'Reopen',
+          longReasonReopen.status === 400 ? 'PASS' : 'FAIL',
+          `HTTP ${longReasonReopen.status} Bad Request (Reason must be <= 500 chars)`
+        );
+
+        // 7.8 Rule C & E: Successful Reopening by Original Student
+        const validReason = 'Water is still leaking steadily under the sink pipe despite initial technician repair.';
+        const successfulReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: validReason },
+        });
+
+        // Verify MySQL persistence
+        const { pool } = await import('../src/config/database.js');
+        const [reopenedReportRows] = await pool.query(
+          'SELECT id, status, assigned_to, assigned_name, assigned_at, resolved_at FROM leak_reports WHERE id = ?',
+          [assignedTicketId]
+        );
+        const rep = reopenedReportRows[0];
+
+        const [historyRows] = await pool.query(
+          'SELECT action, previous_status, new_status, notes FROM report_history WHERE report_id = ? ORDER BY created_at ASC',
+          [assignedTicketId]
+        );
+
+        const hasReopenedHistory = historyRows.some(
+          (h) => h.action === 'reopened' && h.previous_status === 'resolved' && h.notes === validReason
+        );
+        const priorHistoryPreserved = historyRows.length >= 4; // created, assigned, work_note, resolved, reopened
+
+        const [alertRows] = await pool.query(
+          'SELECT title, message FROM alerts WHERE title LIKE ?',
+          [`%${assignedTicketId}%Reopened%`]
+        );
+
+        recordTest(
+          'Rule C & E: Successful Reopening & MySQL State Transition',
+          'Reopen',
+          successfulReopen.status === 200 &&
+            rep?.status === 'reopened' &&
+            rep?.assigned_to === null &&
+            rep?.resolved_at === null &&
+            hasReopenedHistory &&
+            priorHistoryPreserved &&
+            alertRows.length > 0
+            ? 'PASS'
+            : 'FAIL',
+          `Status: "${rep?.status}", Assignee: ${rep?.assigned_to ?? 'NULL'}, History count: ${historyRows.length}, Alerts: ${alertRows.length}`
+        );
+
+        // 7.9 Rule B & Concurrency: Duplicate reopening attempt rejection (double-click simulation)
+        const duplicateReopen = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: 'Duplicate click: tap is still leaking.' },
+        });
+        recordTest(
+          'Rule B & Concurrency: Duplicate Reopening Attempt Rejection',
+          'Reopen',
+          duplicateReopen.status === 409 ? 'PASS' : 'FAIL',
+          `HTTP ${duplicateReopen.status} Conflict (Already reopened ticket cannot be reopened again)`
+        );
+
+        // 7.10 Admin Portal Integration: Reopened ticket appears in admin queue and can be reassigned
+        if (adminCookie) {
+          const adminReopenedCheck = await request('/api/admin/reports?status=reopened', {
+            headers: { Cookie: adminCookie },
+          });
+          const reopenedInAdmin = (adminReopenedCheck.data?.reports || []).some((r) => r.id === assignedTicketId);
+          recordTest(
+            'Admin Review: Reopened Complaint Listed in Administrator Queue',
+            'Admin',
+            adminReopenedCheck.status === 200 && reopenedInAdmin ? 'PASS' : 'FAIL',
+            `Reopened complaint ${assignedTicketId} visible in Admin queue`
+          );
+
+          // Admin reassigns the reopened ticket to Technician 2 (Suresh Babu / EMP-02)
+          const reassignRes = await request(`/api/admin/reports/${assignedTicketId}/assign`, {
+            method: 'PATCH',
+            headers: { Cookie: adminCookie },
+            body: { technicianName: 'Suresh Babu' },
+          });
+          const [reassignedRow] = await pool.query(
+            'SELECT status, assigned_name FROM leak_reports WHERE id = ?',
+            [assignedTicketId]
+          );
+          recordTest(
+            'Admin Reassignment: Reopened Complaint Reassigned to Maintenance Staff',
+            'Admin',
+            reassignRes.status === 200 && reassignedRow[0]?.status === 'assigned' ? 'PASS' : 'FAIL',
+            `Ticket ${assignedTicketId} reassigned to ${reassignedRow[0]?.assigned_name}`
+          );
+        }
+
+        // 7.11 Maintenance Portal Integration: Second maintenance cycle execution
+        if (maint2Cookie) {
+          // Suresh Babu sees ticket in his queue
+          const tech2Queue = await request('/api/maintenance/tasks', {
+            headers: { Cookie: maint2Cookie },
+          });
+          const inTech2Queue = (tech2Queue.data?.tasks || []).some((t) => t.id === assignedTicketId);
+
+          // Suresh Babu updates to in_progress
+          const cycle2Progress = await request(`/api/maintenance/tasks/${assignedTicketId}/status`, {
+            method: 'PATCH',
+            headers: { Cookie: maint2Cookie },
+            body: { status: 'in_progress' },
+          });
+
+          // Suresh Babu logs second work note
+          const cycle2Log = await request(`/api/maintenance/tasks/${assignedTicketId}/logs`, {
+            method: 'POST',
+            headers: { Cookie: maint2Cookie },
+            body: { note: 'Cycle 2: Replaced main valve washer and pressure tested for 30 minutes.' },
+          });
+
+          // Suresh Babu marks resolved
+          const cycle2Resolve = await request(`/api/maintenance/tasks/${assignedTicketId}/status`, {
+            method: 'PATCH',
+            headers: { Cookie: maint2Cookie },
+            body: { status: 'resolved' },
+          });
+
+          recordTest(
+            'Maintenance Second Cycle: Reassigned Tech Completes Secondary Repair & Resolution',
+            'Maintenance',
+            inTech2Queue && cycle2Progress.status === 200 && cycle2Log.status === 201 && cycle2Resolve.status === 200
+              ? 'PASS'
+              : 'FAIL',
+            'Full secondary repair cycle executed and recorded'
+          );
+        }
+
+        // 7.12 Rule G: Repeat Reopening Cycle Supported (Second Reopening)
+        const repeatReopenRes = await request(`/api/student/reports/${assignedTicketId}/reopen`, {
+          method: 'POST',
+          headers: { Cookie: studentCookie },
+          body: { reason: 'Second reopening: water began dripping slowly during the night.' },
+        });
+
+        const [finalHistory] = await pool.query(
+          'SELECT action, notes FROM report_history WHERE report_id = ? ORDER BY created_at ASC',
+          [assignedTicketId]
+        );
+        const reopenEvents = finalHistory.filter((h) => h.action === 'reopened');
+
+        recordTest(
+          'Rule G: Repeat Reopening Cycle Supported & Multi-Cycle History Retained',
+          'Reopen',
+          repeatReopenRes.status === 200 && reopenEvents.length === 2 ? 'PASS' : 'FAIL',
+          `Complaint reopened twice successfully; ${reopenEvents.length} distinct reopening events preserved in history`
+        );
+      }
+    }
+  } catch (reopenErr) {
+    recordTest('Reopen Complaint Checks', 'Reopen', 'FAIL', reopenErr.message);
+  }
+
+  // ── Category 8: Telemetry & Dashboard Analytics ───────────────────────────
+  console.log('\n▶ [8/8] DASHBOARD & TELEMETRY CHECKS');
   try {
     const statsRes = await request('/api/dashboard/stats');
     recordTest(

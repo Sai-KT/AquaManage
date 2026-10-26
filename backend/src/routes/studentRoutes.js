@@ -20,5 +20,11 @@ router.post(
 
 router.get('/reports', studentController.getMyReports);
 router.get('/reports/:id/history', studentController.getReportHistory);
+router.post('/reports/:id/reopen', requireRole('student'), studentController.reopenReport);
+
+// Student Profile Management endpoints (strictly restricted to student role)
+router.get('/profile', requireRole('student'), studentController.getProfile);
+router.patch('/profile', requireRole('student'), studentController.updateProfile);
+router.post('/profile/change-password', requireRole('student'), studentController.changePassword);
 
 export default router;

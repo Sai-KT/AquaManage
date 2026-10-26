@@ -1,7 +1,6 @@
 import apiClient from './apiClient';
 import {
   tankData as mockTanks,
-  campusStats as mockStats,
   campusZones as mockZones,
 } from '../data/mockData';
 
@@ -104,11 +103,103 @@ export const studentService = {
       console.warn('[studentService] getHarvestingStatus error:', err.message);
     }
 
-    return {
-      success: true,
-      tanks: mockTanks,
-      stats: mockStats,
-    };
+  },
+
+  // ── 5. Fetch Student Profile ───────────────────────────────────────────────
+  async getProfile() {
+    try {
+      const res = await apiClient.get('/student/profile');
+      if (res && res.success) {
+        return { success: true, profile: res.profile };
+      }
+      return { success: false, error: res?.message || 'Failed to load profile.' };
+    } catch (err) {
+      console.error('[studentService] getProfile error:', err.message);
+      return { success: false, error: err.message || 'Unable to load student profile from server.' };
+    }
+  },
+
+  // ── 6. Update Student Profile (email, department) ───────────────────────────
+  async updateProfile(updates) {
+    try {
+      const res = await apiClient.patch('/student/profile', updates);
+      if (res && res.success) {
+        return { success: true, message: res.message, profile: res.profile };
+      }
+      return { success: false, error: res?.message || 'Failed to update profile.' };
+    } catch (err) {
+      console.error('[studentService] updateProfile error:', err.message);
+      return { success: false, error: err.message || 'Unable to save profile updates.' };
+    }
+  },
+
+  // ── 7. Change Student Password ─────────────────────────────────────────────
+  async changePassword({ currentPassword, newPassword, confirmPassword }) {
+    try {
+      const res = await apiClient.post('/student/profile/change-password', {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      if (res && res.success) {
+        return { success: true, message: res.message };
+      }
+      return { success: false, error: res?.message || 'Failed to change password.' };
+    } catch (err) {
+      console.error('[studentService] changePassword error:', err.message);
+      return { success: false, error: err.message || 'Unable to update password.' };
+    }
+  },
+
+  // ── 8. Reopen a Resolved Complaint (Feature 02) ────────────────────────────
+  async reopenReport(reportId, reason) {
+    try {
+      const res = await apiClient.post(`/student/reports/${reportId}/reopen`, {
+        reason: reason?.trim(),
+      });
+      if (res && res.success) {
+        return {
+          success: true,
+          message: res.message,
+          data: res.data,
+        };
+      }
+      return {
+        success: false,
+        error: res?.message || 'Failed to reopen complaint.',
+      };
+    } catch (err) {
+      console.error('[studentService] reopenReport error:', err.message);
+      return {
+        success: false,
+        error: err.message || 'Unable to reopen complaint. Please try again.',
+      };
+    }
+  },
+
+  // ── 9. Fetch Complaint Audit History ───────────────────────────────────────
+  async getReportHistory(reportId) {
+    try {
+      const res = await apiClient.get(`/student/reports/${reportId}/history`);
+      if (res && res.success) {
+        return {
+          success: true,
+          history: res.history || [],
+        };
+      }
+      return {
+        success: false,
+        error: res?.message || 'Failed to load report history.',
+        history: [],
+      };
+    } catch (err) {
+      console.error('[studentService] getReportHistory error:', err.message);
+      return {
+        success: false,
+        error: err.message || 'Unable to load complaint history.',
+        history: [],
+      };
+    }
   },
 };
 

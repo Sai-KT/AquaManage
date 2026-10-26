@@ -115,6 +115,7 @@ export const authController = {
         email: user.email,
         student_id: user.student_id,
         employee_id: user.employee_id,
+        department: user.department || '',
         username: user.email || user.employee_id || user.student_id,
       };
 

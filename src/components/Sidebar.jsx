@@ -5,7 +5,7 @@ import {
   Droplets, LayoutDashboard, FileText, CloudRain, BarChart3,
   Map, Bell, Activity, ClipboardList, LogOut, CheckSquare,
   AlertTriangle, Shield, ChevronRight,
-  BookOpen, Leaf, HardHat, X,
+  BookOpen, Leaf, HardHat, X, User,
 } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 import { maintenanceService } from '../services/maintenanceService';
@@ -62,6 +62,12 @@ const navConfigs = {
         label: 'CAMPUS INFO',
         items: [
           { icon: CloudRain, label: 'Harvesting Status', path: '/student/harvesting' },
+        ],
+      },
+      {
+        label: 'ACCOUNT',
+        items: [
+          { icon: User, label: 'My Profile', path: '/student/profile' },
         ],
       },
     ],

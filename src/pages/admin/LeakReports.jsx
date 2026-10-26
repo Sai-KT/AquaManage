@@ -57,10 +57,11 @@ export default function LeakReports() {
     else setSearchParams({});
   };
 
-  // Resolve "active" = pending + in_progress
+  // Resolve "active" = pending + in_progress + reopened
   const matchesStatus = (r) => {
     if (statusFilter === 'all') return true;
-    if (statusFilter === 'active') return r.status === 'pending' || r.status === 'in_progress';
+    if (statusFilter === 'active') return r.status === 'pending' || r.status === 'in_progress' || r.status === 'reopened';
+    if (statusFilter === 'pending') return r.status === 'pending' || r.status === 'reopened';
     return r.status === statusFilter;
   };
 
@@ -83,6 +84,7 @@ export default function LeakReports() {
     if (statusFilter === 'resolved') return `Resolved Issues (${filtered.length})`;
     if (statusFilter === 'pending') return `Pending Reports (${filtered.length})`;
     if (statusFilter === 'in_progress') return `In-Progress Issues (${filtered.length})`;
+    if (statusFilter === 'reopened') return `Reopened Complaints (${filtered.length})`;
     return 'All Leak Reports';
   };
 
@@ -181,6 +183,7 @@ export default function LeakReports() {
               { label: 'Active',         value: reports.filter(r => r.status !== 'resolved').length,                 color: 'red',   filter: 'active'      },
               { label: 'Pending',        value: reports.filter(r => r.status === 'pending').length,                  color: 'amber', filter: 'pending'     },
               { label: 'In Progress',    value: reports.filter(r => r.status === 'in_progress').length,              color: 'teal',  filter: 'in_progress' },
+              { label: 'Reopened',       value: reports.filter(r => r.status === 'reopened').length,                 color: 'amber', filter: 'reopened'    },
               { label: 'Resolved',       value: reports.filter(r => r.status === 'resolved').length,                 color: 'green', filter: 'resolved'    },
               { label: 'Critical',       value: reports.filter(r => r.priority === 'critical').length,               color: 'red',   filter: null          },
             ].map((s) => (
@@ -217,6 +220,7 @@ export default function LeakReports() {
               <option value="active">Active (All)</option>
               <option value="pending">Pending</option>
               <option value="in_progress">In Progress</option>
+              <option value="reopened">Reopened</option>
               <option value="resolved">Resolved</option>
             </select>
             <select className="form-select" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
@@ -292,6 +296,31 @@ export default function LeakReports() {
                       {expanded === r.id && (
                         <tr>
                           <td colSpan={9} style={{ background: 'var(--green-50)', padding: '20px 24px', borderBottom: '2px solid var(--green-200)' }}>
+                            {r.status === 'reopened' && (
+                              <div style={{
+                                padding: '12px 16px',
+                                background: '#fff7ed',
+                                border: '1.5px solid #fb923c',
+                                borderRadius: 8,
+                                marginBottom: 16,
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: 10,
+                              }}>
+                                <AlertTriangle size={18} style={{ color: '#ea580c', flexShrink: 0, marginTop: 2 }} />
+                                <div>
+                                  <div style={{ fontWeight: 700, color: '#c2410c', fontSize: '0.875rem', marginBottom: 2 }}>
+                                    ⚠️ Reopened Complaint — Requires Reassignment
+                                  </div>
+                                  <div style={{ fontSize: '0.8125rem', color: '#7c2d12', lineHeight: 1.5 }}>
+                                    <strong>Student Reopening Reason:</strong> {r.latest_note || 'Issue remains unresolved after previous maintenance repair.'}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#9a3412', marginTop: 4 }}>
+                                    Assign this complaint to a technician below to initiate another maintenance cycle.
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                             <div className="responsive-grid-3" style={{ marginBottom: 16 }}>
                               <div>
                                 <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--navy-400)', textTransform: 'uppercase', marginBottom: 6 }}>Description</div>

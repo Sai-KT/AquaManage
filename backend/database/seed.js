@@ -56,17 +56,17 @@ async function seedDatabase() {
       { full_name: 'Suresh Babu', email: 'suresh.babu@staff.iiit.ac.in', student_id: null, employee_id: 'EMP-02', password_hash: hashedMaintPwd, role: 'maintenance' },
       { full_name: 'Mohan Das', email: 'mohan.das@staff.iiit.ac.in', student_id: null, employee_id: 'EMP-03', password_hash: hashedMaintPwd, role: 'maintenance' },
       // Students
-      { full_name: 'Arjun Mehta', email: 'arjun@student.iiit.ac.in', student_id: 'STU-2024-001', employee_id: null, password_hash: hashedStudentPwd, role: 'student' },
-      { full_name: 'Priya Singh', email: 'priya@student.iiit.ac.in', student_id: 'STU-2024-002', employee_id: null, password_hash: hashedStudent2Pwd, role: 'student' },
-      { full_name: 'Mrugmay', email: 'mrugmay@student.iiit.ac.in', student_id: 'IRN-101', employee_id: null, password_hash: hashedStudentPwd, role: 'student' },
+      { full_name: 'Arjun Mehta', email: 'arjun@student.iiit.ac.in', student_id: 'STU-2024-001', employee_id: null, department: 'Computer Engineering', password_hash: hashedStudentPwd, role: 'student' },
+      { full_name: 'Priya Singh', email: 'priya@student.iiit.ac.in', student_id: 'STU-2024-002', employee_id: null, department: 'Information Technology', password_hash: hashedStudent2Pwd, role: 'student' },
+      { full_name: 'Mrugmay', email: 'mrugmay@student.iiit.ac.in', student_id: 'IRN-101', employee_id: null, department: 'Civil Engineering', password_hash: hashedStudentPwd, role: 'student' },
     ];
 
     for (const u of usersToSeed) {
       await connection.query(
-        `INSERT INTO users (full_name, email, student_id, employee_id, password_hash, role)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), password_hash = VALUES(password_hash), role = VALUES(role)`,
-        [u.full_name, u.email, u.student_id, u.employee_id, u.password_hash, u.role]
+        `INSERT INTO users (full_name, email, student_id, employee_id, department, password_hash, role)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), department = VALUES(department), password_hash = VALUES(password_hash), role = VALUES(role)`,
+        [u.full_name, u.email, u.student_id, u.employee_id, u.department || null, u.password_hash, u.role]
       );
     }
     console.log(`✓ ${usersToSeed.length} user accounts synchronized.`);

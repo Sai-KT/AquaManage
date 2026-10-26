@@ -12,19 +12,23 @@ export const adminController = {
         SELECT r.id, r.category AS type, r.location, r.zone_name AS zone,
                r.reporter_name AS reporter, r.assigned_name AS assignedTo,
                r.status, r.priority, r.description, r.photo_url AS photo,
-               r.video_url AS video, r.created_at, r.resolved_at
+               r.video_url AS video, r.created_at, r.resolved_at,
+               (SELECT notes FROM report_history WHERE report_id = r.id ORDER BY created_at DESC LIMIT 1) AS latest_note,
+               (SELECT action FROM report_history WHERE report_id = r.id ORDER BY created_at DESC LIMIT 1) AS latest_action
         FROM leak_reports r
       `;
       const params = [];
 
       if (status === 'active') {
-        sql += ' WHERE r.status IN ("reported", "assigned", "in_progress")';
+        sql += ' WHERE r.status IN ("reported", "assigned", "in_progress", "reopened")';
       } else if (status === 'pending') {
-        sql += ' WHERE r.status IN ("reported", "pending")';
+        sql += ' WHERE r.status IN ("reported", "pending", "reopened")';
       } else if (status === 'in_progress') {
         sql += ' WHERE r.status = "in_progress"';
       } else if (status === 'resolved') {
         sql += ' WHERE r.status = "resolved"';
+      } else if (status === 'reopened') {
+        sql += ' WHERE r.status = "reopened"';
       }
 
       sql += ' ORDER BY r.created_at DESC';
@@ -101,6 +105,13 @@ export const adminController = {
       }
 
       await withTransaction(async (conn) => {
+        // Fetch current status
+        const [currentRows] = await conn.query('SELECT status FROM leak_reports WHERE id = ? FOR UPDATE', [id]);
+        if (currentRows.length === 0) {
+          throw new Error(`Report "${id}" not found.`);
+        }
+        const prevStatus = currentRows[0].status;
+
         // 1. Update report
         const [updateRes] = await conn.query(
           `UPDATE leak_reports
@@ -121,8 +132,8 @@ export const adminController = {
         await conn.query(
           `INSERT INTO report_history (
              report_id, actor_id, actor_name, action, previous_status, new_status, notes
-           ) VALUES (?, ?, ?, 'assigned', 'reported', 'assigned', ?)`,
-          [id, adminUser?.id || null, adminUser?.name || 'Admin', `Assigned to ${techName} by Admin`]
+           ) VALUES (?, ?, ?, 'assigned', ?, 'assigned', ?)`,
+          [id, adminUser?.id || null, adminUser?.name || 'Admin', prevStatus, `Assigned to ${techName} by Admin`]
         );
 
         // 3. System alert for the maintenance tech
@@ -157,7 +168,7 @@ export const adminController = {
       const { status } = req.body;
       const adminUser = req.session.user;
 
-      const validStatuses = ['pending', 'reported', 'in_progress', 'resolved'];
+      const validStatuses = ['pending', 'reported', 'in_progress', 'resolved', 'reopened'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ success: false, message: 'Invalid status requested.' });
       }

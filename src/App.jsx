@@ -22,6 +22,7 @@ import Analytics      from './pages/admin/Analytics';
 import ReportIssue       from './pages/student/ReportIssue';
 import MyReports         from './pages/student/MyReports';
 import StudentHarvesting from './pages/student/Harvesting';
+import StudentProfile    from './pages/student/StudentProfile';
 
 // Maintenance pages
 import TaskQueue      from './pages/maintenance/TaskQueue';
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/student/report"     element={<ProtectedRoute requiredRole="student"><ReportIssue /></ProtectedRoute>} />
           <Route path="/student/myreports"  element={<ProtectedRoute requiredRole="student"><MyReports /></ProtectedRoute>} />
           <Route path="/student/harvesting" element={<ProtectedRoute requiredRole="student"><StudentHarvesting /></ProtectedRoute>} />
+          <Route path="/student/profile"    element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
 
           {/* Unknown URL → smart root redirect */}
           <Route path="*" element={<RootRedirect />} />

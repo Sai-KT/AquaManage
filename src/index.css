@@ -486,6 +486,7 @@ p  { font-size: 0.9375rem; }
 .badge.pending     { background: var(--amber-100); color: #92400e; }
 .badge.in_progress { background: var(--teal-100);  color: #075985; }
 .badge.resolved    { background: var(--green-100); color: var(--green-800); }
+.badge.reopened    { background: #ffedd5; color: #c2410c; }
 .badge.critical    { background: var(--red-100);   color: var(--red-600); }
 .badge.high        { background: #fef3c7; color: #92400e; }
 .badge.medium      { background: #e0f2fe; color: #0369a1; }
@@ -1632,6 +1633,7 @@ tbody tr:hover { background: var(--green-50); }
 [data-theme="dark"] .badge.pending     { color: var(--amber-400); }
 [data-theme="dark"] .badge.in_progress { color: var(--teal-300);  }
 [data-theme="dark"] .badge.resolved    { color: var(--green-400); }
+[data-theme="dark"] .badge.reopened    { color: #fb923c; background: rgba(249, 115, 22, 0.2); }
 [data-theme="dark"] .badge.critical    { color: var(--red-500);   }
 [data-theme="dark"] .badge.high        { color: var(--amber-400); }
 [data-theme="dark"] .badge.medium      { color: var(--teal-300);  }
