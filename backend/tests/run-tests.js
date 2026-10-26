@@ -85,6 +85,7 @@ async function runAllTests() {
   let adminCookie = '';
   let studentCookie = '';
   let maintCookie = '';
+  let maint2Cookie = '';
 
   try {
     // 2.1 Invalid role rejection
@@ -138,7 +139,7 @@ async function runAllTests() {
       recordTest('Student Login', 'Auth', 'FAIL', `HTTP ${studentLogin.status}`);
     }
 
-    // 2.5 Attempt Maintenance Login
+    // 2.5 Attempt Maintenance Login (Technician 1: Ram Kumar, EMP-01)
     const maintLogin = await request('/api/auth/login', {
       method: 'POST',
       body: { role: 'maintenance', username: 'EMP-01', password: 'Maint@1234' },
@@ -146,14 +147,27 @@ async function runAllTests() {
 
     if (maintLogin.status === 200 && maintLogin.data?.success) {
       maintCookie = maintLogin.headers.get('set-cookie') || '';
-      recordTest('Maintenance Login (EMP-01)', 'Auth', 'PASS', 'Session established');
+      recordTest('Maintenance Login (EMP-01 / Ram Kumar)', 'Auth', 'PASS', 'Session established');
     } else if (maintLogin.status === 500) {
       recordTest('Maintenance Login', 'Auth', 'BLOCKED', 'Database offline');
     } else {
       recordTest('Maintenance Login', 'Auth', 'FAIL', `HTTP ${maintLogin.status}`);
     }
 
-    // 2.6 Cross-role access enforcement (Student cannot call Admin API)
+    // 2.6 Attempt Maintenance Login (Technician 2: Suresh Babu, EMP-02)
+    const maint2Login = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'maintenance', username: 'EMP-02', password: 'Maint@1234' },
+    });
+
+    if (maint2Login.status === 200 && maint2Login.data?.success) {
+      maint2Cookie = maint2Login.headers.get('set-cookie') || '';
+      recordTest('Maintenance Login (EMP-02 / Suresh Babu)', 'Auth', 'PASS', 'Session established');
+    } else {
+      recordTest('Maintenance Login (EMP-02)', 'Auth', 'FAIL', `HTTP ${maint2Login.status}`);
+    }
+
+    // 2.7 Cross-role access enforcement (Student cannot call Admin API)
     if (studentCookie) {
       const studentBlockedFromAdmin = await request('/api/admin/reports', {
         headers: { Cookie: studentCookie },
@@ -169,13 +183,17 @@ async function runAllTests() {
     recordTest('Auth Testing', 'Auth', 'FAIL', e.message);
   }
 
+  // Track created tickets for surgical cleanup in finally block
+  const createdTicketIds = [];
+
   // ── Category 3: Student Workflow ──────────────────────────────────────────
   console.log('\n▶ [3/6] STUDENT WORKFLOW CHECKS');
-  let createdTicketId = null;
+  let assignedTicketId = null;
+  let unassignedTicketId = null;
 
   try {
     if (studentCookie) {
-      // 3.1 Submit complaint
+      // 3.1 Submit primary test complaint (to be assigned)
       const submitRes = await request('/api/student/reports', {
         method: 'POST',
         headers: { Cookie: studentCookie },
@@ -188,13 +206,32 @@ async function runAllTests() {
       });
 
       if (submitRes.status === 201 && submitRes.data?.success) {
-        createdTicketId = submitRes.data.reportId;
-        recordTest('Student Complaint Submission', 'Student', 'PASS', `Ticket Created: ${createdTicketId}`);
+        assignedTicketId = submitRes.data.reportId;
+        createdTicketIds.push(assignedTicketId);
+        recordTest('Student Complaint Submission (Primary)', 'Student', 'PASS', `Ticket Created: ${assignedTicketId}`);
       } else {
-        recordTest('Student Complaint Submission', 'Student', 'FAIL', submitRes.data?.message);
+        recordTest('Student Complaint Submission (Primary)', 'Student', 'FAIL', submitRes.data?.message);
       }
 
-      // 3.2 Fetch student's own reports
+      // 3.2 Submit second complaint to remain unassigned for authorization checks
+      const unassignedRes = await request('/api/student/reports', {
+        method: 'POST',
+        headers: { Cookie: studentCookie },
+        body: {
+          type: 'Dripping Tap',
+          zone: 'PPCRC',
+          location: 'PPCRC — Lab 2 Restroom',
+          description: 'Automated test unassigned complaint for negative auth check.',
+        },
+      });
+
+      if (unassignedRes.status === 201 && unassignedRes.data?.success) {
+        unassignedTicketId = unassignedRes.data.reportId;
+        createdTicketIds.push(unassignedTicketId);
+        recordTest('Student Complaint Submission (Unassigned Check)', 'Student', 'PASS', `Ticket Created: ${unassignedTicketId}`);
+      }
+
+      // 3.3 Fetch student's own reports
       const myReports = await request('/api/student/reports', {
         headers: { Cookie: studentCookie },
       });
@@ -237,9 +274,9 @@ async function runAllTests() {
         `Staff count: ${staffList.data?.staff?.length || 0}`
       );
 
-      // 4.3 Assignment
-      if (createdTicketId) {
-        const assignRes = await request(`/api/admin/reports/${createdTicketId}/assign`, {
+      // 4.3 Assignment: Admin assigns assignedTicketId to Ram Kumar (EMP-01)
+      if (assignedTicketId) {
+        const assignRes = await request(`/api/admin/reports/${assignedTicketId}/assign`, {
           method: 'PATCH',
           headers: { Cookie: adminCookie },
           body: { technicianName: 'Ram Kumar' },
@@ -248,7 +285,7 @@ async function runAllTests() {
           'Admin Complaint Assignment',
           'Admin',
           assignRes.status === 200 ? 'PASS' : 'FAIL',
-          `Ticket ${createdTicketId} assigned to Ram Kumar`
+          `Ticket ${assignedTicketId} assigned to Ram Kumar`
         );
       }
     } else {
@@ -258,52 +295,98 @@ async function runAllTests() {
     recordTest('Admin Workflow', 'Admin', 'FAIL', e.message);
   }
 
-  // ── Category 5: Maintenance Workflow ──────────────────────────────────────
-  console.log('\n▶ [5/6] MAINTENANCE WORKFLOW CHECKS');
+  // ── Category 5: Maintenance Workflow & Authorization Enforcement ──────────
+  console.log('\n▶ [5/6] MAINTENANCE WORKFLOW & AUTHORIZATION CHECKS');
   try {
     if (maintCookie) {
+      // 5.1 Task queue retrieval for Ram Kumar (should show assignedTicketId, not unassignedTicketId)
       const taskQueue = await request('/api/maintenance/tasks', {
         headers: { Cookie: maintCookie },
       });
+      const taskIdsInQueue = (taskQueue.data?.tasks || []).map((t) => t.id);
+      const queueFilterCorrect = assignedTicketId && taskIdsInQueue.includes(assignedTicketId) &&
+                                 (!unassignedTicketId || !taskIdsInQueue.includes(unassignedTicketId));
       recordTest(
-        'Maintenance Task Queue Retrieval',
+        'Maintenance Assigned Task Queue Isolation',
         'Maintenance',
-        taskQueue.status === 200 && taskQueue.data?.tasks ? 'PASS' : 'FAIL',
-        `${taskQueue.data?.tasks?.length || 0} active tasks`
+        taskQueue.status === 200 && queueFilterCorrect ? 'PASS' : 'FAIL',
+        `Queue contains assigned task, strictly excludes unassigned tasks`
       );
 
-      if (createdTicketId) {
-        // Status update to in_progress
-        const progressRes = await request(`/api/maintenance/tasks/${createdTicketId}/status`, {
+      // 5.2 Negative Auth Test: Technician cannot update an unassigned complaint
+      if (unassignedTicketId) {
+        const unassignedUpdateRes = await request(`/api/maintenance/tasks/${unassignedTicketId}/status`, {
           method: 'PATCH',
           headers: { Cookie: maintCookie },
           body: { status: 'in_progress' },
         });
         recordTest(
-          'Maintenance Status Update (in_progress)',
+          'Negative Auth: Technician Barred from Altering Unassigned Ticket',
           'Maintenance',
-          progressRes.status === 200 ? 'PASS' : 'FAIL',
-          'Status updated'
+          unassignedUpdateRes.status === 403 ? 'PASS' : 'FAIL',
+          `HTTP ${unassignedUpdateRes.status} Forbidden (Non-admin cannot alter unassigned report)`
+        );
+      }
+
+      // 5.3 Negative Auth Test: Technician 2 (Suresh Babu) cannot alter Technician 1 (Ram Kumar)'s ticket
+      if (assignedTicketId && maint2Cookie) {
+        const crossTechUpdateRes = await request(`/api/maintenance/tasks/${assignedTicketId}/status`, {
+          method: 'PATCH',
+          headers: { Cookie: maint2Cookie },
+          body: { status: 'in_progress' },
+        });
+        recordTest(
+          'Negative Auth: Technician Barred from Updating Other Technician Task',
+          'Maintenance',
+          crossTechUpdateRes.status === 403 ? 'PASS' : 'FAIL',
+          `HTTP ${crossTechUpdateRes.status} Forbidden (Cross-technician update rejected)`
         );
 
-        // Add work log
-        const logRes = await request(`/api/maintenance/tasks/${createdTicketId}/logs`, {
+        const crossTechLogRes = await request(`/api/maintenance/tasks/${assignedTicketId}/logs`, {
+          method: 'POST',
+          headers: { Cookie: maint2Cookie },
+          body: { note: 'Unauthorized note attempt by Suresh Babu' },
+        });
+        recordTest(
+          'Negative Auth: Technician Barred from Logging Work on Other Technician Task',
+          'Maintenance',
+          crossTechLogRes.status === 403 ? 'PASS' : 'FAIL',
+          `HTTP ${crossTechLogRes.status} Forbidden (Cross-technician work log rejected)`
+        );
+      }
+
+      // 5.4 Positive Auth: Assigned technician updates status to in_progress
+      if (assignedTicketId) {
+        const progressRes = await request(`/api/maintenance/tasks/${assignedTicketId}/status`, {
+          method: 'PATCH',
+          headers: { Cookie: maintCookie },
+          body: { status: 'in_progress' },
+        });
+        recordTest(
+          'Maintenance Authorized Status Update (in_progress)',
+          'Maintenance',
+          progressRes.status === 200 ? 'PASS' : 'FAIL',
+          'Status updated by assigned technician'
+        );
+
+        // 5.5 Positive Auth: Assigned technician adds work log
+        const logRes = await request(`/api/maintenance/tasks/${assignedTicketId}/logs`, {
           method: 'POST',
           headers: { Cookie: maintCookie },
           body: { note: 'Inspected and tightened fixture during automated testing.' },
         });
-        recordTest('Maintenance Work Note Addition', 'Maintenance', logRes.status === 201 ? 'PASS' : 'FAIL');
+        recordTest('Maintenance Authorized Work Note Addition', 'Maintenance', logRes.status === 201 ? 'PASS' : 'FAIL');
 
-        // Status update to resolved
-        const resolveRes = await request(`/api/maintenance/tasks/${createdTicketId}/status`, {
+        // 5.6 Positive Auth: Assigned technician resolves ticket
+        const resolveRes = await request(`/api/maintenance/tasks/${assignedTicketId}/status`, {
           method: 'PATCH',
           headers: { Cookie: maintCookie },
           body: { status: 'resolved' },
         });
-        recordTest('Maintenance Status Resolution (resolved)', 'Maintenance', resolveRes.status === 200 ? 'PASS' : 'FAIL');
+        recordTest('Maintenance Authorized Status Resolution (resolved)', 'Maintenance', resolveRes.status === 200 ? 'PASS' : 'FAIL');
       }
 
-      // Completed tasks
+      // 5.7 Completed tasks history
       const completedTasks = await request('/api/maintenance/completed', {
         headers: { Cookie: maintCookie },
       });
@@ -350,6 +433,32 @@ async function runAllTests() {
     recordTest('Dashboard Telemetry Check', 'Telemetry', 'FAIL', e.message);
   }
 
+  // ── Teardown & Surgical Test Cleanup (Task 5) ─────────────────────────────
+  console.log('\n▶ [CLEANUP] POST-TEST DATA SANITIZATION');
+  try {
+    if (createdTicketIds.length > 0) {
+      const { pool } = await import('../src/config/database.js');
+      for (const ticketId of createdTicketIds) {
+        await pool.query('DELETE FROM alerts WHERE title LIKE ? OR message LIKE ?', [
+          `%${ticketId}%`,
+          `%${ticketId}%`,
+        ]);
+        await pool.query('DELETE FROM report_history WHERE report_id = ?', [ticketId]);
+        await pool.query('DELETE FROM leak_reports WHERE id = ?', [ticketId]);
+      }
+      recordTest(
+        'Automated Test Data Cleanup',
+        'Infrastructure',
+        'PASS',
+        `Surgically cleaned ${createdTicketIds.length} test ticket(s) [${createdTicketIds.join(', ')}] — main data preserved`
+      );
+    } else {
+      recordTest('Automated Test Data Cleanup', 'Infrastructure', 'PASS', 'No test records created');
+    }
+  } catch (cleanErr) {
+    recordTest('Automated Test Data Cleanup', 'Infrastructure', 'FAIL', cleanErr.message);
+  }
+
   // Cleanup server and database pool
   await new Promise((resolve) => server.close(resolve));
   try {
@@ -378,3 +487,4 @@ runAllTests()
     console.error('Fatal Test Runner Error:', err);
     process.exit(1);
   });
+

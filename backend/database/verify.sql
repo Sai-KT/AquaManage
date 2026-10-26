@@ -3,7 +3,7 @@
 -- Use these queries in MySQL Workbench during faculty demonstration
 -- ─────────────────────────────────────────────────────────────────────────────
 
-USE `aqua_manage_local`;
+USE aqua_manage_local;
 
 -- 1. All Users & Roles (Without Password Hashes)
 SELECT id, full_name, role, email, student_id, employee_id, is_active, created_at
@@ -55,8 +55,7 @@ ORDER BY id;
 -- 6. Historical Water Consumption by Zone (Past 7 Days)
 SELECT usage_date, location, quantity_liters, data_source
 FROM water_usage
-ORDER BY usage_date DESC, location ASC
-LIMIT 20;
+ORDER BY usage_date DESC, location ASC;
 
 -- 7. Active Alerts & Notifications
 SELECT id, type, title, message, is_read, target_role, created_at
