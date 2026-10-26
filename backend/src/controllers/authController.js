@@ -7,7 +7,7 @@ export const authController = {
    */
   async login(req, res, next) {
     try {
-      const { role, username, password, name, irnNo, studentId, employeeId, email } = req.body;
+      const { role, username, password, irnNo, studentId, employeeId, email } = req.body;
 
       if (!role || !['admin', 'maintenance', 'student'].includes(role)) {
         return res.status(400).json({
@@ -67,10 +67,13 @@ export const authController = {
       // ── C. Student Authentication ─────────────────────────────────────────
       else if (role === 'student') {
         const cleanStudentId = (studentId || irnNo || username || '').trim().toUpperCase();
-        const cleanName = (name || cleanStudentId).trim();
+        const cleanPassword = (password || '').trim();
 
-        if (!cleanStudentId) {
-          return res.status(400).json({ success: false, message: 'Student ID / IRN No. is required.' });
+        if (!cleanStudentId || !cleanPassword) {
+          return res.status(400).json({
+            success: false,
+            message: 'Student ID and password are required.',
+          });
         }
 
         // Check if student exists in database
@@ -79,32 +82,28 @@ export const authController = {
           [cleanStudentId, `${cleanStudentId.toLowerCase()}@student.iiit.ac.in`]
         );
 
-        if (users.length > 0) {
-          user = users[0];
-          // If password was provided, verify it; otherwise allow instant demo student login
-          if (password) {
-            const isMatch = await bcrypt.compare(password, user.password_hash);
-            if (!isMatch) {
-              return res.status(401).json({ success: false, message: 'Invalid student password.' });
-            }
-          }
-        } else {
-          // Dynamic student registration for college demo
-          const defaultHash = await bcrypt.hash(password || 'Student@123', 10);
-          const result = await query(
-            `INSERT INTO users (full_name, email, student_id, password_hash, role)
-             VALUES (?, ?, ?, ?, 'student')`,
-            [cleanName || cleanStudentId, `${cleanStudentId.toLowerCase()}@student.iiit.ac.in`, cleanStudentId, defaultHash]
-          );
+        if (users.length === 0) {
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid student credentials.',
+          });
+        }
 
-          user = {
-            id: result.insertId,
-            full_name: cleanName || cleanStudentId,
-            email: `${cleanStudentId.toLowerCase()}@student.iiit.ac.in`,
-            student_id: cleanStudentId,
-            employee_id: null,
-            role: 'student',
-          };
+        user = users[0];
+
+        if (!user.is_active) {
+          return res.status(403).json({
+            success: false,
+            message: 'Student account is inactive. Please contact campus administration.',
+          });
+        }
+
+        const isMatch = await bcrypt.compare(cleanPassword, user.password_hash);
+        if (!isMatch) {
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid student credentials.',
+          });
         }
       }
 

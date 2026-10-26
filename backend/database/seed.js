@@ -17,6 +17,7 @@ const DEMO_PASSWORDS = {
   hod: 'HoD@Admin2024',
   maintenance: 'Maint@1234',
   student: 'Student@123',
+  student2: 'Student@456',
 };
 
 async function seedDatabase() {
@@ -44,6 +45,7 @@ async function seedDatabase() {
     const hashedHodPwd = await bcrypt.hash(DEMO_PASSWORDS.hod, BCRYPT_SALT_ROUNDS);
     const hashedMaintPwd = await bcrypt.hash(DEMO_PASSWORDS.maintenance, BCRYPT_SALT_ROUNDS);
     const hashedStudentPwd = await bcrypt.hash(DEMO_PASSWORDS.student, BCRYPT_SALT_ROUNDS);
+    const hashedStudent2Pwd = await bcrypt.hash(DEMO_PASSWORDS.student2 || 'Student@456', BCRYPT_SALT_ROUNDS);
 
     const usersToSeed = [
       // Admins
@@ -55,7 +57,7 @@ async function seedDatabase() {
       { full_name: 'Mohan Das', email: 'mohan.das@staff.iiit.ac.in', student_id: null, employee_id: 'EMP-03', password_hash: hashedMaintPwd, role: 'maintenance' },
       // Students
       { full_name: 'Arjun Mehta', email: 'arjun@student.iiit.ac.in', student_id: 'STU-2024-001', employee_id: null, password_hash: hashedStudentPwd, role: 'student' },
-      { full_name: 'Priya Singh', email: 'priya@student.iiit.ac.in', student_id: 'STU-2024-002', employee_id: null, password_hash: hashedStudentPwd, role: 'student' },
+      { full_name: 'Priya Singh', email: 'priya@student.iiit.ac.in', student_id: 'STU-2024-002', employee_id: null, password_hash: hashedStudent2Pwd, role: 'student' },
       { full_name: 'Mrugmay', email: 'mrugmay@student.iiit.ac.in', student_id: 'IRN-101', employee_id: null, password_hash: hashedStudentPwd, role: 'student' },
     ];
 

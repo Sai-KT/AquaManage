@@ -2,7 +2,6 @@ import apiClient from './apiClient';
 import {
   tankData as mockTanks,
   campusStats as mockStats,
-  myReports as mockMyReports,
   campusZones as mockZones,
 } from '../data/mockData';
 
@@ -65,14 +64,14 @@ export const studentService = {
   async getMyReports(_user) {
     try {
       const res = await apiClient.get('/student/reports');
-      if (res && res.success && res.reports) {
-        return { success: true, reports: res.reports };
+      if (res && res.success) {
+        return { success: true, reports: res.reports || [] };
       }
+      return { success: false, error: res?.message || 'Failed to load reports', reports: [] };
     } catch (err) {
-      console.warn('[studentService] getMyReports API unavailable, using offline fallback:', err.message);
+      console.error('[studentService] getMyReports error:', err.message);
+      return { success: false, error: err.message || 'Unable to load reports from server.', reports: [] };
     }
-
-    return { success: true, reports: mockMyReports };
   },
 
   // ── 4. Fetch Rainwater Harvesting Status & Tank Levels ─────────────────────

@@ -10,7 +10,13 @@ export const studentController = {
       const zone = req.body.zone || req.body.zone_name || 'Academic Block';
       const location = req.body.location || req.body.location_detail;
       const description = req.body.description;
-      const user = req.session.user;
+      const user = req.session?.user;
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required. Please log in as a student to submit a report.',
+        });
+      }
 
       if (!type || !zone || !description || description.trim().length < 10) {
         return res.status(400).json({
@@ -32,18 +38,24 @@ export const studentController = {
       else if (type === 'Tap Wastage') priority = 'medium';
       else priority = 'low';
 
-      const reporterId = user?.id || null;
-      const reporterName = user?.name || req.body.reporterName || 'Student';
+      const reporterId = user.id;
+      const reporterName = user.name || 'Student';
       const locDetail = location || `${zone} — Campus Area`;
 
       const result = await withTransaction(async (conn) => {
-        // 1. Determine next report ID (LK-XXX)
-        const [maxRow] = await conn.query('SELECT COUNT(*) AS total FROM leak_reports');
-        const nextNum = (maxRow[0]?.total || 0) + 1;
+        // 1. Determine next report ID (LK-XXX) safely without collision
+        const [rows] = await conn.query('SELECT id FROM leak_reports ORDER BY CAST(SUBSTRING(id, 4) AS UNSIGNED) DESC LIMIT 1');
+        let nextNum = 1;
+        if (rows.length > 0 && rows[0].id) {
+          const match = rows[0].id.match(/LK-(\d+)/);
+          if (match) {
+            nextNum = parseInt(match[1], 10) + 1;
+          }
+        }
         const reportId = `LK-${String(nextNum).padStart(3, '0')}`;
         const reportRef = `REF-2026-${String(nextNum).padStart(3, '0')}`;
 
-        // 2. Insert into leak_reports
+        // 2. Insert into leak_reports with authenticated student's permanent database ID
         await conn.query(
           `INSERT INTO leak_reports (
              id, report_reference, student_id, reporter_name, location, zone_name,
@@ -104,14 +116,22 @@ export const studentController = {
    */
   async getMyReports(req, res, next) {
     try {
-      const user = req.session.user;
+      const user = req.session?.user;
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required. No active session.',
+        });
+      }
+
+      // Strictly filter by student's permanent database user ID
       const reports = await query(
         `SELECT id, category AS type, location AS location_detail, zone_name AS zone,
                 status, priority, description, photo_url, video_url, created_at, resolved_at
          FROM leak_reports
-         WHERE student_id = ? OR reporter_name = ?
+         WHERE student_id = ?
          ORDER BY created_at DESC`,
-        [user.id, user.name]
+        [user.id]
       );
 
       // Format for frontend MyReports.jsx
@@ -143,21 +163,24 @@ export const studentController = {
   async getReportHistory(req, res, next) {
     try {
       const { id } = req.params;
-      const user = req.session.user;
+      const user = req.session?.user;
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required. No active session.',
+        });
+      }
 
       // Student ownership check: students can only view history of their own reports
       if (user.role === 'student') {
         const owner = await query(
-          'SELECT student_id, reporter_name FROM leak_reports WHERE id = ?',
+          'SELECT student_id FROM leak_reports WHERE id = ?',
           [id]
         );
         if (owner.length === 0) {
           return res.status(404).json({ success: false, message: 'Report not found.' });
         }
-        const isOwner =
-          (owner[0].student_id && owner[0].student_id === user.id) ||
-          (owner[0].reporter_name && owner[0].reporter_name.toLowerCase() === user.name.toLowerCase());
-        if (!isOwner) {
+        if (owner[0].student_id !== user.id) {
           return res.status(403).json({
             success: false,
             message: 'Access denied: You are only authorized to view history for your own reports.',

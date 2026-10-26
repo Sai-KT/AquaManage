@@ -84,6 +84,7 @@ async function runAllTests() {
   console.log('\n▶ [2/6] AUTHENTICATION & SECURITY CHECKS');
   let adminCookie = '';
   let studentCookie = '';
+  let studentBCookie = '';
   let maintCookie = '';
   let maint2Cookie = '';
 
@@ -109,7 +110,33 @@ async function runAllTests() {
       `HTTP ${unauthReport.status} (Protected route rejects anonymous caller)`
     );
 
-    // 2.3 Attempt Admin Login
+    // 2.3 Test A: Invalid student credentials (valid ID, wrong password)
+    const invalidPassLogin = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'STU-2024-001', password: 'WrongPassword999!' },
+    });
+    recordTest(
+      'Test A: Invalid Student Credentials Rejection',
+      'Auth',
+      invalidPassLogin.status === 401 ? 'PASS' : 'FAIL',
+      `HTTP ${invalidPassLogin.status} (Rejected bad password)`
+    );
+
+    // 2.4 Test B: Unknown student rejection (nonexistent ID, no auto-registration)
+    const unknownStudentLogin = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'NONEXISTENT-999', password: 'AnyPassword123' },
+    });
+    const { pool } = await import('../src/config/database.js');
+    const [unknownCheck] = await pool.query('SELECT id FROM users WHERE student_id = "NONEXISTENT-999"');
+    recordTest(
+      'Test B: Unknown Student Rejection Without Auto-Creation',
+      'Auth',
+      unknownStudentLogin.status === 401 && unknownCheck.length === 0 ? 'PASS' : 'FAIL',
+      `HTTP ${unknownStudentLogin.status} (No account created in database)`
+    );
+
+    // 2.5 Attempt Admin Login
     const adminLogin = await request('/api/auth/login', {
       method: 'POST',
       body: { role: 'admin', username: 'director@iiit.ac.in', password: 'Director@99' },
@@ -118,28 +145,38 @@ async function runAllTests() {
     if (adminLogin.status === 200 && adminLogin.data?.success) {
       adminCookie = adminLogin.headers.get('set-cookie') || '';
       recordTest('Admin Login (director@iiit.ac.in)', 'Auth', 'PASS', 'Session cookie issued');
-    } else if (adminLogin.status === 500 && !adminLogin.data?.success) {
-      recordTest('Admin Login', 'Auth', 'BLOCKED', 'Database offline or pending credentials');
     } else {
       recordTest('Admin Login', 'Auth', 'FAIL', `HTTP ${adminLogin.status}: ${adminLogin.data?.message}`);
     }
 
-    // 2.4 Attempt Student Login
+    // 2.6 Attempt Student A Login (Arjun Mehta, STU-2024-001, Student@123)
     const studentLogin = await request('/api/auth/login', {
       method: 'POST',
-      body: { role: 'student', name: 'Arjun Mehta', irnNo: 'STU-2024-001' },
+      body: { role: 'student', studentId: 'STU-2024-001', password: 'Student@123' },
     });
 
     if (studentLogin.status === 200 && studentLogin.data?.success) {
       studentCookie = studentLogin.headers.get('set-cookie') || '';
-      recordTest('Student Login (STU-2024-001)', 'Auth', 'PASS', 'Session established');
-    } else if (studentLogin.status === 500) {
-      recordTest('Student Login', 'Auth', 'BLOCKED', 'Database offline');
+      recordTest('Student A Login (STU-2024-001 / Arjun Mehta)', 'Auth', 'PASS', 'Session established');
     } else {
-      recordTest('Student Login', 'Auth', 'FAIL', `HTTP ${studentLogin.status}`);
+      recordTest('Student A Login', 'Auth', 'FAIL', `HTTP ${studentLogin.status}`);
     }
 
-    // 2.5 Attempt Maintenance Login (Technician 1: Ram Kumar, EMP-01)
+    // 2.7 Attempt Student B Login (Priya Singh, STU-2024-002, Student@456)
+    const studentBLogin = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: 'STU-2024-002', password: 'Student@456' },
+    });
+
+    studentBCookie = '';
+    if (studentBLogin.status === 200 && studentBLogin.data?.success) {
+      studentBCookie = studentBLogin.headers.get('set-cookie') || '';
+      recordTest('Student B Login (STU-2024-002 / Priya Singh)', 'Auth', 'PASS', 'Session established');
+    } else {
+      recordTest('Student B Login', 'Auth', 'FAIL', `HTTP ${studentBLogin.status}`);
+    }
+
+    // 2.8 Attempt Maintenance Login (Technician 1: Ram Kumar, EMP-01)
     const maintLogin = await request('/api/auth/login', {
       method: 'POST',
       body: { role: 'maintenance', username: 'EMP-01', password: 'Maint@1234' },
@@ -148,13 +185,11 @@ async function runAllTests() {
     if (maintLogin.status === 200 && maintLogin.data?.success) {
       maintCookie = maintLogin.headers.get('set-cookie') || '';
       recordTest('Maintenance Login (EMP-01 / Ram Kumar)', 'Auth', 'PASS', 'Session established');
-    } else if (maintLogin.status === 500) {
-      recordTest('Maintenance Login', 'Auth', 'BLOCKED', 'Database offline');
     } else {
       recordTest('Maintenance Login', 'Auth', 'FAIL', `HTTP ${maintLogin.status}`);
     }
 
-    // 2.6 Attempt Maintenance Login (Technician 2: Suresh Babu, EMP-02)
+    // 2.9 Attempt Maintenance Login (Technician 2: Suresh Babu, EMP-02)
     const maint2Login = await request('/api/auth/login', {
       method: 'POST',
       body: { role: 'maintenance', username: 'EMP-02', password: 'Maint@1234' },
@@ -167,7 +202,7 @@ async function runAllTests() {
       recordTest('Maintenance Login (EMP-02)', 'Auth', 'FAIL', `HTTP ${maint2Login.status}`);
     }
 
-    // 2.7 Cross-role access enforcement (Student cannot call Admin API)
+    // 2.10 Cross-role access enforcement (Student cannot call Admin API)
     if (studentCookie) {
       const studentBlockedFromAdmin = await request('/api/admin/reports', {
         headers: { Cookie: studentCookie },
@@ -186,21 +221,21 @@ async function runAllTests() {
   // Track created tickets for surgical cleanup in finally block
   const createdTicketIds = [];
 
-  // ── Category 3: Student Workflow ──────────────────────────────────────────
-  console.log('\n▶ [3/6] STUDENT WORKFLOW CHECKS');
+  // ── Category 3: Student Workflow & Identity Persistence ───────────────────
+  console.log('\n▶ [3/6] STUDENT WORKFLOW & IDENTITY PERSISTENCE CHECKS');
   let assignedTicketId = null;
   let unassignedTicketId = null;
 
   try {
     if (studentCookie) {
-      // 3.1 Submit primary test complaint (to be assigned)
+      // 3.1 Test C: Student A submits primary test complaint
       const submitRes = await request('/api/student/reports', {
         method: 'POST',
         headers: { Cookie: studentCookie },
         body: {
           type: 'Pipe Leak',
           zone: 'Academic Block',
-          location: 'Academic Block — Test Ground Floor',
+          location: 'Academic Block — 2nd Floor Corridor',
           description: 'Automated test verification leak report for college demo.',
         },
       });
@@ -208,38 +243,114 @@ async function runAllTests() {
       if (submitRes.status === 201 && submitRes.data?.success) {
         assignedTicketId = submitRes.data.reportId;
         createdTicketIds.push(assignedTicketId);
-        recordTest('Student Complaint Submission (Primary)', 'Student', 'PASS', `Ticket Created: ${assignedTicketId}`);
+        recordTest('Test C: Student A Complaint Submission', 'Student', 'PASS', `Ticket Created: ${assignedTicketId}`);
       } else {
-        recordTest('Student Complaint Submission (Primary)', 'Student', 'FAIL', submitRes.data?.message);
+        recordTest('Test C: Student A Complaint Submission', 'Student', 'FAIL', submitRes.data?.message);
       }
 
-      // 3.2 Submit second complaint to remain unassigned for authorization checks
-      const unassignedRes = await request('/api/student/reports', {
+      // 3.2 Verify complaint in database has Student A's internal user ID (6)
+      const { pool } = await import('../src/config/database.js');
+      const [reportRows] = await pool.query('SELECT id, student_id, reporter_name FROM leak_reports WHERE id = ?', [assignedTicketId]);
+      const isStudentAOwner = reportRows.length > 0 && reportRows[0].student_id === 6;
+      recordTest(
+        'Database Report Ownership Association',
+        'Student',
+        isStudentAOwner ? 'PASS' : 'FAIL',
+        `Report student_id=${reportRows[0]?.student_id} matches User ID 6`
+      );
+
+      // 3.3 Test D: Student A logs out and logs back in — My Reports persistence
+      // Step D1: Logout
+      const logoutA = await request('/api/auth/logout', {
         method: 'POST',
         headers: { Cookie: studentCookie },
+      });
+      recordTest('Student A Logout', 'Student', logoutA.status === 200 ? 'PASS' : 'FAIL', 'Session destroyed');
+
+      // Step D2: Re-login as Student A
+      const reloginA = await request('/api/auth/login', {
+        method: 'POST',
+        body: { role: 'student', studentId: 'STU-2024-001', password: 'Student@123' },
+      });
+      const newStudentCookie = reloginA.headers.get('set-cookie') || '';
+      studentCookie = newStudentCookie;
+
+      // Step D3: Fetch My Reports after re-login
+      const myReportsAfterRelogin = await request('/api/student/reports', {
+        headers: { Cookie: studentCookie },
+      });
+      const hasReport = (myReportsAfterRelogin.data?.reports || []).some((r) => r.id === assignedTicketId);
+      recordTest(
+        'Test D: Student A Report Persistence Across Sessions',
+        'Student',
+        myReportsAfterRelogin.status === 200 && hasReport ? 'PASS' : 'FAIL',
+        `Previously submitted report ${assignedTicketId} recovered from MySQL`
+      );
+
+      // 3.4 Test E: Student B login and account isolation
+      // Log in as Student B and check My Reports
+      const loginB = await request('/api/auth/login', {
+        method: 'POST',
+        body: { role: 'student', studentId: 'STU-2024-002', password: 'Student@456' },
+      });
+      studentBCookie = loginB.headers.get('set-cookie') || '';
+      const studentBReports = await request('/api/student/reports', {
+        headers: { Cookie: studentBCookie },
+      });
+      const studentBReportList = studentBReports.data?.reports || [];
+      const studentAInBQueue = studentBReportList.some((r) => r.id === assignedTicketId);
+      recordTest(
+        'Test E: Student B Account Isolation (Cannot see Student A report)',
+        'Student',
+        studentBReports.status === 200 && !studentAInBQueue ? 'PASS' : 'FAIL',
+        `Student B sees ${studentBReportList.length} reports, strictly excludes Student A's ticket`
+      );
+
+      // 3.5 Test F: Student B submits their own complaint
+      const submitBRes = await request('/api/student/reports', {
+        method: 'POST',
+        headers: { Cookie: studentBCookie },
         body: {
           type: 'Dripping Tap',
           zone: 'PPCRC',
           location: 'PPCRC — Lab 2 Restroom',
-          description: 'Automated test unassigned complaint for negative auth check.',
+          description: 'Automated test complaint submitted by Student B.',
         },
       });
 
-      if (unassignedRes.status === 201 && unassignedRes.data?.success) {
-        unassignedTicketId = unassignedRes.data.reportId;
+      if (submitBRes.status === 201 && submitBRes.data?.success) {
+        unassignedTicketId = submitBRes.data.reportId;
         createdTicketIds.push(unassignedTicketId);
-        recordTest('Student Complaint Submission (Unassigned Check)', 'Student', 'PASS', `Ticket Created: ${unassignedTicketId}`);
+        recordTest('Test F1: Student B Submits Independent Complaint', 'Student', 'PASS', `Ticket Created: ${unassignedTicketId}`);
       }
 
-      // 3.3 Fetch student's own reports
-      const myReports = await request('/api/student/reports', {
+      // Verify Student B sees their complaint and Student A sees only their own
+      const myReportsBAfterSubmit = await request('/api/student/reports', {
+        headers: { Cookie: studentBCookie },
+      });
+      const myReportsAAfterSubmit = await request('/api/student/reports', {
         headers: { Cookie: studentCookie },
       });
+      const bSeesB = (myReportsBAfterSubmit.data?.reports || []).some((r) => r.id === unassignedTicketId);
+      const bSeesA = (myReportsBAfterSubmit.data?.reports || []).some((r) => r.id === assignedTicketId);
+      const aSeesA = (myReportsAAfterSubmit.data?.reports || []).some((r) => r.id === assignedTicketId);
+      const aSeesB = (myReportsAAfterSubmit.data?.reports || []).some((r) => r.id === unassignedTicketId);
       recordTest(
-        'Student "My Reports" Retrieval',
+        'Test F2: Bidirectional Account Isolation Verified',
         'Student',
-        myReports.status === 200 && myReports.data?.reports ? 'PASS' : 'FAIL',
-        `${myReports.data?.reports?.length || 0} reports returned`
+        bSeesB && !bSeesA && aSeesA && !aSeesB ? 'PASS' : 'FAIL',
+        'Each student sees only their own persistent complaints'
+      );
+
+      // 3.6 Test K: Direct API Protection (Student B blocked from Student A history)
+      const studentBHackHistory = await request(`/api/student/reports/${assignedTicketId}/history`, {
+        headers: { Cookie: studentBCookie },
+      });
+      recordTest(
+        'Test K: Direct API Access Protection (Student B blocked from Student A ticket history)',
+        'Student',
+        studentBHackHistory.status === 403 ? 'PASS' : 'FAIL',
+        `HTTP ${studentBHackHistory.status} Forbidden`
       );
     } else {
       recordTest('Student Complaint Workflow', 'Student', 'BLOCKED', 'Requires database connection for auth');
@@ -396,6 +507,20 @@ async function runAllTests() {
         completedTasks.status === 200 ? 'PASS' : 'FAIL',
         `${completedTasks.data?.tasks?.length || 0} completed tasks`
       );
+
+      // 5.8 Test I: Original student checks My Reports and sees "resolved" status
+      if (assignedTicketId && studentCookie) {
+        const studentCheckRes = await request('/api/student/reports', {
+          headers: { Cookie: studentCookie },
+        });
+        const resolvedTicket = (studentCheckRes.data?.reports || []).find((r) => r.id === assignedTicketId);
+        recordTest(
+          'Test I: Original Student Observes Resolved Complaint Status in My Reports',
+          'Student',
+          resolvedTicket?.status === 'resolved' ? 'PASS' : 'FAIL',
+          `Ticket ${assignedTicketId} status is "${resolvedTicket?.status}"`
+        );
+      }
     } else {
       recordTest('Maintenance Workflow', 'Maintenance', 'BLOCKED', 'Requires database connection for auth');
     }

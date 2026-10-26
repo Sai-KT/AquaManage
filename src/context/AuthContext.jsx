@@ -70,10 +70,17 @@ export function AuthProvider({ children }) {
         if (res && res.success && res.user) {
           setUser(res.user);
           sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+        } else {
+          setUser(null);
+          sessionStorage.removeItem(STORAGE_KEY);
         }
       })
-      .catch(() => {
-        // Backend not yet running or no active cookie session
+      .catch((err) => {
+        // Clear local storage if session is rejected by backend
+        if (err.status === 401 || err.status === 403) {
+          setUser(null);
+          sessionStorage.removeItem(STORAGE_KEY);
+        }
       });
   }, []);
 
@@ -160,54 +167,49 @@ export function AuthProvider({ children }) {
   };
 
   // ── Student Login ───────────────────────────────────────────────────────────
-  const loginStudent = async (name, irnNo) => {
-    const cleanName = (name || '').trim();
-    const cleanIrn  = (irnNo || '').trim();
+  const loginStudent = async (studentId, password) => {
+    const cleanStudentId = (studentId || '').trim();
+    const cleanPassword = (password || '').trim();
 
-    if (!cleanName) {
-      return { success: false, error: 'Please enter your full name.' };
+    if (!cleanStudentId) {
+      return { success: false, error: 'Please enter your Student ID / IRN No.' };
     }
-    if (!cleanIrn) {
-      return { success: false, error: 'Please enter your IRN No. / PRN No.' };
+    if (!cleanPassword) {
+      return { success: false, error: 'Please enter your password.' };
     }
 
     try {
       const res = await apiClient.post('/auth/login', {
         role: 'student',
-        name: cleanName,
-        irnNo: cleanIrn,
+        studentId: cleanStudentId,
+        password: cleanPassword,
       });
 
       if (res && res.success && res.user) {
         const userData = {
           id: res.user.id,
           name: res.user.name,
-          irnNo: cleanIrn,
-          student_id: cleanIrn,
+          student_id: res.user.student_id,
+          email: res.user.email,
           role: 'student',
-          username: cleanName,
+          username: res.user.student_id || res.user.name,
         };
 
         setUser(userData);
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
         return { success: true, user: userData };
       }
-    } catch (err) {
-      console.warn('[AuthContext] Local backend error on student login, using local session:', err.message);
-    }
 
-    // Fallback session
-    const userData = {
-      id: `stud-${cleanIrn}`,
-      name: cleanName,
-      irnNo: cleanIrn,
-      student_id: cleanIrn,
-      role: 'student',
-      username: cleanName,
-    };
-    setUser(userData);
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-    return { success: true, user: userData };
+      return {
+        success: false,
+        error: res?.message || 'Authentication failed. Please verify your credentials.',
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.message || 'Invalid credentials. Please check your Student ID and password.',
+      };
+    }
   };
 
   return (

@@ -138,8 +138,8 @@ Open your browser to:
 | **Administrator** | `director@iiit.ac.in` | `Director@99` | [http://localhost:5173/login/admin](http://localhost:5173/login/admin) |
 | **Administrator (HoD)** | `hod@iiit.ac.in` | `HoD@Admin2024` | [http://localhost:5173/login/admin](http://localhost:5173/login/admin) |
 | **Maintenance Staff** | `EMP-01` | `Maint@1234` | [http://localhost:5173/login/maintenance](http://localhost:5173/login/maintenance) |
-| **Maintenance Staff** | `EMP-02` | `Maint@1234` | [http://localhost:5173/login/maintenance](http://localhost:5173/login/maintenance) |
-| **Student** | Any Name (e.g. `Arjun Mehta`) | IRN `STU-2024-001` | [http://localhost:5173/login/student](http://localhost:5173/login/student) |
+| **Student A (Arjun Mehta)** | `STU-2024-001` | `Student@123` | [http://localhost:5173/login/student](http://localhost:5173/login/student) |
+| **Student B (Priya Singh)** | `STU-2024-002` | `Student@456` | [http://localhost:5173/login/student](http://localhost:5173/login/student) |
 
 ---
 

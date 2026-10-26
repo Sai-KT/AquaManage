@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  BookOpen, User, Droplets, CheckCircle,
+  BookOpen, Droplets, CheckCircle,
   CloudRain, FileText, ArrowRight, Leaf, Star,
-  IdCard, AlertCircle
+  IdCard, Lock, Eye, EyeOff, AlertCircle
 } from 'lucide-react';
 
 const features = [
@@ -22,8 +22,9 @@ const campusStats = [
 export default function StudentLogin() {
   const navigate = useNavigate();
   const { user, loginStudent } = useAuth();
-  const [name, setName] = useState('');
-  const [irnNo, setIrnNo] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +136,7 @@ export default function StudentLogin() {
     return () => { cancelAnimationFrame(animId); ro.disconnect(); };
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user && user.role === 'student') {
       navigate('/student/report', { replace: true });
     }
@@ -143,21 +144,24 @@ export default function StudentLogin() {
 
   const handleContinue = async (e) => {
     if (e) e.preventDefault();
-    if (!name.trim()) {
-      setError('Please enter your full name (compulsory).');
+    const cleanId = studentId.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanId) {
+      setError('Please enter your Student ID / IRN No.');
       return;
     }
-    if (!irnNo.trim()) {
-      setError('Please enter your IRN No. (compulsory).');
+    if (!cleanPass) {
+      setError('Please enter your password.');
       return;
     }
     setError('');
     setIsLoading(true);
 
     try {
-      const res = await loginStudent(name, irnNo);
+      const res = await loginStudent(cleanId, cleanPass);
       if (res && !res.success) {
-        setError(res.error || 'Failed to authenticate. Please check your credentials.');
+        setError(res.error || 'Invalid student credentials. Please check your Student ID and password.');
         setIsLoading(false);
       } else {
         navigate('/student/report');
@@ -169,7 +173,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', fontFamily: "'Inter', sans-serif", width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+    <div className="student-login-page" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
 
       {/* ─────── LEFT PANEL — Friendly student branding ─────── */}
       <div className="student-login-left" style={{
@@ -178,7 +182,7 @@ export default function StudentLogin() {
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         padding: '60px 64px', position: 'relative', overflow: 'hidden',
       }}>
-        {/* ── Aaron Cunningham-style particle field canvas ── */}
+        {/* ── Particle field canvas ── */}
         <canvas
           ref={canvasRef}
           style={{
@@ -215,7 +219,7 @@ export default function StudentLogin() {
             borderRadius: 20, padding: '5px 14px', marginBottom: 22,
           }}>
             <Star size={10} style={{ color: '#38bdf8' }} />
-            <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#38bdf8', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Student &amp; Staff Portal</span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#38bdf8', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Student Portal</span>
           </div>
 
           {/* Headline */}
@@ -281,7 +285,7 @@ export default function StudentLogin() {
         <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', bottom: -40, left: -40, background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         <div style={{ width: '100%', maxWidth: 380, position: 'relative', zIndex: 1 }}>
-          {/* Animated logo on right panel too */}
+          {/* Animated logo on right panel */}
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{
               width: 78, height: 78, borderRadius: 24, margin: '0 auto 18px',
@@ -295,31 +299,31 @@ export default function StudentLogin() {
             </div>
             <h2 style={{ fontSize: '1.4375rem', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Student Sign In</h2>
             <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.32)', margin: 0, lineHeight: 1.6 }}>
-              Enter your Name and IRN No. to access the student portal
+              Enter your Student ID and password to access your reports
             </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleContinue}>
-            {/* Name field */}
+            {/* Student ID field */}
             <div style={{ marginBottom: 18 }}>
               <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', marginBottom: 8, letterSpacing: '0.2px' }}>
-                Full Name <span style={{ color: '#ef4444' }}>*</span>
+                Student ID / IRN No. <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <div style={{ position: 'relative' }}>
-                <User size={15} style={{
+                <IdCard size={15} style={{
                   position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                  color: focusedField === 'name' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
+                  color: focusedField === 'studentId' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
                 }} />
                 <input
-                  type="text" placeholder="e.g. Arjun Mehta"
-                  value={name} onChange={e => { setName(e.target.value); if (error) setError(''); }}
-                  onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)}
+                  type="text" placeholder="e.g. STU-2024-001"
+                  value={studentId} onChange={e => { setStudentId(e.target.value); if (error) setError(''); }}
+                  onFocus={() => setFocusedField('studentId')} onBlur={() => setFocusedField(null)}
                   autoFocus required
                   style={{
                     width: '100%', padding: '13px 14px 13px 42px',
-                    background: focusedField === 'name' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
-                    border: `1.5px solid ${focusedField === 'name' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
+                    background: focusedField === 'studentId' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${focusedField === 'studentId' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
                     borderRadius: 12, color: '#fff', fontSize: '0.9375rem',
                     outline: 'none', boxSizing: 'border-box',
                     transition: 'all 0.2s ease', caretColor: '#38bdf8',
@@ -328,30 +332,44 @@ export default function StudentLogin() {
               </div>
             </div>
 
-            {/* IRN No. field */}
+            {/* Password field */}
             <div style={{ marginBottom: 22 }}>
               <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', marginBottom: 8, letterSpacing: '0.2px' }}>
-                IRN No. / PRN No. <span style={{ color: '#ef4444' }}>*</span>
+                Password <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <div style={{ position: 'relative' }}>
-                <IdCard size={15} style={{
+                <Lock size={15} style={{
                   position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                  color: focusedField === 'irn' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
+                  color: focusedField === 'password' ? '#38bdf8' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s',
                 }} />
                 <input
-                  type="text" placeholder="e.g. IRN2024891"
-                  value={irnNo} onChange={e => { setIrnNo(e.target.value); if (error) setError(''); }}
-                  onFocus={() => setFocusedField('irn')} onBlur={() => setFocusedField(null)}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your private password"
+                  value={password} onChange={e => { setPassword(e.target.value); if (error) setError(''); }}
+                  onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)}
                   required
                   style={{
-                    width: '100%', padding: '13px 14px 13px 42px',
-                    background: focusedField === 'irn' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
-                    border: `1.5px solid ${focusedField === 'irn' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
+                    width: '100%', padding: '13px 44px 13px 42px',
+                    background: focusedField === 'password' ? 'rgba(14,165,233,0.07)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${focusedField === 'password' ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.09)'}`,
                     borderRadius: 12, color: '#fff', fontSize: '0.9375rem',
                     outline: 'none', boxSizing: 'border-box',
                     transition: 'all 0.2s ease', caretColor: '#38bdf8',
                   }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'rgba(255,255,255,0.3)', padding: 4, display: 'flex', alignItems: 'center',
+                    transition: 'color 0.2s',
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -383,20 +401,15 @@ export default function StudentLogin() {
               }}
             >
               {isLoading ? (
-                <>
-                  <span>Authenticating...</span>
-                </>
+                <span>Authenticating with MySQL...</span>
               ) : (
                 <>
-                  <span>Continue to Student Portal</span>
+                  <span>Sign In to Student Portal</span>
                   <ArrowRight size={16} style={{ animation: isHovered ? 'slideRight 0.4s ease infinite alternate' : 'none' }} />
                 </>
               )}
             </button>
-
-
           </form>
-
 
           {/* Verification badge */}
           <div style={{
@@ -406,7 +419,7 @@ export default function StudentLogin() {
             borderRadius: 10, textAlign: 'center',
           }}>
             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
-              🆔 <strong style={{ color: '#38bdf8' }}>Verified Portal</strong> — Name &amp; IRN No. mandatory for campus issue reporting
+              🔒 <strong style={{ color: '#38bdf8' }}>Secure Authentication</strong> — Verified against campus database records
             </div>
           </div>
 
@@ -438,3 +451,4 @@ export default function StudentLogin() {
     </div>
   );
 }
+
