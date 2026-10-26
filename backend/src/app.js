@@ -1,3 +1,4 @@
+import fs from 'fs';
 import express from 'express';
 import session from 'express-session';
 import MySQLStoreFactory from 'express-mysql-session';
@@ -21,22 +22,27 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+
+// ── 0. Reverse Proxy Trust (Essential for Render HTTPS Cookies) ──────────────
+app.set('trust proxy', 1);
 
 // ── 1. Security & CORS ───────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+  process.env.FRONTEND_ORIGIN,
+  process.env.RENDER_EXTERNAL_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or same-origin)
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (same-origin, curl, mobile apps, or local dev)
+      if (!origin || allowedOrigins.includes(origin) || !isProduction) {
         return callback(null, true);
       }
-      return callback(null, true); // Allow all localhost variants in local dev
+      return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -77,16 +83,22 @@ try {
   console.warn('[SessionStore] Fallback to MemoryStore:', e.message);
 }
 
+const sessionSecret = process.env.SESSION_SECRET || 'aquamanage_local_dev_secret_2026';
+if (isProduction && !process.env.SESSION_SECRET) {
+  console.warn('[SECURITY WARNING] Running in production without a custom SESSION_SECRET!');
+}
+
 app.use(
   session({
     key: 'aquamanage_sid',
-    secret: process.env.SESSION_SECRET || 'aquamanage_local_dev_secret_2026',
+    secret: sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Respect X-Forwarded-Proto from Render proxy
     cookie: {
       httpOnly: true,
-      secure: false, // Local HTTP development
+      secure: isProduction, // Enforce HTTPS cookies in production
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: 'lax',
     },
@@ -101,11 +113,13 @@ app.get('/api/health', async (req, res) => {
   return res.status(isHealthy ? 200 : 503).json({
     success: isHealthy,
     status: isHealthy ? 'healthy' : 'degraded',
-    service: 'AquaManage Local API',
+    service: isProduction ? 'AquaManage Cloud API' : 'AquaManage Local API',
+    environment: process.env.NODE_ENV || 'development',
     database: {
       connected: isHealthy,
       name: process.env.DB_NAME || 'aqua_manage_local',
       host: process.env.DB_HOST || '127.0.0.1',
+      ssl: Boolean(process.env.DB_SSL_CA_PATH || process.env.DB_SSL_CA),
       details: dbHealth.message,
     },
     timestamp: new Date().toISOString(),
@@ -120,15 +134,38 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/water', waterRoutes);
 
-// ── 7. 404 Route Handler ─────────────────────────────────────────────────────
-app.use('/api/*', (req, res) => {
+// ── 7. 404 Route Handler for Unknown API Calls ──────────────────────────────
+app.all('/api/*', (req, res) => {
   res.status(404).json({
     success: false,
     message: `API endpoint "${req.method} ${req.originalUrl}" not found.`,
   });
 });
 
-// ── 8. Error Handling ────────────────────────────────────────────────────────
+// ── 8. Production React Static Files & SPA Routing ──────────────────────────
+const distDir = path.resolve(__dirname, '../../dist');
+if (fs.existsSync(distDir)) {
+  app.use(
+    express.static(distDir, {
+      maxAge: isProduction ? '1d' : 0,
+      etag: true,
+    })
+  );
+
+  // Client-side React Router fallback (supports refreshes on deep links)
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/uploads')) {
+      return next();
+    }
+    const indexPath = path.join(distDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    next();
+  });
+}
+
+// ── 9. Error Handling ────────────────────────────────────────────────────────
 app.use(errorHandler);
 
 export default app;

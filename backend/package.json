@@ -11,6 +11,7 @@
     "db:seed": "node database/seed.js",
     "db:clear": "node database/clear-complaints.js",
     "db:verify": "node database/verify.js",
+    "db:init:cloud": "node database/init-cloud-db.js",
     "test": "node tests/run-tests.js"
   },
   "dependencies": {

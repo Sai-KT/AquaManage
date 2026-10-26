@@ -19,23 +19,33 @@ async function runSchema() {
 
   let connection;
   try {
-    // Connect directly to the AquaManage database
-    connection = await mysql.createConnection({
+    const connConfig = {
       host,
       port,
       user,
       password,
       database,
       multipleStatements: true,
-    });
+    };
+
+    if (process.env.DB_SSL_CA_PATH) {
+      connConfig.ssl = {
+        ca: fs.readFileSync(path.resolve(process.env.DB_SSL_CA_PATH), 'utf8'),
+        rejectUnauthorized: true,
+      };
+    }
+
+    // Connect directly to the AquaManage database
+    connection = await mysql.createConnection(connConfig);
     console.log(`✓ Connected to MySQL server at ${host}:${port}/${database} as user "${user}".`);
 
     // Read schema.sql
     const schemaPath = path.resolve(__dirname, 'schema.sql');
     let sql = fs.readFileSync(schemaPath, 'utf8');
 
-    // Remove any CREATE DATABASE statements to prevent permission issues for dedicated app users
+    // Remove any CREATE DATABASE or USE statements to prevent permission issues for dedicated app users
     sql = sql.replace(/CREATE DATABASE IF NOT EXISTS\s+`?[a-zA-Z0-9_]+`?[^;]*;/gi, '-- database exists');
+    sql = sql.replace(/USE\s+`?[a-zA-Z0-9_]+`?;/gi, '-- use active database');
 
     // Execute schema
     await connection.query(sql);
