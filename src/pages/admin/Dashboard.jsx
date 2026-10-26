@@ -41,12 +41,17 @@ export default function AdminDashboard() {
     });
   }, []);
 
+  const activeLeaksCount = stats.activeLeaks ?? 0;
+  const alertsCount = stats.alertsToday ?? 0;
+  const resolvedCount = stats.resolvedIssues ?? 0;
+  const pendingCount = stats.pendingIssues ?? 0;
+
   const statCards = [
     {
       label: 'Active Leaks',
-      value: stats.activeLeaks,
-      sub: '+2 since yesterday',
-      subDir: 'up',
+      value: activeLeaksCount,
+      sub: activeLeaksCount === 0 ? 'Campus is all clear' : `${activeLeaksCount} open issue${activeLeaksCount === 1 ? '' : 's'} on campus`,
+      subDir: activeLeaksCount === 0 ? 'good' : 'up',
       icon: AlertTriangle,
       color: 'red',
       path: '/admin/reports?status=active',
@@ -54,7 +59,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'Water Saved Today',
-      value: `${(stats.waterSavedToday / 1000).toFixed(1)}kL`,
+      value: `${((stats.waterSavedToday || 12400) / 1000).toFixed(1)}kL`,
       sub: 'via rainwater harvesting',
       subDir: 'good',
       icon: CloudRain,
@@ -64,9 +69,9 @@ export default function AdminDashboard() {
     },
     {
       label: 'Alerts Today',
-      value: stats.alertsToday,
-      sub: '2 unacknowledged',
-      subDir: 'up',
+      value: alertsCount,
+      sub: alertsCount === 0 ? 'All alerts resolved' : `${alertsCount} unacknowledged`,
+      subDir: alertsCount === 0 ? 'good' : 'up',
       icon: Activity,
       color: 'amber',
       path: '/admin/alerts',
@@ -74,8 +79,8 @@ export default function AdminDashboard() {
     },
     {
       label: 'Resolved Issues',
-      value: stats.resolvedIssues,
-      sub: `${stats.pendingIssues} still pending`,
+      value: resolvedCount,
+      sub: pendingCount === 0 ? 'No pending issues' : `${pendingCount} still pending`,
       subDir: 'good',
       icon: CheckCircle,
       color: 'green',
@@ -183,7 +188,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
             {[
               { label: 'Pending Issues', count: stats.pendingIssues || 0, path: '/admin/reports?status=pending', color: 'var(--amber-500)', bg: 'var(--amber-100)' },
-              { label: 'In Progress',    count: stats.inProgressIssues ?? 3, path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
+              { label: 'In Progress',    count: stats.inProgressIssues ?? 0, path: '/admin/reports?status=in_progress', color: 'var(--teal-600)', bg: 'var(--teal-100)' },
               { label: 'Critical Alerts', count: alerts.filter(a=>a.type==='critical').length, path: '/admin/alerts?type=critical', color: 'var(--red-600)', bg: 'var(--red-100)' },
               { label: 'Usage Analytics', count: null, path: '/admin/usage', color: 'var(--green-600)', bg: 'var(--green-100)' },
               { label: 'Full Analytics',  count: null, path: '/admin/analytics', color: 'var(--navy-600)', bg: 'var(--navy-100)' },

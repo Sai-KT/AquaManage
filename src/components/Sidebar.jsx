@@ -8,6 +8,7 @@ import {
   BookOpen, Leaf, HardHat, X,
 } from 'lucide-react';
 import ProfileModal from './ProfileModal';
+import { maintenanceService } from '../services/maintenanceService';
 
 // ─── Navigation configs ───────────────────────────────────────────────────────
 const navConfigs = {
@@ -233,7 +234,48 @@ function AdminSidebar({ user, location, navigate, logout, onOpenProfile }) {
 //  Theme: Industrial amber. Full amber top header, task-count strip, bold cards.
 // ─────────────────────────────────────────────────────────────────────────────
 function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile }) {
-  const cfg = navConfigs.maintenance;
+  const [taskCounts, setTaskCounts] = React.useState({ active: 0, critical: 0, done: 0 });
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const [assignedRes, completedRes] = await Promise.all([
+          maintenanceService.getAssignedTasks(user),
+          maintenanceService.getCompletedTasks(user),
+        ]);
+        if (isMounted) {
+          const assigned = assignedRes?.tasks || [];
+          const completed = completedRes?.tasks || [];
+          const active = assigned.length;
+          const critical = assigned.filter((t) => {
+            const p = (t.priority || t.severity || '').toLowerCase();
+            return p === 'critical' || p === 'high';
+          }).length;
+          const done = completed.length;
+          setTaskCounts({ active, critical, done });
+        }
+      } catch {
+        if (isMounted) {
+          setTaskCounts({ active: 0, critical: 0, done: 0 });
+        }
+      }
+    }
+    loadStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, location.pathname]);
+
+  const sections = [
+    {
+      label: 'WORK QUEUE',
+      items: [
+        { icon: ClipboardList, label: 'Active Tasks', path: '/maintenance/tasks', badge: taskCounts.active },
+        { icon: CheckSquare, label: 'Completed Tasks', path: '/maintenance/completed' },
+      ],
+    },
+  ];
 
   return (
     <div className="sidebar-wrapper" style={{
@@ -320,7 +362,11 @@ function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile })
 
       {/* ── Task summary strip ── */}
       <div style={{ display: 'flex', borderBottom: '1px solid rgba(245,158,11,0.08)', position: 'relative', zIndex: 1 }}>
-        {[{ label: 'Active', value: '3', color: '#fbbf24' }, { label: 'Critical', value: '1', color: '#f87171' }, { label: 'Done', value: '2', color: '#34d399' }].map((s, i) => (
+        {[
+          { label: 'Active', value: taskCounts.active, color: '#fbbf24' },
+          { label: 'Critical', value: taskCounts.critical, color: '#f87171' },
+          { label: 'Done', value: taskCounts.done, color: '#34d399' }
+        ].map((s, i) => (
           <div key={s.label} style={{ flex: 1, padding: '10px 8px', textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(245,158,11,0.07)' : 'none' }}>
             <div style={{ fontSize: '1rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
             <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.28)', fontWeight: 600, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{s.label}</div>
@@ -330,7 +376,7 @@ function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile })
 
       {/* ── Nav ── */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', position: 'relative', zIndex: 1 }}>
-        {cfg.sections.map(section => (
+        {sections.map(section => (
           <div key={section.label} style={{ marginBottom: 16 }}>
             <div style={{ fontSize: '0.5rem', fontWeight: 800, color: 'rgba(251,191,36,0.35)', letterSpacing: '1.5px', padding: '0 8px', marginBottom: 6 }}>
               {section.label}
@@ -363,7 +409,11 @@ function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile })
                   <span style={{ fontSize: '0.8125rem', fontWeight: active ? 700 : 500, color: active ? '#fff' : 'rgba(255,255,255,0.38)', flex: 1, transition: 'color 0.18s' }}>
                     {item.label}
                   </span>
-                  {item.badge && <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#fff', background: '#f59e0b', borderRadius: 10, padding: '2px 7px' }}>{item.badge}</span>}
+                  {item.badge !== undefined && item.badge !== null && (
+                    <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#fff', background: '#f59e0b', borderRadius: 10, padding: '2px 7px' }}>
+                      {item.badge}
+                    </span>
+                  )}
                 </div>
               );
             })}

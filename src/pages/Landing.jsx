@@ -1,18 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Droplets, Users, Wrench, Shield, CheckCircle,
   Activity, CloudRain, ArrowRight, Lock
 } from 'lucide-react';
+import apiClient from '../services/apiClient';
 
 export default function Landing() {
   const navigate = useNavigate();
 
+  const [liveStats, setLiveStats] = useState({
+    activeLeaks: 0,
+    resolvedIssues: 0,
+    alertsToday: 0,
+    harvestingEfficiency: '87%',
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    apiClient.get('/dashboard/stats')
+      .then((res) => {
+        if (isMounted && res && res.success && res.stats) {
+          setLiveStats({
+            activeLeaks: res.stats.activeLeaks ?? 0,
+            resolvedIssues: res.stats.resolvedIssues ?? 0,
+            alertsToday: res.stats.alertsToday ?? 0,
+            harvestingEfficiency: `${res.stats.harvestingEfficiency ?? 87}%`,
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const stats = [
-    { icon: Droplets,    label: 'Litres Saved This Month', value: '2.4M', color: 'var(--teal-400)'  },
-    { icon: CloudRain,   label: 'Harvesting Efficiency',   value: '87%',  color: 'var(--green-400)' },
-    { icon: CheckCircle, label: 'Issues Resolved',         value: '48',   color: 'var(--green-400)' },
-    { icon: Activity,    label: 'Active Alerts',           value: '3',    color: 'var(--amber-400)' },
+    { icon: Droplets,    label: 'Demonstration Water Saved', value: '12.4 kL', color: 'var(--teal-400)'  },
+    { icon: CloudRain,   label: 'Harvesting Efficiency',     value: liveStats.harvestingEfficiency, color: 'var(--green-400)' },
+    { icon: CheckCircle, label: 'Complaints Resolved',       value: `${liveStats.resolvedIssues}`,   color: 'var(--green-400)' },
+    { icon: Activity,    label: 'Active Campus Leaks',       value: `${liveStats.activeLeaks}`,    color: 'var(--amber-400)' },
   ];
 
   const roles = [
@@ -147,12 +176,14 @@ export default function Landing() {
 
       {/* Footer */}
       <div className="landing-footer">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span className="live-dot" />
           <span style={{ color: 'var(--green-400)', fontWeight: 600, fontSize: '0.8125rem' }}>System Online</span>
           <span style={{ color: 'var(--navy-600)' }}>·</span>
           <Activity size={13} style={{ color: 'var(--navy-500)' }} />
-          <span>59,500 L monitored today</span>
+          <span>59,500 L monitored today (Simulated Telemetry)</span>
+          <span style={{ color: 'var(--navy-600)' }}>·</span>
+          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>Local Demonstration Environment · College DTI Project</span>
         </div>
       </div>
     </div>

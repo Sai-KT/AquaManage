@@ -7,18 +7,22 @@ const STORAGE_KEY = 'aquamanage_user';
 const LAST_ACTIVE_KEY = 'aquamanage_last_active';
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes idle timeout for Admin & Maintenance
 
-// ── Fallback credentials for offline demo reliability ─────────────────────────
-const CREDENTIALS = {
-  admin: [
-    { username: 'director@iiit.ac.in', password: 'Director@99',  name: 'Prof. A. Kulkarni', role: 'admin' },
-    { username: 'hod@iiit.ac.in',      password: 'HoD@Admin2024', name: 'Dr. R. Sharma',     role: 'admin' },
-  ],
-  maintenance: [
-    { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar',   role: 'maintenance' },
-    { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh Babu', role: 'maintenance' },
-    { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan Das',   role: 'maintenance' },
-  ],
-};
+// ── Fallback credentials for offline local development only ─────────────────
+// In deployed production builds, demonstration credentials are removed to enforce backend authentication.
+const isDev = Boolean(import.meta.env.DEV);
+const CREDENTIALS = isDev
+  ? {
+      admin: [
+        { username: 'director@iiit.ac.in', password: 'Director@99',  name: 'Prof. A. Kulkarni', role: 'admin' },
+        { username: 'hod@iiit.ac.in',      password: 'HoD@Admin2024', name: 'Dr. R. Sharma',     role: 'admin' },
+      ],
+      maintenance: [
+        { username: 'EMP-01', password: 'Maint@1234', name: 'Ram Kumar',   role: 'maintenance' },
+        { username: 'EMP-02', password: 'Maint@1234', name: 'Suresh Babu', role: 'maintenance' },
+        { username: 'EMP-03', password: 'Maint@1234', name: 'Mohan Das',   role: 'maintenance' },
+      ],
+    }
+  : { admin: [], maintenance: [] };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {

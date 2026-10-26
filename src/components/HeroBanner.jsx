@@ -16,6 +16,7 @@ import {
   ArrowRight, Droplets, Map,
   FileText, CheckCircle, Zap
 } from 'lucide-react';
+import { maintenanceService } from '../services/maintenanceService';
 
 // ── Tiny static particles (stable across renders) ─────────────────────────────
 const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
@@ -143,6 +144,34 @@ function MaintenanceHero({ user }) {
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   const shift = now.getHours() < 14 ? 'Morning Shift' : 'Afternoon Shift';
 
+  const [taskStats, setTaskStats] = useState({ active: 0, critical: 0 });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTasks() {
+      try {
+        const res = await maintenanceService.getAssignedTasks(user);
+        if (isMounted) {
+          const tasks = res?.tasks || [];
+          const active = tasks.length;
+          const critical = tasks.filter((t) => {
+            const p = (t.priority || t.severity || '').toLowerCase();
+            return p === 'critical' || p === 'high';
+          }).length;
+          setTaskStats({ active, critical });
+        }
+      } catch {
+        if (isMounted) {
+          setTaskStats({ active: 0, critical: 0 });
+        }
+      }
+    }
+    loadTasks();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
   return (
     <div style={{
       position: 'relative', overflow: 'hidden', borderRadius: 16, marginBottom: 28,
@@ -193,8 +222,20 @@ function MaintenanceHero({ user }) {
           {/* Quick status chips */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             {[
-              { label: '3 Active Tasks', color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', path: '/maintenance/tasks' },
-              { label: '1 Critical',     color: '#f87171', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.2)', path: '/maintenance/tasks' },
+              {
+                label: `${taskStats.active} Active Task${taskStats.active === 1 ? '' : 's'}`,
+                color: '#fbbf24',
+                bg: 'rgba(245,158,11,0.1)',
+                border: 'rgba(245,158,11,0.25)',
+                path: '/maintenance/tasks',
+              },
+              {
+                label: `${taskStats.critical} Critical`,
+                color: '#f87171',
+                bg: 'rgba(239,68,68,0.08)',
+                border: 'rgba(239,68,68,0.2)',
+                path: '/maintenance/tasks',
+              },
             ].map(chip => (
               <button
                 key={chip.label}
