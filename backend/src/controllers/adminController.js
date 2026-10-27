@@ -12,7 +12,10 @@ export const adminController = {
         SELECT r.id, r.category AS type, r.location, r.zone_name AS zone,
                r.reporter_name AS reporter, r.assigned_name AS assignedTo,
                r.status, r.priority, r.description, r.photo_url AS photo,
-               r.video_url AS video, r.created_at, r.resolved_at,
+               r.video_url AS video,
+               COALESCE(r.reported_at, r.created_at) AS created_at,
+               r.reported_at,
+               r.resolved_at,
                (SELECT notes FROM report_history WHERE report_id = r.id ORDER BY created_at DESC LIMIT 1) AS latest_note,
                (SELECT action FROM report_history WHERE report_id = r.id ORDER BY created_at DESC LIMIT 1) AS latest_action
         FROM leak_reports r
@@ -35,11 +38,18 @@ export const adminController = {
 
       const reports = await query(sql, params);
 
-      const formatted = reports.map((r) => ({
-        ...r,
-        status: r.status === 'reported' ? 'pending' : r.status,
-        date: new Date(r.created_at).toISOString().split('T')[0],
-      }));
+      const formatted = reports.map((r) => {
+        const rawDate = r.created_at || r.reported_at;
+        const d = rawDate ? new Date(rawDate) : new Date();
+        const isValidDate = !isNaN(d.getTime());
+        return {
+          ...r,
+          status: r.status === 'reported' ? 'pending' : r.status,
+          created_at: isValidDate ? d.toISOString() : r.created_at,
+          date: isValidDate ? d.toISOString().split('T')[0] : (r.date || ''),
+          time: isValidDate ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '',
+        };
+      });
 
       return res.json({
         success: true,

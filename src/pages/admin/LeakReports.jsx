@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { AlertTriangle, Download, Search, Eye, UserCheck, ChevronLeft, X, RefreshCw } from 'lucide-react';
+import {
+  AlertTriangle,
+  Download,
+  Search,
+  Eye,
+  UserCheck,
+  ChevronLeft,
+  X,
+  RefreshCw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import { leakReports as defaultReports } from '../../data/mockData';
 import adminService from '../../services/adminService';
 
@@ -14,6 +26,10 @@ export default function LeakReports() {
   const [reports, setReports] = useState(defaultReports);
   const [staffList, setStaffList] = useState(['Ram Kumar', 'Suresh Babu', 'Mohan Das', 'Vijay Patil', 'Anil Sharma']);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sorting state: default is date descending (newest first)
+  const [sortField, setSortField] = useState('date'); // 'date' | 'priority' | 'id'
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' | 'asc'
 
   // Read initial filter from URL params (e.g. ?status=active or ?status=pending)
   const urlStatus = searchParams.get('status') || 'all';
@@ -65,6 +81,38 @@ export default function LeakReports() {
     return r.status === statusFilter;
   };
 
+  // Helpers for date and time parsing and formatting
+  const getTimeValue = (report) => {
+    const val = report.created_at || report.reported_at || report.date;
+    if (!val) return 0;
+    const time = new Date(val).getTime();
+    return isNaN(time) ? 0 : time;
+  };
+
+  const formatDisplayDate = (val) => {
+    if (!val) return '—';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val).split('T')[0] || String(val);
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatDisplayTime = (val) => {
+    if (!val) return '';
+    if (typeof val === 'string' && (val.includes('AM') || val.includes('PM'))) return val;
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const handleColumnSort = (field) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortOrder(field === 'date' ? 'desc' : 'asc');
+    }
+  };
+
   const filtered = reports
     .filter(matchesStatus)
     .filter((r) => priorityFilter === 'all' || r.priority === priorityFilter)
@@ -75,7 +123,29 @@ export default function LeakReports() {
       (r.location && r.location.toLowerCase().includes(search.toLowerCase())) ||
       (r.reporter && r.reporter.toLowerCase().includes(search.toLowerCase()))
     )
-    .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
+    .sort((a, b) => {
+      if (sortField === 'date') {
+        const tA = getTimeValue(a);
+        const tB = getTimeValue(b);
+        if (tA !== tB) {
+          return sortOrder === 'asc' ? tA - tB : tB - tA;
+        }
+        return (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9);
+      }
+      if (sortField === 'priority') {
+        const pA = PRIORITY_ORDER[a.priority] ?? 9;
+        const pB = PRIORITY_ORDER[b.priority] ?? 9;
+        if (pA !== pB) {
+          return sortOrder === 'asc' ? pB - pA : pA - pB;
+        }
+        return getTimeValue(b) - getTimeValue(a);
+      }
+      if (sortField === 'id') {
+        const cmp = (a.id || '').localeCompare(b.id || '', undefined, { numeric: true });
+        return sortOrder === 'asc' ? cmp : -cmp;
+      }
+      return 0;
+    });
 
   const zones = [...new Set(reports.map((r) => r.zone))];
 
@@ -107,14 +177,15 @@ export default function LeakReports() {
 
   const handleExportCSV = () => {
     if (!filtered.length) return;
-    const headers = ['Report ID', 'Type', 'Location', 'Zone', 'Reporter', 'Date', 'Priority', 'Status', 'Assigned Staff', 'Description'];
+    const headers = ['Report ID', 'Type', 'Location', 'Zone', 'Reporter', 'Date', 'Time', 'Priority', 'Status', 'Assigned Staff', 'Description'];
     const rows = filtered.map(r => [
       `"${r.id || ''}"`,
       `"${(r.type || '').replace(/"/g, '""')}"`,
       `"${(r.location || '').replace(/"/g, '""')}"`,
       `"${(r.zone || '').replace(/"/g, '""')}"`,
       `"${(r.reporter || '').replace(/"/g, '""')}"`,
-      `"${r.date || ''}"`,
+      `"${formatDisplayDate(r.created_at || r.reported_at || r.date)}"`,
+      `"${formatDisplayTime(r.time || r.created_at || r.reported_at || '')}"`,
       `"${r.priority || ''}"`,
       `"${r.status || ''}"`,
       `"${(r.assignedTo || 'Unassigned').replace(/"/g, '""')}"`,
@@ -234,6 +305,27 @@ export default function LeakReports() {
               <option value="all">All Zones</option>
               {zones.map((z) => <option key={z} value={z}>{z}</option>)}
             </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', borderRadius: 8, padding: '2px 8px', border: '1.5px solid var(--navy-200)' }}>
+              <ArrowUpDown size={14} style={{ color: 'var(--navy-400)', flexShrink: 0 }} />
+              <select
+                className="form-select"
+                value={`${sortField}_${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split('_');
+                  setSortField(field);
+                  setSortOrder(order);
+                }}
+                title="Sort leak reports by date, time, priority, or ID"
+                style={{ border: 'none', background: 'transparent', padding: '6px 4px', fontSize: '0.8125rem', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="date_desc">Sort: Date & Time (Newest First)</option>
+                <option value="date_asc">Sort: Date & Time (Oldest First)</option>
+                <option value="priority_desc">Sort: Priority (High → Low)</option>
+                <option value="priority_asc">Sort: Priority (Low → High)</option>
+                <option value="id_asc">Sort: ID (Ascending)</option>
+                <option value="id_desc">Sort: ID (Descending)</option>
+              </select>
+            </div>
           </div>
 
           {/* Table */}
@@ -242,12 +334,51 @@ export default function LeakReports() {
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th
+                      onClick={() => handleColumnSort('id')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      title="Click to sort by ID"
+                    >
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span>ID</span>
+                        {sortField === 'id' ? (
+                          sortOrder === 'asc' ? <ArrowUp size={12} style={{ color: 'var(--teal-600)' }} /> : <ArrowDown size={12} style={{ color: 'var(--teal-600)' }} />
+                        ) : (
+                          <ArrowUpDown size={11} style={{ opacity: 0.3 }} />
+                        )}
+                      </div>
+                    </th>
                     <th>Type</th>
                     <th>Location</th>
                     <th>Reporter</th>
-                    <th>Date</th>
-                    <th>Priority</th>
+                    <th
+                      onClick={() => handleColumnSort('date')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      title="Click to sort by Date and Time"
+                    >
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span>Date & Time</span>
+                        {sortField === 'date' ? (
+                          sortOrder === 'desc' ? <ArrowDown size={13} style={{ color: 'var(--teal-600)' }} /> : <ArrowUp size={13} style={{ color: 'var(--teal-600)' }} />
+                        ) : (
+                          <ArrowUpDown size={11} style={{ opacity: 0.3 }} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleColumnSort('priority')}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      title="Click to sort by Priority"
+                    >
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span>Priority</span>
+                        {sortField === 'priority' ? (
+                          sortOrder === 'desc' ? <ArrowDown size={13} style={{ color: 'var(--teal-600)' }} /> : <ArrowUp size={13} style={{ color: 'var(--teal-600)' }} />
+                        ) : (
+                          <ArrowUpDown size={11} style={{ opacity: 0.3 }} />
+                        )}
+                      </div>
+                    </th>
                     <th>Status</th>
                     <th>Assigned To</th>
                     <th>Actions</th>
@@ -264,7 +395,16 @@ export default function LeakReports() {
                           <td>{r.type}</td>
                           <td style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.location}</td>
                         <td>{r.reporter}</td>
-                        <td style={{ color: 'var(--navy-400)', fontSize: '0.8125rem' }}>{r.date}</td>
+                        <td style={{ verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--navy-700)', whiteSpace: 'nowrap' }}>
+                              📅 {formatDisplayDate(r.created_at || r.reported_at || r.date)}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--navy-400)', whiteSpace: 'nowrap' }}>
+                              🕐 {formatDisplayTime(r.time || r.created_at || r.reported_at) || '—'}
+                            </span>
+                          </div>
+                        </td>
                         <td><span className={`badge ${r.priority}`}>{r.priority}</span></td>
                         <td>
                           <span className={`badge ${r.status}`}>{r.status.replace('_', ' ')}</span>
