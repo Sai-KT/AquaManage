@@ -118,7 +118,7 @@ async function seedDatabase() {
     const reportsToSeed = [
       {
         id: 'LK-001',
-        report_reference: 'REF-2026-001',
+        report_reference: 'REF-2026-LK-001',
         student_id: student1?.id || null,
         reporter_name: 'Arjun Mehta',
         assigned_to: emp1?.id || null,
@@ -134,8 +134,8 @@ async function seedDatabase() {
         resolved_at: null,
       },
       {
-        id: 'LK-002',
-        report_reference: 'REF-2026-002',
+        id: 'TW-001',
+        report_reference: 'REF-2026-TW-001',
         student_id: student2?.id || null,
         reporter_name: 'Priya Singh',
         assigned_to: null,
@@ -151,8 +151,8 @@ async function seedDatabase() {
         resolved_at: null,
       },
       {
-        id: 'LK-003',
-        report_reference: 'REF-2026-003',
+        id: 'PB-001',
+        report_reference: 'REF-2026-PB-001',
         student_id: student1?.id || null,
         reporter_name: 'Arjun Mehta',
         assigned_to: emp2?.id || null,
@@ -168,8 +168,8 @@ async function seedDatabase() {
         resolved_at: null,
       },
       {
-        id: 'LK-004',
-        report_reference: 'REF-2026-004',
+        id: 'OF-001',
+        report_reference: 'REF-2026-OF-001',
         student_id: null,
         reporter_name: 'System Alert',
         assigned_to: emp1?.id || null,
@@ -185,8 +185,8 @@ async function seedDatabase() {
         resolved_at: '2026-10-18 11:45:00',
       },
       {
-        id: 'LK-005',
-        report_reference: 'REF-2026-005',
+        id: 'TW-002',
+        report_reference: 'REF-2026-TW-002',
         student_id: student2?.id || null,
         reporter_name: 'Priya Singh',
         assigned_to: emp3?.id || null,
@@ -202,8 +202,8 @@ async function seedDatabase() {
         resolved_at: '2026-10-17 12:15:00',
       },
       {
-        id: 'LK-006',
-        report_reference: 'REF-2026-006',
+        id: 'LK-002',
+        report_reference: 'REF-2026-LK-002',
         student_id: student1?.id || null,
         reporter_name: 'Arjun Mehta',
         assigned_to: null,
@@ -219,8 +219,8 @@ async function seedDatabase() {
         resolved_at: null,
       },
       {
-        id: 'LK-007',
-        report_reference: 'REF-2026-007',
+        id: 'TW-003',
+        report_reference: 'REF-2026-TW-003',
         student_id: null,
         reporter_name: 'Security Guard',
         assigned_to: emp2?.id || null,
@@ -236,8 +236,8 @@ async function seedDatabase() {
         resolved_at: null,
       },
       {
-        id: 'LK-008',
-        report_reference: 'REF-2026-008',
+        id: 'LK-003',
+        report_reference: 'REF-2026-LK-003',
         student_id: student2?.id || null,
         reporter_name: 'Priya Singh',
         assigned_to: emp3?.id || null,
@@ -282,23 +282,23 @@ async function seedDatabase() {
       { report_id: 'LK-001', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned to Ram Kumar (EMP-01)' },
       { report_id: 'LK-001', actor_name: 'Ram Kumar', action: 'status_update', previous_status: 'assigned', new_status: 'in_progress', notes: 'Inspected leak source — pipe joint above false ceiling. Temporary patch applied.' },
 
-      { report_id: 'LK-002', actor_name: 'Priya Singh', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Complaint submitted by student.' },
+      { report_id: 'TW-001', actor_name: 'Priya Singh', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Complaint submitted by student.' },
 
-      { report_id: 'LK-003', actor_name: 'Arjun Mehta', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Critical burst reported.' },
-      { report_id: 'LK-003', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned urgently to Suresh Babu' },
-      { report_id: 'LK-003', actor_name: 'Suresh Babu', action: 'status_update', previous_status: 'assigned', new_status: 'in_progress', notes: 'Main isolation valve shut off to section. Replacement flange ordered.' },
+      { report_id: 'PB-001', actor_name: 'Arjun Mehta', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Critical burst reported.' },
+      { report_id: 'PB-001', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned urgently to Suresh Babu' },
+      { report_id: 'PB-001', actor_name: 'Suresh Babu', action: 'status_update', previous_status: 'assigned', new_status: 'in_progress', notes: 'Main isolation valve shut off to section. Replacement flange ordered.' },
 
-      { report_id: 'LK-004', actor_name: 'System Alert', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Automated overflow alert.' },
-      { report_id: 'LK-004', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned to Ram Kumar' },
-      { report_id: 'LK-004', actor_name: 'Ram Kumar', action: 'resolved', previous_status: 'in_progress', new_status: 'resolved', notes: 'Overflow float valve adjusted and calibrated. Drainage cleared.' },
+      { report_id: 'OF-001', actor_name: 'System Alert', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Automated overflow alert.' },
+      { report_id: 'OF-001', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned to Ram Kumar' },
+      { report_id: 'OF-001', actor_name: 'Ram Kumar', action: 'resolved', previous_status: 'in_progress', new_status: 'resolved', notes: 'Overflow float valve adjusted and calibrated. Drainage cleared.' },
 
-      { report_id: 'LK-005', actor_name: 'Priya Singh', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Complaint submitted.' },
-      { report_id: 'LK-005', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned to Mohan Das' },
-      { report_id: 'LK-005', actor_name: 'Mohan Das', action: 'resolved', previous_status: 'in_progress', new_status: 'resolved', notes: 'Tap washer replaced and tested. Zero leakage.' },
+      { report_id: 'TW-002', actor_name: 'Priya Singh', action: 'reported', previous_status: null, new_status: 'reported', notes: 'Complaint submitted.' },
+      { report_id: 'TW-002', actor_name: 'Prof. A. Kulkarni', action: 'assigned', previous_status: 'reported', new_status: 'assigned', notes: 'Assigned to Mohan Das' },
+      { report_id: 'TW-002', actor_name: 'Mohan Das', action: 'resolved', previous_status: 'in_progress', new_status: 'resolved', notes: 'Tap washer replaced and tested. Zero leakage.' },
     ];
 
     // Clear existing history to avoid duplicated duplicate logs on re-seed
-    await connection.query('DELETE FROM report_history WHERE report_id IN ("LK-001","LK-002","LK-003","LK-004","LK-005")');
+    await connection.query('DELETE FROM report_history WHERE report_id IN ("LK-001","TW-001","PB-001","OF-001","TW-002")');
     for (const h of historyLogs) {
       await connection.query(
         `INSERT INTO report_history (report_id, actor_name, action, previous_status, new_status, notes)
@@ -354,8 +354,8 @@ async function seedDatabase() {
 
     if (includeSampleReports) {
       alertsToSeed.push(
-        { id: 3, type: 'warning', icon: 'AlertCircle', title: 'New Critical Report: LK-003', message: 'Pipe burst reported in PPCRC 2nd Floor. Assigned to Suresh Babu.', is_read: false, target_role: 'maintenance' },
-        { id: 5, type: 'info', icon: 'CheckCircle', title: 'Issue LK-004 Resolved', message: 'PPCRC overflow issue resolved by Ram Kumar.', is_read: true, target_role: 'all' }
+        { id: 3, type: 'warning', icon: 'AlertCircle', title: 'New Critical Report: PB-001', message: 'Pipe burst reported in PPCRC 2nd Floor. Assigned to Suresh Babu.', is_read: false, target_role: 'maintenance' },
+        { id: 5, type: 'info', icon: 'CheckCircle', title: 'Issue OF-001 Resolved', message: 'PPCRC overflow issue resolved by Ram Kumar.', is_read: true, target_role: 'all' }
       );
     }
 

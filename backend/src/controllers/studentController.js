@@ -1,6 +1,30 @@
 import bcrypt from 'bcrypt';
 import { query, withTransaction } from '../config/database.js';
 
+/**
+ * Map issue category/type to its standard unique report prefix
+ * E.g., Pipe Leak -> LK, Overflow -> OF, Pipe Burst -> PB, Tap Wastage -> TW,
+ *       Sprinkler Fault -> SF, Blocked Drain -> BD, Other -> OT
+ */
+export function getReportTypePrefix(type) {
+  if (!type || typeof type !== 'string') return 'LK';
+  const clean = type.trim().toLowerCase();
+  if (clean.includes('burst')) return 'PB';       // Pipe Burst -> PB
+  if (clean.includes('overflow')) return 'OF';    // Overflow -> OF
+  if (clean.includes('tap') || clean.includes('wastage')) return 'TW'; // Tap Wastage -> TW
+  if (clean.includes('sprinkler')) return 'SF';   // Sprinkler Fault -> SF
+  if (clean.includes('drain') || clean.includes('blocked')) return 'BD'; // Blocked Drain -> BD
+  if (clean.includes('other')) return 'OT';       // Other -> OT
+  if (clean.includes('leak')) return 'LK';        // Pipe Leak -> LK
+  
+  // Generic fallback: first 2 letters uppercase
+  const words = type.trim().split(/\s+/);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return type.trim().slice(0, 2).toUpperCase() || 'LK';
+}
+
 export const studentController = {
   /**
    * Submit a new leak/water issue complaint
@@ -44,17 +68,21 @@ export const studentController = {
       const locDetail = location || `${zone} — Campus Area`;
 
       const result = await withTransaction(async (conn) => {
-        // 1. Determine next report ID (LK-XXX) safely without collision
-        const [rows] = await conn.query('SELECT id FROM leak_reports ORDER BY CAST(SUBSTRING(id, 4) AS UNSIGNED) DESC LIMIT 1');
+        // 1. Determine next report ID with category-specific unique prefix safely without collision
+        const prefix = getReportTypePrefix(type);
+        const [rows] = await conn.query(
+          'SELECT id FROM leak_reports WHERE id LIKE ? ORDER BY CAST(SUBSTRING_INDEX(id, "-", -1) AS UNSIGNED) DESC LIMIT 1',
+          [`${prefix}-%`]
+        );
         let nextNum = 1;
         if (rows.length > 0 && rows[0].id) {
-          const match = rows[0].id.match(/LK-(\d+)/);
+          const match = rows[0].id.match(new RegExp(`^${prefix}-(\\d+)`));
           if (match) {
             nextNum = parseInt(match[1], 10) + 1;
           }
         }
-        const reportId = `LK-${String(nextNum).padStart(3, '0')}`;
-        const reportRef = `REF-2026-${String(nextNum).padStart(3, '0')}`;
+        const reportId = `${prefix}-${String(nextNum).padStart(3, '0')}`;
+        const reportRef = `REF-2026-${reportId}`;
 
         // 2. Insert into leak_reports with authenticated student's permanent database ID
         await conn.query(

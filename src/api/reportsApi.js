@@ -60,7 +60,17 @@ export const reportsApi = {
       }
     }
 
-    const fallbackId = `LK-0${Math.floor(10 + Math.random() * 90)}`;
+    const prefixMap = {
+      'pipe leak': 'LK',
+      'overflow': 'OF',
+      'pipe burst': 'PB',
+      'tap wastage': 'TW',
+      'sprinkler fault': 'SF',
+      'blocked drain': 'BD',
+      'other': 'OT',
+    };
+    const pfx = prefixMap[type?.toLowerCase()] || (type?.includes('burst') ? 'PB' : type?.includes('overflow') ? 'OF' : type?.includes('tap') ? 'TW' : 'LK');
+    const fallbackId = `${pfx}-0${Math.floor(10 + Math.random() * 90)}`;
     return {
       success: true,
       reportId: fallbackId,

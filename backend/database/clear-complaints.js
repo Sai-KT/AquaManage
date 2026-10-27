@@ -37,8 +37,8 @@ async function clearComplaints() {
       SELECT COUNT(*) as c FROM alerts 
       WHERE title LIKE '%Report%' 
          OR title LIKE '%Ticket%' 
-         OR title LIKE '%Issue LK%' 
-         OR message LIKE '%LK-%'
+         OR title LIKE '%Issue %' 
+         OR message REGEXP '[A-Z]{2}-[0-9]{3}'
     `);
     const [bUsers] = await connection.query('SELECT COUNT(*) as c FROM users');
     const [bTanks] = await connection.query('SELECT COUNT(*) as c FROM tanks');
@@ -61,8 +61,8 @@ async function clearComplaints() {
       DELETE FROM alerts 
       WHERE title LIKE '%Report%' 
          OR title LIKE '%Ticket%' 
-         OR title LIKE '%Issue LK%' 
-         OR message LIKE '%LK-%'
+         OR title LIKE '%Issue %' 
+         OR message REGEXP '[A-Z]{2}-[0-9]{3}'
     `);
     console.log(`  ✓ Removed ${delAlerts.affectedRows} complaint-related alerts.`);
 

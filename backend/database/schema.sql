@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `report_history` (
   `new_status` VARCHAR(50) NULL,
   `notes` TEXT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_report_history_report` FOREIGN KEY (`report_id`) REFERENCES `leak_reports` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_report_history_report` FOREIGN KEY (`report_id`) REFERENCES `leak_reports` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_report_history_actor` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   INDEX `idx_report_history_report` (`report_id`),
   INDEX `idx_report_history_created` (`created_at` ASC)
