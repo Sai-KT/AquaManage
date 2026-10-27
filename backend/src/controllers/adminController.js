@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { query, withTransaction } from '../config/database.js';
 
 export const adminController = {
@@ -241,6 +242,224 @@ export const adminController = {
     try {
       await query('UPDATE alerts SET is_read = TRUE');
       return res.json({ success: true, message: 'All alerts marked as read.' });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * Get all registered student accounts (admin only)
+   */
+  async getStudents(req, res, next) {
+    try {
+      const students = await query(
+        `SELECT id, full_name, student_id, email, department, role, is_active, created_at, updated_at
+         FROM users
+         WHERE role = 'student'
+         ORDER BY created_at DESC, id DESC`
+      );
+
+      const formatted = students.map((s) => ({
+        ...s,
+        is_active: Boolean(s.is_active),
+      }));
+
+      return res.json({
+        success: true,
+        count: formatted.length,
+        students: formatted,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * Register a new student account (admin only)
+   */
+  async createStudent(req, res, next) {
+    try {
+      const {
+        full_name,
+        student_id,
+        department,
+        email,
+        password,
+        confirmPassword,
+      } = req.body || {};
+
+      // 1. Mandatory input presence & type validation
+      if (!full_name || typeof full_name !== 'string' || !full_name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Full Name is required and cannot be blank.',
+        });
+      }
+
+      if (!student_id || typeof student_id !== 'string' || !student_id.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Student ID is required and cannot be blank.',
+        });
+      }
+
+      if (!email || typeof email !== 'string' || !email.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email address is required and cannot be blank.',
+        });
+      }
+
+      if (!password || typeof password !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Initial password is required.',
+        });
+      }
+
+      if (confirmPassword === undefined || confirmPassword === null) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password confirmation is required.',
+        });
+      }
+
+      // 2. Normalize inputs
+      const cleanFullName = full_name.trim();
+      const cleanStudentId = student_id.trim().toUpperCase();
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanDept = typeof department === 'string' && department.trim() ? department.trim() : 'General';
+
+      // 3. Length & Format Validations
+      if (cleanFullName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Full Name cannot exceed 100 characters.',
+        });
+      }
+
+      if (cleanStudentId.length > 50) {
+        return res.status(400).json({
+          success: false,
+          message: 'Student ID cannot exceed 50 characters.',
+        });
+      }
+
+      if (cleanDept.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Department cannot exceed 100 characters.',
+        });
+      }
+
+      // Email format check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail) || cleanEmail.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid email address (e.g. rahul@example.edu).',
+        });
+      }
+
+      // Password confirmation match
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Initial password and password confirmation do not match.',
+        });
+      }
+
+      // Password length check (minimum 8 characters, maximum 72 bytes for bcrypt safe limit)
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'Initial password must be at least 8 characters long.',
+        });
+      }
+
+      if (Buffer.byteLength(password, 'utf8') > 72) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password exceeds maximum length supported by hashing standard (72 bytes).',
+        });
+      }
+
+      // 4. Check uniqueness: Student ID
+      const existingStudentId = await query(
+        'SELECT id FROM users WHERE UPPER(student_id) = ? LIMIT 1',
+        [cleanStudentId]
+      );
+      if (existingStudentId.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: 'This Student ID is already registered.',
+        });
+      }
+
+      // 5. Check uniqueness: Email
+      const existingEmail = await query(
+        'SELECT id FROM users WHERE LOWER(email) = ? LIMIT 1',
+        [cleanEmail]
+      );
+      if (existingEmail.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: 'This email address is already associated with an account.',
+        });
+      }
+
+      // 6. Secure Password Hashing
+      const password_hash = await bcrypt.hash(password, 10);
+
+      // 7. Parameterized Insert into users
+      let insertResult;
+      try {
+        insertResult = await query(
+          `INSERT INTO users (
+             full_name, email, student_id, employee_id, department, password_hash, role, is_active
+           ) VALUES (?, ?, ?, NULL, ?, ?, 'student', 1)`,
+          [cleanFullName, cleanEmail, cleanStudentId, cleanDept, password_hash]
+        );
+      } catch (dbErr) {
+        // Handle MySQL duplicate key error (ER_DUP_ENTRY / 1062) for concurrent collisions
+        if (dbErr.code === 'ER_DUP_ENTRY' || dbErr.errno === 1062) {
+          const errMsg = (dbErr.message || '').toLowerCase();
+          if (errMsg.includes('student_id')) {
+            return res.status(409).json({
+              success: false,
+              message: 'This Student ID is already registered.',
+            });
+          }
+          if (errMsg.includes('email')) {
+            return res.status(409).json({
+              success: false,
+              message: 'This email address is already associated with an account.',
+            });
+          }
+          return res.status(409).json({
+            success: false,
+            message: 'A user account with these unique credentials already exists.',
+          });
+        }
+        throw dbErr;
+      }
+
+      const newUserId = insertResult.insertId;
+
+      return res.status(201).json({
+        success: true,
+        message: 'Student account created successfully. The student can now log in using their Student ID and initial password.',
+        student: {
+          id: newUserId,
+          full_name: cleanFullName,
+          student_id: cleanStudentId,
+          department: cleanDept,
+          email: cleanEmail,
+          role: 'student',
+          is_active: true,
+          created_at: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       next(error);
     }

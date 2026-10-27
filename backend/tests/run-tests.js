@@ -218,8 +218,10 @@ async function runAllTests() {
     recordTest('Auth Testing', 'Auth', 'FAIL', e.message);
   }
 
-  // Track created tickets for surgical cleanup in finally block
+  // Track created tickets & users for surgical cleanup in finally block
   const createdTicketIds = [];
+  const createdUserIds = [];
+  const createdStudentCodes = [];
 
   // ── Category 3: Student Workflow & Identity Persistence ───────────────────
   console.log('\n▶ [3/8] STUDENT WORKFLOW & IDENTITY PERSISTENCE CHECKS');
@@ -1034,7 +1036,7 @@ async function runAllTests() {
   }
 
   // ── Category 8: Telemetry & Dashboard Analytics ───────────────────────────
-  console.log('\n▶ [8/8] DASHBOARD & TELEMETRY CHECKS');
+  console.log('\n▶ [8/9] DASHBOARD & TELEMETRY CHECKS');
   try {
     const statsRes = await request('/api/dashboard/stats');
     recordTest(
@@ -1063,11 +1065,332 @@ async function runAllTests() {
     recordTest('Dashboard Telemetry Check', 'Telemetry', 'FAIL', e.message);
   }
 
+  // ── Category 9: Admin-Controlled Student Registration (Feature 03) ────────
+  console.log('\n▶ [9/9] ADMIN-CONTROLLED STUDENT REGISTRATION CHECKS (FEATURE 03)');
+  try {
+    const { pool } = await import('../src/config/database.js');
+
+    // 9.1 Admin can list students
+    const listRes = await request('/api/admin/students', {
+      headers: { Cookie: adminCookie },
+    });
+    const hasStudents = listRes.status === 200 && Array.isArray(listRes.data?.students) && listRes.data.students.length > 0;
+    const noPasswordHash = hasStudents && listRes.data.students.every(s => !s.password_hash && !s.password);
+    const studentsOnly = hasStudents && listRes.data.students.every(s => s.role === 'student');
+
+    recordTest(
+      'Admin Student Directory Listing (GET /api/admin/students)',
+      'Student Management',
+      listRes.status === 200 && hasStudents && noPasswordHash && studentsOnly ? 'PASS' : 'FAIL',
+      `HTTP 200, returned ${listRes.data?.students?.length || 0} student(s), credentials protected`
+    );
+
+    // 9.2 Non-admin cannot list students
+    const unauthList = await request('/api/admin/students');
+    const studentList = await request('/api/admin/students', { headers: { Cookie: studentCookie } });
+    const maintList = await request('/api/admin/students', { headers: { Cookie: maintCookie } });
+
+    recordTest(
+      'Security: Unauthorized Student Listing Barred (401/403)',
+      'Security',
+      unauthList.status === 401 && studentList.status === 403 && maintList.status === 403 ? 'PASS' : 'FAIL',
+      `Unauth: ${unauthList.status}, Student: ${studentList.status}, Maint: ${maintList.status}`
+    );
+
+    // 9.3 Validation: Missing required fields
+    const missingName = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: { student_id: 'TEST-STU-VAL-01', email: 'val1@student.iiit.ac.in', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+    const missingId = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: { full_name: 'Test Val', email: 'val2@student.iiit.ac.in', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+    const invalidEmail = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: { full_name: 'Test Val', student_id: 'TEST-STU-VAL-03', email: 'invalid-email-format', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+    const shortPassword = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: { full_name: 'Test Val', student_id: 'TEST-STU-VAL-04', email: 'val4@student.iiit.ac.in', password: 'short', confirmPassword: 'short' },
+    });
+    const passwordMismatch = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: { full_name: 'Test Val', student_id: 'TEST-STU-VAL-05', email: 'val5@student.iiit.ac.in', password: 'Password@123', confirmPassword: 'DifferentPassword@123' },
+    });
+
+    recordTest(
+      'Validation: Mandatory Fields & Password Rules Enforcement',
+      'Validation',
+      missingName.status === 400 && missingId.status === 400 && invalidEmail.status === 400 && shortPassword.status === 400 && passwordMismatch.status === 400
+        ? 'PASS'
+        : 'FAIL',
+      'Missing name, ID, bad email, short password (<8), and mismatch all rejected with HTTP 400'
+    );
+
+    // 9.4 Non-admin cannot create students
+    const unauthCreate = await request('/api/admin/students', {
+      method: 'POST',
+      body: { full_name: 'Hacker', student_id: 'HACK-01', email: 'hack@test.com', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+    const studentCreate = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: studentCookie },
+      body: { full_name: 'Student Create', student_id: 'STU-HACK-01', email: 'stuhack@test.com', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+    const maintCreate = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: maintCookie },
+      body: { full_name: 'Maint Create', student_id: 'MAINT-HACK-01', email: 'mainthack@test.com', password: 'Password@123', confirmPassword: 'Password@123' },
+    });
+
+    recordTest(
+      'Security: Unauthorized Student Creation Barred (401/403)',
+      'Security',
+      unauthCreate.status === 401 && studentCreate.status === 403 && maintCreate.status === 403 ? 'PASS' : 'FAIL',
+      `Unauth: ${unauthCreate.status}, Student: ${studentCreate.status}, Maint: ${maintCreate.status}`
+    );
+
+    // 9.5 Admin successfully creates a new student
+    const testStudentCode = 'TEST-STU-REG-001';
+    const testStudentEmail = 'kavita.patel.test@student.iiit.ac.in';
+    const testStudentPwd = 'PatelPassword@123';
+    createdStudentCodes.push(testStudentCode);
+
+    const createRes = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: {
+        full_name: 'Kavita Patel',
+        student_id: testStudentCode,
+        department: 'Information Technology',
+        email: testStudentEmail,
+        password: testStudentPwd,
+        confirmPassword: testStudentPwd,
+      },
+    });
+
+    let newStudentDbId = null;
+    let isBcryptHashed = false;
+    let isStudentActive = false;
+
+    if (createRes.status === 201 && createRes.data?.student?.id) {
+      newStudentDbId = createRes.data.student.id;
+      createdUserIds.push(newStudentDbId);
+
+      // Verify in MySQL
+      const [userRows] = await pool.query(
+        'SELECT id, full_name, email, student_id, password_hash, role, is_active, department FROM users WHERE id = ?',
+        [newStudentDbId]
+      );
+      if (userRows.length > 0) {
+        const u = userRows[0];
+        isBcryptHashed = u.password_hash.startsWith('$2b$') || u.password_hash.startsWith('$2a$');
+        isStudentActive = Boolean(u.is_active);
+      }
+    }
+
+    recordTest(
+      'Admin Registers New Student Account (POST /api/admin/students)',
+      'Student Management',
+      createRes.status === 201 && newStudentDbId && isBcryptHashed && isStudentActive ? 'PASS' : 'FAIL',
+      `HTTP 201, User ID: ${newStudentDbId}, Role: student, Active: ${isStudentActive}, Bcrypt Hashed: ${isBcryptHashed}`
+    );
+
+    // 9.6 Uniqueness: Duplicate Student ID rejected (409)
+    const dupIdRes = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: {
+        full_name: 'Another Student',
+        student_id: testStudentCode, // duplicate ID
+        department: 'Mechanical Engineering',
+        email: 'another.unique.email@student.iiit.ac.in',
+        password: 'Password@123',
+        confirmPassword: 'Password@123',
+      },
+    });
+
+    recordTest(
+      'Uniqueness: Duplicate Student ID Rejected (HTTP 409 Conflict)',
+      'Validation',
+      dupIdRes.status === 409 && (dupIdRes.data?.message || '').toLowerCase().includes('student id') ? 'PASS' : 'FAIL',
+      `HTTP ${dupIdRes.status}: "${dupIdRes.data?.message}"`
+    );
+
+    // 9.7 Uniqueness: Duplicate Email rejected (409)
+    const dupEmailRes = await request('/api/admin/students', {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+      body: {
+        full_name: 'Second Student',
+        student_id: 'TEST-STU-REG-002',
+        department: 'Civil Engineering',
+        email: testStudentEmail, // duplicate email
+        password: 'Password@123',
+        confirmPassword: 'Password@123',
+      },
+    });
+
+    recordTest(
+      'Uniqueness: Duplicate Email Address Rejected (HTTP 409 Conflict)',
+      'Validation',
+      dupEmailRes.status === 409 && (dupEmailRes.data?.message || '').toLowerCase().includes('email') ? 'PASS' : 'FAIL',
+      `HTTP ${dupEmailRes.status}: "${dupEmailRes.data?.message}"`
+    );
+
+    // 9.8 Student Login: Wrong password rejected
+    const badLoginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: testStudentCode, password: 'WrongPassword@999' },
+    });
+
+    recordTest(
+      'Student Login Security: Invalid Password Rejected (HTTP 401)',
+      'Auth',
+      badLoginRes.status === 401 ? 'PASS' : 'FAIL',
+      'HTTP 401: Rejected incorrect password'
+    );
+
+    // 9.9 Student Login: Correct Student ID and initial password succeeds
+    const goodLoginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: testStudentCode, password: testStudentPwd },
+    });
+
+    let newStudentCookie = null;
+    if (goodLoginRes.status === 200) {
+      const setCookie = goodLoginRes.headers.get('set-cookie');
+      if (setCookie) {
+        newStudentCookie = setCookie.split(';')[0];
+      }
+    }
+
+    recordTest(
+      'Newly Registered Student Successful Login (/api/auth/login)',
+      'Auth',
+      goodLoginRes.status === 200 && newStudentCookie && goodLoginRes.data?.user?.student_id === testStudentCode
+        ? 'PASS'
+        : 'FAIL',
+      `Authenticated as ${goodLoginRes.data?.user?.name} (${goodLoginRes.data?.user?.student_id}), Session established`
+    );
+
+    // 9.10 Student Profile Integration: verify profile returns correct info
+    const profileRes = await request('/api/student/profile', {
+      headers: { Cookie: newStudentCookie },
+    });
+
+    recordTest(
+      'Student Profile Integration: Verified Registered Details (GET /api/student/profile)',
+      'Profile',
+      profileRes.status === 200 &&
+        profileRes.data?.profile?.full_name === 'Kavita Patel' &&
+        profileRes.data?.profile?.department === 'Information Technology' &&
+        profileRes.data?.profile?.email === testStudentEmail
+        ? 'PASS'
+        : 'FAIL',
+      `Name: ${profileRes.data?.profile?.full_name}, Dept: ${profileRes.data?.profile?.department}, Role: ${profileRes.data?.profile?.role}`
+    );
+
+    // 9.11 New student submits complaint & complaint persistence
+    const reportRes = await request('/api/student/reports', {
+      method: 'POST',
+      headers: { Cookie: newStudentCookie },
+      body: {
+        type: 'Tap Wastage',
+        zone: 'Academic Block',
+        location: 'Ground Floor Labs Washroom',
+        description: 'Persistent tap leakage dripping water continuously in lab washroom.',
+      },
+    });
+
+    let newStudentTicketId = null;
+    if (reportRes.status === 201 && (reportRes.data?.reportId || reportRes.data?.report?.id)) {
+      newStudentTicketId = reportRes.data.reportId || reportRes.data.report.id;
+      createdTicketIds.push(newStudentTicketId);
+    }
+
+    // Verify in database that student_id references new student's permanent ID
+    let dbStudentOwnerMatch = false;
+    if (newStudentTicketId) {
+      const [repRows] = await pool.query(
+        'SELECT student_id, reporter_name FROM leak_reports WHERE id = ?',
+        [newStudentTicketId]
+      );
+      if (repRows.length > 0 && repRows[0].student_id === newStudentDbId) {
+        dbStudentOwnerMatch = true;
+      }
+    }
+
+    recordTest(
+      'New Student Complaint Submission & Database Ownership Association',
+      'Student Workflow',
+      reportRes.status === 201 && newStudentTicketId && dbStudentOwnerMatch ? 'PASS' : 'FAIL',
+      `Ticket: ${newStudentTicketId}, Foreign Key student_id: ${newStudentDbId} matches users.id`
+    );
+
+    // Logout and re-login to verify complaint persistence across sessions
+    await request('/api/auth/logout', {
+      method: 'POST',
+      headers: { Cookie: newStudentCookie },
+    });
+
+    const reloginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: testStudentCode, password: testStudentPwd },
+    });
+    let reconnectedCookie = null;
+    if (reloginRes.status === 200) {
+      const setCookie = reloginRes.headers.get('set-cookie');
+      if (setCookie) reconnectedCookie = setCookie.split(';')[0];
+    }
+
+    const myReportsRes = await request('/api/student/reports', {
+      headers: { Cookie: reconnectedCookie },
+    });
+    const hasMyTicket = myReportsRes.status === 200 &&
+      Array.isArray(myReportsRes.data?.reports) &&
+      myReportsRes.data.reports.some(r => r.id === newStudentTicketId);
+
+    recordTest(
+      'Complaint Persistence Across Logout & Re-login (GET /api/student/reports)',
+      'Persistence',
+      hasMyTicket ? 'PASS' : 'FAIL',
+      `Ticket ${newStudentTicketId} recovered after full session restart`
+    );
+
+    // 9.12 Bidirectional Account Isolation
+    const studentAView = await request('/api/student/reports', {
+      headers: { Cookie: studentCookie },
+    });
+    const studentASeesNewTicket = studentAView.status === 200 &&
+      Array.isArray(studentAView.data?.reports) &&
+      studentAView.data.reports.some(r => r.id === newStudentTicketId);
+
+    const newStudentSeesOldTicket = myReportsRes.status === 200 &&
+      Array.isArray(myReportsRes.data?.reports) &&
+      myReportsRes.data.reports.some(r => r.id === assignedTicketId);
+
+    recordTest(
+      'Account Isolation: Strict Complaint Boundary Between Students',
+      'Security',
+      !studentASeesNewTicket && !newStudentSeesOldTicket ? 'PASS' : 'FAIL',
+      'Neither student can view or access complaints submitted by the other'
+    );
+  } catch (fe03Err) {
+    recordTest('Admin Student Registration Checks', 'Student Management', 'FAIL', fe03Err.message);
+  }
+
   // ── Teardown & Surgical Test Cleanup (Task 5) ─────────────────────────────
   console.log('\n▶ [CLEANUP] POST-TEST DATA SANITIZATION');
   try {
+    const { pool } = await import('../src/config/database.js');
     if (createdTicketIds.length > 0) {
-      const { pool } = await import('../src/config/database.js');
       for (const ticketId of createdTicketIds) {
         await pool.query('DELETE FROM alerts WHERE title LIKE ? OR message LIKE ?', [
           `%${ticketId}%`,
@@ -1076,15 +1399,24 @@ async function runAllTests() {
         await pool.query('DELETE FROM report_history WHERE report_id = ?', [ticketId]);
         await pool.query('DELETE FROM leak_reports WHERE id = ?', [ticketId]);
       }
-      recordTest(
-        'Automated Test Data Cleanup',
-        'Infrastructure',
-        'PASS',
-        `Surgically cleaned ${createdTicketIds.length} test ticket(s) [${createdTicketIds.join(', ')}] — main data preserved`
-      );
-    } else {
-      recordTest('Automated Test Data Cleanup', 'Infrastructure', 'PASS', 'No test records created');
     }
+    if (createdUserIds.length > 0) {
+      for (const uid of createdUserIds) {
+        await pool.query('DELETE FROM users WHERE id = ?', [uid]);
+      }
+    }
+    if (createdStudentCodes.length > 0) {
+      for (const scode of createdStudentCodes) {
+        await pool.query('DELETE FROM users WHERE student_id = ?', [scode]);
+      }
+    }
+
+    recordTest(
+      'Automated Test Data Cleanup',
+      'Infrastructure',
+      'PASS',
+      `Surgically cleaned ${createdTicketIds.length} test ticket(s), ${createdUserIds.length} test user(s) — main data preserved`
+    );
   } catch (cleanErr) {
     recordTest('Automated Test Data Cleanup', 'Infrastructure', 'FAIL', cleanErr.message);
   }

@@ -17,6 +17,7 @@ import LeakReports    from './pages/admin/LeakReports';
 import MapView        from './pages/admin/MapView';
 import Alerts         from './pages/admin/Alerts';
 import Analytics      from './pages/admin/Analytics';
+import StudentManagement from './pages/admin/StudentManagement';
 
 // Student pages
 import ReportIssue       from './pages/student/ReportIssue';
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/admin/map"        element={<ProtectedRoute requiredRole="admin"><MapView /></ProtectedRoute>} />
           <Route path="/admin/alerts"     element={<ProtectedRoute requiredRole="admin"><Alerts /></ProtectedRoute>} />
           <Route path="/admin/analytics"  element={<ProtectedRoute requiredRole="admin"><Analytics /></ProtectedRoute>} />
+          <Route path="/admin/students"   element={<ProtectedRoute requiredRole="admin"><StudentManagement /></ProtectedRoute>} />
 
           {/* ── Maintenance Routes (protected: role = maintenance) ────────── */}
           <Route path="/maintenance/tasks"     element={<ProtectedRoute requiredRole="maintenance"><TaskQueue /></ProtectedRoute>} />

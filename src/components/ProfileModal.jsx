@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
   X, Shield, HardHat, BookOpen, LogOut,
-  MapPin, Clock, ArrowRight, Key, Droplets
+  MapPin, Clock, ArrowRight, Key, Droplets, Users
 } from 'lucide-react';
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { user, logout } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideClick = (event) => {
+      // If click target is outside the modal card, close the modal immediately
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -75,30 +106,37 @@ export default function ProfileModal({ isOpen, onClose }) {
     navigate(cfg.loginPath);
   };
 
-  return (
+  const modalContent = (
     <div
       className="profile-modal-backdrop"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       style={{
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
-        zIndex: 99999,
+        zIndex: 999999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
+        overflowY: 'auto',
         animation: 'fadeIn 0.18s ease both',
       }}
     >
       <div
+        ref={modalRef}
         className="profile-modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
           maxWidth: '460px',
+          maxHeight: 'min(640px, calc(100dvh - 32px))',
+          display: 'flex',
+          flexDirection: 'column',
           background: isDark ? '#161b22' : '#ffffff',
           borderRadius: '16px',
           border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'var(--navy-200)'}`,
@@ -106,13 +144,15 @@ export default function ProfileModal({ isOpen, onClose }) {
             ? '0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)'
             : '0 20px 50px rgba(0, 0, 0, 0.18)',
           overflow: 'hidden',
+          margin: 'auto',
           animation: 'fadeUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) both',
         }}
       >
-        {/* Header Ribbon */}
+        {/* Header Ribbon - pinned at top of card, never cut off */}
         <div
           style={{
-            padding: '24px 24px 18px',
+            flexShrink: 0,
+            padding: '20px 24px 16px',
             background: isDark
               ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)'
               : 'linear-gradient(180deg, var(--navy-50) 0%, transparent 100%)',
@@ -221,22 +261,29 @@ export default function ProfileModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Profile Information Fields */}
-        <div style={{ padding: '20px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '20px' }}>
+        {/* Scrollable Modal Body */}
+        <div
+          style={{
+            padding: '16px 22px 20px',
+            overflowY: 'auto',
+            flex: 1,
+          }}
+        >
+          {/* Profile Information Fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginBottom: '16px' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
+                padding: '8px 12px',
                 borderRadius: '10px',
                 background: isDark ? 'rgba(255,255,255,0.03)' : 'var(--navy-50)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Key size={15} style={{ color: cfg.accentColor }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Key size={14} style={{ color: cfg.accentColor }} />
                 <span style={{ fontSize: '0.8125rem', color: 'var(--navy-500)' }}>{cfg.idLabel}</span>
               </div>
               <span
@@ -256,14 +303,14 @@ export default function ProfileModal({ isOpen, onClose }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
+                padding: '8px 12px',
                 borderRadius: '10px',
                 background: isDark ? 'rgba(255,255,255,0.03)' : 'var(--navy-50)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <MapPin size={15} style={{ color: cfg.accentColor }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={14} style={{ color: cfg.accentColor }} />
                 <span style={{ fontSize: '0.8125rem', color: 'var(--navy-500)' }}>Campus</span>
               </div>
               <span
@@ -282,14 +329,14 @@ export default function ProfileModal({ isOpen, onClose }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
+                padding: '8px 12px',
                 borderRadius: '10px',
                 background: isDark ? 'rgba(255,255,255,0.03)' : 'var(--navy-50)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Droplets size={15} style={{ color: cfg.accentColor }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Droplets size={14} style={{ color: cfg.accentColor }} />
                 <span style={{ fontSize: '0.8125rem', color: 'var(--navy-500)' }}>System Scope</span>
               </div>
               <span
@@ -308,14 +355,14 @@ export default function ProfileModal({ isOpen, onClose }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
+                padding: '8px 12px',
                 borderRadius: '10px',
                 background: isDark ? 'rgba(255,255,255,0.03)' : 'var(--navy-50)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'var(--navy-100)'}`,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Clock size={15} style={{ color: cfg.accentColor }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={14} style={{ color: cfg.accentColor }} />
                 <span style={{ fontSize: '0.8125rem', color: 'var(--navy-500)' }}>Session Security</span>
               </div>
               <span
@@ -350,6 +397,29 @@ export default function ProfileModal({ isOpen, onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {role === 'admin' && (
                 <>
+                  <button
+                    onClick={() => { onClose(); navigate('/admin/students'); }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(16,185,129,0.12)',
+                      border: '1px solid rgba(16,185,129,0.3)',
+                      color: '#10b981',
+                      fontSize: '0.8125rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Users size={14} />
+                      Student Management
+                    </span>
+                    <ArrowRight size={13} />
+                  </button>
                   <button
                     onClick={() => { onClose(); navigate('/student/report'); }}
                     style={{
@@ -533,4 +603,8 @@ export default function ProfileModal({ isOpen, onClose }) {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }

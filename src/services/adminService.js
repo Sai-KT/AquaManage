@@ -112,7 +112,28 @@ export const adminService = {
 
   // ── 7. Registered Students & Users ────────────────────────────────────────
   async getStudents() {
-    return { success: true, students: [] };
+    try {
+      const res = await apiClient.get('/admin/students');
+      if (res && res.success && res.students) {
+        return { success: true, students: res.students };
+      }
+      return { success: false, error: res?.message || 'Failed to retrieve students' };
+    } catch (err) {
+      console.warn('[adminService] getStudents API failed:', err.message);
+      return { success: false, error: err.message };
+    }
+  },
+
+  async createStudent(studentData) {
+    try {
+      const res = await apiClient.post('/admin/students', studentData);
+      if (res && res.success) {
+        return { success: true, message: res.message, student: res.student };
+      }
+      return { success: false, error: res?.message || 'Failed to create student account' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   },
 };
 

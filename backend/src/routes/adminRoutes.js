@@ -14,5 +14,7 @@ router.patch('/reports/:id/assign', adminController.assignReport);
 router.patch('/reports/:id/status', adminController.updateReportStatus);
 router.get('/alerts', adminController.getAlerts);
 router.patch('/alerts/mark-read', adminController.markAllAlertsRead);
+router.get('/students', adminController.getStudents);
+router.post('/students', adminController.createStudent);
 
 export default router;

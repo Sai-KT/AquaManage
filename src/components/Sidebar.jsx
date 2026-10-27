@@ -5,7 +5,7 @@ import {
   Droplets, LayoutDashboard, FileText, CloudRain, BarChart3,
   Map, Bell, Activity, ClipboardList, LogOut, CheckSquare,
   AlertTriangle, Shield, ChevronRight,
-  BookOpen, Leaf, HardHat, X, User,
+  BookOpen, Leaf, HardHat, X, User, Users,
 } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 import { maintenanceService } from '../services/maintenanceService';
@@ -34,6 +34,7 @@ const navConfigs = {
         label: 'MANAGEMENT',
         items: [
           { icon: FileText, label: 'Leak Reports', path: '/admin/reports' },
+          { icon: Users,    label: 'Student Management', path: '/admin/students' },
         ],
       },
     ],
