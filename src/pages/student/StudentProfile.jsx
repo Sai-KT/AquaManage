@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -8,7 +8,7 @@ import studentService from '../../services/studentService';
 import {
   Mail, Building, GraduationCap, Lock, Key, Eye, EyeOff,
   Save, X, Edit3, CheckCircle, Shield, Clock,
-  FileText, RefreshCw, AlertCircle, Info
+  FileText, RefreshCw, AlertCircle, Info, Camera, Trash2, UploadCloud, Image as ImageIcon
 } from 'lucide-react';
 
 export default function StudentProfile() {
@@ -20,6 +20,13 @@ export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
+
+  // Avatar upload states
+  const fileInputRef = useRef(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarSuccess, setAvatarSuccess] = useState('');
+  const [avatarError, setAvatarError] = useState('');
+  const [dragOver, setDragOver] = useState(false);
 
   // Edit mode states
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +64,9 @@ export default function StudentProfile() {
           email: res.profile.email || '',
           department: res.profile.department || '',
         });
+        if (res.profile.avatar_url && updateCurrentUser) {
+          updateCurrentUser({ avatar_url: res.profile.avatar_url });
+        }
       } else {
         setFetchError(res?.error || 'Unable to load profile data from MySQL.');
       }
@@ -223,6 +233,75 @@ export default function StudentProfile() {
     }
   };
 
+  // ── Profile Photo Upload & Removal Handlers ──
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadAvatarFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadAvatarFile = async (file) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarError('Please select a valid image file (JPG, PNG, WebP, or GIF).');
+      setAvatarSuccess('');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('File size exceeds 5MB limit. Please choose a smaller photo.');
+      setAvatarSuccess('');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setAvatarError('');
+    setAvatarSuccess('');
+
+    try {
+      const res = await studentService.uploadAvatar(file);
+      if (res && res.success && res.avatar_url) {
+        setProfile((prev) => ({ ...prev, avatar_url: res.avatar_url }));
+        if (updateCurrentUser) {
+          updateCurrentUser({ avatar_url: res.avatar_url });
+        }
+        setAvatarSuccess('Profile picture updated successfully! Visible across your Topbar and Portal.');
+      } else {
+        setAvatarError(res?.error || 'Failed to upload profile picture.');
+      }
+    } catch (err) {
+      setAvatarError(err.message || 'Error occurred while uploading profile picture.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setIsUploadingAvatar(true);
+    setAvatarError('');
+    setAvatarSuccess('');
+
+    try {
+      const res = await studentService.deleteAvatar();
+      if (res && res.success) {
+        setProfile((prev) => ({ ...prev, avatar_url: null }));
+        if (updateCurrentUser) {
+          updateCurrentUser({ avatar_url: null });
+        }
+        setAvatarSuccess('Profile picture removed. Reverted to default initials avatar.');
+      } else {
+        setAvatarError(res?.error || 'Failed to remove profile picture.');
+      }
+    } catch (err) {
+      setAvatarError(err.message || 'Error occurred while removing profile picture.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  // Current active avatar
+  const currentAvatarUrl = profile?.avatar_url || user?.avatar_url;
+
   // Derive initials for avatar
   const displayName = profile?.full_name || user?.name || 'Student';
   const displayStudentId = profile?.student_id || user?.student_id || user?.username || 'STU-2024-001';
@@ -308,6 +387,48 @@ export default function StudentProfile() {
           ) : (
             <>
               {/* ── Global Feedback Alerts ── */}
+              {avatarSuccess && (
+                <div
+                  style={{
+                    padding: '12px 18px',
+                    borderRadius: 10,
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#10b981',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 20,
+                  }}
+                >
+                  <CheckCircle size={18} />
+                  <span>{avatarSuccess}</span>
+                </div>
+              )}
+
+              {avatarError && (
+                <div
+                  style={{
+                    padding: '12px 18px',
+                    borderRadius: 10,
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#ef4444',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 20,
+                  }}
+                >
+                  <AlertCircle size={18} />
+                  <span>{avatarError}</span>
+                </div>
+              )}
+
               {saveSuccess && (
                 <div
                   style={{
@@ -396,23 +517,59 @@ export default function StudentProfile() {
                 >
                   {/* Left: Avatar & Identity */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                    <div
-                      style={{
-                        width: 72,
-                        height: 72,
-                        borderRadius: 20,
-                        background: 'linear-gradient(135deg, #0ea5e9, #10b981)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontSize: '1.75rem',
-                        fontWeight: 800,
-                        boxShadow: '0 8px 24px rgba(14, 165, 233, 0.35)',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {initials}
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <div
+                        style={{
+                          width: 76,
+                          height: 76,
+                          borderRadius: 22,
+                          background: 'linear-gradient(135deg, #0ea5e9, #10b981)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '1.85rem',
+                          fontWeight: 800,
+                          boxShadow: '0 8px 24px rgba(14, 165, 233, 0.35)',
+                          overflow: 'hidden',
+                          position: 'relative',
+                        }}
+                      >
+                        {currentAvatarUrl ? (
+                          <img
+                            src={currentAvatarUrl}
+                            alt={displayName}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Upload or Change Profile Picture"
+                        style={{
+                          position: 'absolute',
+                          bottom: -4,
+                          right: -4,
+                          width: 28,
+                          height: 28,
+                          borderRadius: '50%',
+                          background: '#0ea5e9',
+                          border: '2px solid #fff',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                          transition: 'transform 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.12)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                      >
+                        <Camera size={13} />
+                      </button>
                     </div>
 
                     <div>
@@ -723,6 +880,178 @@ export default function StudentProfile() {
 
                 {/* ── Right Column: Account Security & Password Management ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {/* Card: Student Profile Picture */}
+                  <div className="card" style={{ padding: '24px' }}>
+                    <div className="card-header" style={{ marginBottom: 16 }}>
+                      <div className="card-title">
+                        <Camera size={18} style={{ color: '#0ea5e9' }} />
+                        <span>Student Profile Picture</span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          background: currentAvatarUrl ? 'rgba(16, 185, 129, 0.12)' : 'rgba(14, 165, 233, 0.1)',
+                          color: currentAvatarUrl ? '#10b981' : '#0ea5e9',
+                          padding: '3px 10px',
+                          borderRadius: 20,
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            backgroundColor: currentAvatarUrl ? '#10b981' : '#0ea5e9',
+                          }}
+                        />
+                        {currentAvatarUrl ? 'Custom Photo Active' : 'Default Initials'}
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--navy-500)', marginBottom: 18, lineHeight: 1.5 }}>
+                      Upload and manage your student profile photo. Your picture will be displayed across your Topbar avatar, profile security popup, and campus water issue submissions.
+                    </p>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 18,
+                        padding: '16px',
+                        borderRadius: 12,
+                        background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'var(--navy-50)',
+                        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'var(--navy-200)'}`,
+                        marginBottom: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #0ea5e9, #10b981)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '1.75rem',
+                          fontWeight: 800,
+                          boxShadow: '0 6px 20px rgba(14, 165, 233, 0.3)',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {currentAvatarUrl ? (
+                          <img
+                            src={currentAvatarUrl}
+                            alt={displayName}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--navy-900)', marginBottom: 2 }}>
+                          {displayName}
+                        </div>
+                        <div style={{ fontSize: '0.78125rem', color: 'var(--navy-500)', marginBottom: 10, fontFamily: 'monospace' }}>
+                          {displayStudentId}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploadingAvatar}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.78125rem' }}
+                          >
+                            {isUploadingAvatar ? (
+                              <>
+                                <RefreshCw size={13} className="spin-icon" /> Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <UploadCloud size={13} /> {currentAvatarUrl ? 'Change Photo' : 'Upload Photo'}
+                              </>
+                            )}
+                          </button>
+                          {currentAvatarUrl && (
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              onClick={handleRemoveAvatar}
+                              disabled={isUploadingAvatar}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                fontSize: '0.78125rem',
+                                color: '#ef4444',
+                                borderColor: 'rgba(239, 68, 68, 0.3)',
+                              }}
+                              title="Revert to system initials avatar"
+                            >
+                              <Trash2 size={13} /> Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Drag and drop upload zone */}
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOver(true);
+                      }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOver(false);
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) uploadAvatarFile(file);
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        padding: '16px',
+                        borderRadius: 10,
+                        border: `2px dashed ${
+                          dragOver ? '#0ea5e9' : isDark ? 'rgba(255, 255, 255, 0.15)' : 'var(--navy-200)'
+                        }`,
+                        background: dragOver
+                          ? 'rgba(14, 165, 233, 0.08)'
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.02)'
+                          : '#fafafa',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.18s ease',
+                      }}
+                    >
+                      <ImageIcon size={22} style={{ color: '#0ea5e9', margin: '0 auto 6px' }} />
+                      <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--navy-800)', marginBottom: 2 }}>
+                        Click to browse or drag & drop student image here
+                      </div>
+                      <div style={{ fontSize: '0.71875rem', color: 'var(--navy-400)' }}>
+                        Supported: JPG, PNG, WebP or GIF (Up to 5MB)
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+                  </div>
+
                   {/* Card C: Change Password */}
                   <div className="card" style={{ padding: '24px' }}>
                     <div className="card-header" style={{ marginBottom: 16 }}>

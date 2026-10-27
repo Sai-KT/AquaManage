@@ -26,5 +26,7 @@ router.post('/reports/:id/reopen', requireRole('student'), studentController.reo
 router.get('/profile', requireRole('student'), studentController.getProfile);
 router.patch('/profile', requireRole('student'), studentController.updateProfile);
 router.post('/profile/change-password', requireRole('student'), studentController.changePassword);
+router.post('/profile/avatar', requireRole('student'), upload.single('avatar'), studentController.uploadAvatar);
+router.delete('/profile/avatar', requireRole('student'), studentController.deleteAvatar);
 
 export default router;

@@ -19,7 +19,7 @@ async function request(path, options = {}) {
     Accept: 'application/json',
     ...options.headers,
   };
-  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData || Buffer.isBuffer(options.body))) {
     headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(options.body);
   }
@@ -595,6 +595,41 @@ async function runAllTests() {
       'Profile',
       checkReportsPostUpdate.status === 200 && hasOriginalComplaint ? 'PASS' : 'FAIL',
       `Complaint ${testTicketId} retained for permanent user ID ${testUserId}`
+    );
+
+    // 4.16 Test 14: Profile picture upload
+    const boundary = '----WebKitFormBoundaryAvatarTest';
+    const pngBytes = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082', 'hex');
+    const header = `--${boundary}\r\nContent-Disposition: form-data; name="avatar"; filename="test.png"\r\nContent-Type: image/png\r\n\r\n`;
+    const footer = `\r\n--${boundary}--\r\n`;
+    const multipartBody = Buffer.concat([Buffer.from(header), pngBytes, Buffer.from(footer)]);
+
+    const avatarUploadRes = await request('/api/student/profile/avatar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data; boundary=' + boundary,
+        Cookie: testUserCookie,
+      },
+      body: multipartBody,
+    });
+    const uploadedAvatarUrl = avatarUploadRes.data?.avatar_url;
+    recordTest(
+      'Test 14: Student Profile Picture Upload (POST /api/student/profile/avatar)',
+      'Profile',
+      avatarUploadRes.status === 200 && uploadedAvatarUrl ? 'PASS' : 'FAIL',
+      `Saved Avatar URL: ${uploadedAvatarUrl}`
+    );
+
+    // 4.17 Test 15: Profile picture removal
+    const avatarDeleteRes = await request('/api/student/profile/avatar', {
+      method: 'DELETE',
+      headers: { Cookie: testUserCookie },
+    });
+    recordTest(
+      'Test 15: Student Profile Picture Removal (DELETE /api/student/profile/avatar)',
+      'Profile',
+      avatarDeleteRes.status === 200 && avatarDeleteRes.data?.avatar_url === null ? 'PASS' : 'FAIL',
+      'Reverted avatar to null in MySQL'
     );
   } catch (err) {
     recordTest('Student Profile Checks', 'Profile', 'FAIL', err.message);

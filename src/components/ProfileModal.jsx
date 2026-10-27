@@ -88,7 +88,7 @@ export default function ProfileModal({ isOpen, onClose }) {
       avatarBg: 'linear-gradient(135deg, #0ea5e9, #10b981)',
       loginPath: '/login/student',
       idLabel: 'IRN / PRN No.',
-      idValue: user?.irnNo || user?.username || 'STU-2024-001',
+      idValue: user?.student_id || user?.studentId || user?.irnNo || (user?.username && !user?.username.includes('@') ? user.username : null) || 'STU-2024-001',
       portalName: 'Student Portal',
     },
   };
@@ -201,9 +201,19 @@ export default function ProfileModal({ isOpen, onClose }) {
                 letterSpacing: '0.5px',
                 boxShadow: `0 6px 20px ${cfg.accentColor}44`,
                 flexShrink: 0,
+                overflow: 'hidden',
+                position: 'relative',
               }}
             >
-              {initials}
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user?.name || 'User'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                initials
+              )}
             </div>
 
             <div style={{ minWidth: 0, flex: 1 }}>

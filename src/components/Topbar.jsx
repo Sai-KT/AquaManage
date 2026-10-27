@@ -995,9 +995,22 @@ export default function Topbar({ title, subtitle }) {
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
+              position: 'relative',
+              flexShrink: 0,
             }}
           >
-            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user?.name || 'User'}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : user?.name ? (
+              user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+            ) : (
+              'U'
+            )}
           </div>
           <span
             style={{

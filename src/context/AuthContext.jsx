@@ -131,7 +131,10 @@ export function AuthProvider({ children }) {
           role: res.user.role,
           username: cleanUsername,
           email: res.user.email,
+          student_id: res.user.student_id,
           employee_id: res.user.employee_id,
+          department: res.user.department || '',
+          avatar_url: res.user.avatar_url || null,
         };
 
         setUser(userData);
@@ -154,7 +157,7 @@ export function AuthProvider({ children }) {
       (c) => c.username.trim().toLowerCase() === cleanUsername.toLowerCase() && c.password.trim() === cleanPassword
     );
     if (found) {
-      const userData = { id: 999, name: found.name, role: found.role, username: found.username };
+      const userData = { id: 999, name: found.name, role: found.role, username: found.username, avatar_url: null };
       setUser(userData);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
       if (role === 'admin' || role === 'maintenance') {
@@ -192,6 +195,7 @@ export function AuthProvider({ children }) {
           student_id: res.user.student_id,
           email: res.user.email,
           department: res.user.department || '',
+          avatar_url: res.user.avatar_url || null,
           role: 'student',
           username: res.user.student_id || res.user.name,
         };

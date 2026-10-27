@@ -151,6 +151,36 @@ export const studentService = {
     }
   },
 
+  // ── 7b. Upload Student Profile Picture ─────────────────────────────────────
+  async uploadAvatar(file) {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await apiClient.upload('/student/profile/avatar', formData);
+      if (res && res.success) {
+        return { success: true, message: res.message, avatar_url: res.avatar_url };
+      }
+      return { success: false, error: res?.message || 'Failed to upload profile picture.' };
+    } catch (err) {
+      console.error('[studentService] uploadAvatar error:', err.message);
+      return { success: false, error: err.message || 'Unable to upload profile picture.' };
+    }
+  },
+
+  // ── 7c. Remove Student Profile Picture ─────────────────────────────────────
+  async deleteAvatar() {
+    try {
+      const res = await apiClient.delete('/student/profile/avatar');
+      if (res && res.success) {
+        return { success: true, message: res.message, avatar_url: null };
+      }
+      return { success: false, error: res?.message || 'Failed to remove profile picture.' };
+    } catch (err) {
+      console.error('[studentService] deleteAvatar error:', err.message);
+      return { success: false, error: err.message || 'Unable to remove profile picture.' };
+    }
+  },
+
   // ── 8. Reopen a Resolved Complaint (Feature 02) ────────────────────────────
   async reopenReport(reportId, reason) {
     try {

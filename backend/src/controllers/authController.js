@@ -116,6 +116,7 @@ export const authController = {
         student_id: user.student_id,
         employee_id: user.employee_id,
         department: user.department || '',
+        avatar_url: user.avatar_url || null,
         username: user.email || user.employee_id || user.student_id,
       };
 
@@ -142,6 +143,27 @@ export const authController = {
    */
   async getCurrentUser(req, res) {
     if (req.session && req.session.user) {
+      try {
+        const rows = await query(
+          'SELECT id, full_name, email, student_id, employee_id, department, avatar_url, role, is_active FROM users WHERE id = ? LIMIT 1',
+          [req.session.user.id]
+        );
+        if (rows.length > 0 && rows[0].is_active) {
+          const u = rows[0];
+          req.session.user = {
+            ...req.session.user,
+            name: u.full_name,
+            email: u.email,
+            student_id: u.student_id,
+            employee_id: u.employee_id,
+            department: u.department || '',
+            avatar_url: u.avatar_url || null,
+          };
+          req.session.save();
+        }
+      } catch {
+        // Fallback to existing session user if query fails
+      }
       return res.json({
         success: true,
         user: req.session.user,

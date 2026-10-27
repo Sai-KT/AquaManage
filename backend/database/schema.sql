@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `student_id` VARCHAR(50) UNIQUE NULL,
   `employee_id` VARCHAR(50) UNIQUE NULL,
   `department` VARCHAR(100) NULL,
+  `avatar_url` VARCHAR(255) NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `role` ENUM('admin', 'student', 'maintenance') NOT NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,

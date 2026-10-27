@@ -227,7 +227,7 @@ export const studentController = {
       }
 
       const rows = await query(
-        `SELECT id, full_name, email, student_id, department, role, is_active, created_at, updated_at
+        `SELECT id, full_name, email, student_id, department, avatar_url, role, is_active, created_at, updated_at
          FROM users
          WHERE id = ? AND role = 'student'
          LIMIT 1`,
@@ -257,6 +257,7 @@ export const studentController = {
           student_id: profile.student_id,
           email: profile.email,
           department: profile.department || '',
+          avatar_url: profile.avatar_url || null,
           role: profile.role,
           is_active: Boolean(profile.is_active),
           created_at: profile.created_at,
@@ -269,7 +270,7 @@ export const studentController = {
   },
 
   /**
-   * Update authenticated student's profile (permitted fields: email, department)
+   * Update authenticated student's profile (permitted fields: email, department, avatar_url)
    */
   async updateProfile(req, res, next) {
     try {
@@ -298,8 +299,8 @@ export const studentController = {
         });
       }
 
-      const { email, department } = req.body;
-      if (email === undefined && department === undefined) {
+      const { email, department, avatar_url } = req.body;
+      if (email === undefined && department === undefined && avatar_url === undefined) {
         return res.status(400).json({
           success: false,
           message: 'Please provide at least one permitted field to update (email, department).',
@@ -353,19 +354,35 @@ export const studentController = {
         }
       }
 
+      let cleanAvatar = undefined;
+      if (avatar_url !== undefined) {
+        if (avatar_url === null || avatar_url === '') {
+          cleanAvatar = null;
+        } else if (typeof avatar_url === 'string') {
+          cleanAvatar = avatar_url.trim();
+        }
+      }
+
       // Parameterized update
       await query(
         `UPDATE users 
          SET email = COALESCE(?, email),
              department = COALESCE(?, department),
+             avatar_url = CASE WHEN ? = 1 THEN ? ELSE avatar_url END,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = ? AND role = 'student'`,
-        [cleanEmail !== undefined ? cleanEmail : null, cleanDept !== undefined ? cleanDept : null, user.id]
+        [
+          cleanEmail !== undefined ? cleanEmail : null,
+          cleanDept !== undefined ? cleanDept : null,
+          cleanAvatar !== undefined ? 1 : 0,
+          cleanAvatar !== undefined ? cleanAvatar : null,
+          user.id,
+        ]
       );
 
       // Fetch fresh updated record
       const updatedRows = await query(
-        `SELECT id, full_name, email, student_id, department, role, is_active, created_at, updated_at
+        `SELECT id, full_name, email, student_id, department, avatar_url, role, is_active, created_at, updated_at
          FROM users
          WHERE id = ? AND role = 'student'
          LIMIT 1`,
@@ -378,6 +395,7 @@ export const studentController = {
       if (req.session.user) {
         if (cleanEmail !== undefined) req.session.user.email = cleanEmail;
         if (cleanDept !== undefined) req.session.user.department = cleanDept;
+        if (cleanAvatar !== undefined) req.session.user.avatar_url = cleanAvatar;
         req.session.save();
       }
 
@@ -390,6 +408,7 @@ export const studentController = {
           student_id: updated.student_id,
           email: updated.email,
           department: updated.department || '',
+          avatar_url: updated.avatar_url || null,
           role: updated.role,
           is_active: Boolean(updated.is_active),
           created_at: updated.created_at,
@@ -632,6 +651,101 @@ export const studentController = {
           message: error.message,
         });
       }
+      next(error);
+    }
+  },
+
+  /**
+   * Upload or change student profile picture
+   */
+  async uploadAvatar(req, res, next) {
+    try {
+      const user = req.session?.user;
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required. No active session.',
+        });
+      }
+
+      if (user.role !== 'student') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Profile picture upload is restricted to students.',
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No image file uploaded. Please select a JPG, PNG, or WebP picture.',
+        });
+      }
+
+      const avatarUrl = `/uploads/${req.file.filename}`;
+
+      // Update database
+      await query(
+        `UPDATE users
+         SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND role = 'student'`,
+        [avatarUrl, user.id]
+      );
+
+      // Keep active session in sync
+      if (req.session.user) {
+        req.session.user.avatar_url = avatarUrl;
+        req.session.save();
+      }
+
+      return res.json({
+        success: true,
+        message: 'Profile picture uploaded successfully.',
+        avatar_url: avatarUrl,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * Remove student profile picture (revert to default initials)
+   */
+  async deleteAvatar(req, res, next) {
+    try {
+      const user = req.session?.user;
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required. No active session.',
+        });
+      }
+
+      if (user.role !== 'student') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied.',
+        });
+      }
+
+      await query(
+        `UPDATE users
+         SET avatar_url = NULL, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND role = 'student'`,
+        [user.id]
+      );
+
+      if (req.session.user) {
+        req.session.user.avatar_url = null;
+        req.session.save();
+      }
+
+      return res.json({
+        success: true,
+        message: 'Profile picture removed successfully.',
+        avatar_url: null,
+      });
+    } catch (error) {
       next(error);
     }
   },

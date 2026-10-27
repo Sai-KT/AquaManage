@@ -79,12 +79,29 @@ export async function withTransaction(callback) {
   }
 }
 
+// Schema compatibility migration check
+export async function ensureSchemaCompatibility() {
+  try {
+    const cols = await query(
+      "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'avatar_url'"
+    );
+    if (!cols || cols.length === 0) {
+      await query('ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255) NULL AFTER department');
+      console.log('[Database Schema] Added avatar_url column to users table.');
+    }
+  } catch (err) {
+    // Non-fatal if table does not exist yet (e.g. before initial schema migration)
+    console.warn('[Database Schema Warning] Could not verify avatar_url column:', err.message);
+  }
+}
+
 // Health check / connection test
 export async function checkDatabaseConnection() {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
+    await ensureSchemaCompatibility();
     return { ok: true, message: 'Database connection verified successfully.' };
   } catch (error) {
     return {
