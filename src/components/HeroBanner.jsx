@@ -7,7 +7,7 @@
  * Student → ocean blue with motivational copy + quick action chips
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,15 +18,219 @@ import {
 } from 'lucide-react';
 import { maintenanceService } from '../services/maintenanceService';
 
-// ── Tiny static particles (stable across renders) ─────────────────────────────
-const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
-  left:  `${(i * 43 + 9) % 100}%`,
-  top:   `${(i * 61 + 5) % 100}%`,
-  size:  (i % 3) === 0 ? 3 : 2,
-  dur:   `${5 + (i % 4)}s`,
-  delay: `${(i * 0.45) % 3}s`,
-  op:    i % 4 === 0 ? 0.45 : 0.22,
-}));
+// ── Admin Moving Dots Animation (Telemetry Node Mesh) ─────────────────────────
+function AdminMovingDots() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let width = 0;
+    let height = 0;
+
+    const resize = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    const DOT_COUNT = 34;
+    const dots = Array.from({ length: DOT_COUNT }, () => ({
+      x: Math.random() * (width || 800),
+      y: Math.random() * (height || 200),
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.32,
+      radius: Math.random() < 0.25 ? 2.4 : Math.random() < 0.6 ? 1.7 : 1.2,
+      baseAlpha: 0.25 + Math.random() * 0.4,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.015 + Math.random() * 0.025,
+      color: Math.random() < 0.7 ? '52, 211, 153' : '110, 231, 183',
+    }));
+
+    const render = () => {
+      if (!width || !height) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw faint connections between nearby telemetry nodes
+      for (let i = 0; i < DOT_COUNT; i++) {
+        for (let j = i + 1; j < DOT_COUNT; j++) {
+          const dx = dots[i].x - dots[j].x;
+          const dy = dots[i].y - dots[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 65) {
+            const lineAlpha = (1 - dist / 65) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(dots[i].x, dots[i].y);
+            ctx.lineTo(dots[j].x, dots[j].y);
+            ctx.strokeStyle = `rgba(52, 211, 153, ${lineAlpha})`;
+            ctx.lineWidth = 0.65;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Update & render moving dots
+      for (let i = 0; i < DOT_COUNT; i++) {
+        const d = dots[i];
+        d.x += d.vx;
+        d.y += d.vy;
+        d.pulse += d.pulseSpeed;
+
+        if (d.x < -10) d.x = width + 10;
+        if (d.x > width + 10) d.x = -10;
+        if (d.y < -10) d.y = height + 10;
+        if (d.y > height + 10) d.y = -10;
+
+        const currentAlpha = Math.max(0.12, d.baseAlpha + Math.sin(d.pulse) * 0.18);
+
+        // Soft outer glow halo
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${d.color}, ${currentAlpha * 0.22})`;
+        ctx.fill();
+
+        // Sharp bright center core
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${d.color}, ${currentAlpha})`;
+        ctx.fill();
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    />
+  );
+}
+
+// ── Student Calming Animated Waves ───────────────────────────────────────────
+function CalmingWave() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 90,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 0,
+        animation: 'calmWaveSwell 8s ease-in-out infinite',
+        willChange: 'transform',
+      }}
+    >
+      {/* Wave 1: Deep Ocean Cyan */}
+      <svg
+        viewBox="0 0 1600 100"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '200%',
+          height: '100%',
+          opacity: 0.16,
+          animation: 'calmWaveDrift 22s linear infinite',
+          willChange: 'transform',
+        }}
+      >
+        <defs>
+          <linearGradient id="waveGradDeep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#0284c7" />
+            <stop offset="50%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 0 45 Q 200 20 400 45 T 800 45 T 1200 45 T 1600 45 V 100 H 0 Z"
+          fill="url(#waveGradDeep)"
+        />
+      </svg>
+
+      {/* Wave 2: Aquamarine / Mint (offset speed and reverse direction) */}
+      <svg
+        viewBox="0 0 1600 100"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '200%',
+          height: '100%',
+          opacity: 0.12,
+          animation: 'calmWaveDriftRev 18s linear infinite',
+          willChange: 'transform',
+        }}
+      >
+        <defs>
+          <linearGradient id="waveGradMint" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#059669" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 0 58 Q 200 78 400 58 T 800 58 T 1200 58 T 1600 58 V 100 H 0 Z"
+          fill="url(#waveGradMint)"
+        />
+      </svg>
+
+      {/* Wave 3: Surface Aqua Crest */}
+      <svg
+        viewBox="0 0 1600 100"
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '200%',
+          height: '100%',
+          opacity: 0.08,
+          animation: 'calmWaveDrift 30s linear infinite',
+          willChange: 'transform',
+        }}
+      >
+        <path
+          d="M 0 70 Q 200 58 400 70 T 800 70 T 1200 70 T 1600 70 V 100 H 0 Z"
+          fill="#67e8f9"
+        />
+      </svg>
+    </div>
+  );
+}
 
 // ── Live clock hook ──────────────────────────────────────────────────────────
 function useClock() {
@@ -65,10 +269,8 @@ function AdminHero({ user }) {
       {/* Scanlines */}
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(16,185,129,0.01) 3px, rgba(16,185,129,0.01) 4px)', pointerEvents: 'none' }} />
 
-      {/* Floating particles */}
-      {PARTICLES.map((p, i) => (
-        <div key={i} style={{ position: 'absolute', left: p.left, top: p.top, width: p.size, height: p.size, borderRadius: '50%', background: '#34d399', opacity: p.op, animation: `heroParticle ${p.dur} ease-in-out ${p.delay} infinite` }} />
-      ))}
+      {/* Animated Moving Telemetry Dots */}
+      <AdminMovingDots />
 
       {/* Right glow */}
       <div style={{ position: 'absolute', right: -60, top: '50%', transform: 'translateY(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -288,11 +490,8 @@ function StudentHero({ user }) {
     }}>
       {/* Dot grid */}
       <div style={{ position: 'absolute', inset: 0, opacity: 0.12, backgroundImage: 'radial-gradient(rgba(14,165,233,0.6) 1px, transparent 1px)', backgroundSize: '30px 30px', pointerEvents: 'none' }} />
-      {/* Wave decoration */}
-      <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: 0.1 }} viewBox="0 0 800 80" fill="none">
-        <path d="M0 40C133 15 267 65 400 40C533 15 667 65 800 40V80H0V40Z" fill="#38bdf8"/>
-        <path d="M0 55C133 30 267 75 400 55C533 30 667 75 800 55V80H0V55Z" fill="#34d399"/>
-      </svg>
+      {/* Subtle & Calming Animated Water Waves */}
+      <CalmingWave />
       {/* Top accent */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #0ea5e9, #38bdf8 50%, transparent)' }} />
       {/* Right glow */}
@@ -351,8 +550,10 @@ function StudentHero({ user }) {
       <style>{`
         @keyframes ringPulse  { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.1);opacity:.2} }
         @keyframes blink      { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @keyframes heroParticle { 0%,100%{transform:translateY(0) scale(1);opacity:var(--op,.25)} 50%{transform:translateY(-14px) scale(1.3);opacity:.07} }
         @keyframes logoBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        @keyframes calmWaveDrift { 0%{transform:translate3d(0,0,0)} 100%{transform:translate3d(-50%,0,0)} }
+        @keyframes calmWaveDriftRev { 0%{transform:translate3d(-50%,0,0)} 100%{transform:translate3d(0,0,0)} }
+        @keyframes calmWaveSwell { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
       `}</style>
     </div>
   );
