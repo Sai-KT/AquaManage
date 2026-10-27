@@ -41,7 +41,6 @@ export default function MaintenanceLogin() {
 
   return (
     <div className="maintenance-login-page" style={{
-      minHeight: '100vh',
       minHeight: '100dvh',
       fontFamily: "'Inter', sans-serif",
       background: '#0e0900',
@@ -53,12 +52,8 @@ export default function MaintenanceLogin() {
       overflowX: 'hidden',
     }}>
 
-      {/* ── Full-page diagonal hazard stripes (very subtle) ── */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.025,
-        backgroundImage: 'repeating-linear-gradient(55deg, #f59e0b 0px, #f59e0b 10px, transparent 10px, transparent 30px)',
-        pointerEvents: 'none',
-      }} />
+      {/* ── Live animated diagonal slant lines in page background ── */}
+      <div className="maintenance-slant-lines maintenance-slant-lines-login-page" aria-hidden="true" />
 
       {/* ── Background amber glow blobs ── */}
       <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(245,158,11,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
@@ -77,8 +72,8 @@ export default function MaintenanceLogin() {
         {/* Banner inner gradient overlay */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.35) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
 
-        {/* Diagonal lines on banner */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.08, backgroundImage: 'repeating-linear-gradient(55deg, #fbbf24 0px, #fbbf24 1px, transparent 1px, transparent 22px)', pointerEvents: 'none' }} />
+        {/* Live animated diagonal lines on banner */}
+        <div className="maintenance-slant-lines maintenance-slant-lines-login-banner" aria-hidden="true" />
 
         {/* Bottom amber glow line */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #fbbf24 30%, #f59e0b 70%, transparent)' }} />

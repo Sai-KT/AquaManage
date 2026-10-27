@@ -180,8 +180,8 @@ function MaintenanceHero({ user }) {
       boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
       minHeight: 188,
     }}>
-      {/* Diagonal stripe texture */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'repeating-linear-gradient(55deg, #fbbf24 0px, #fbbf24 10px, transparent 10px, transparent 30px)', pointerEvents: 'none' }} />
+      {/* Live animated diagonal slant lines across hero banner */}
+      <div className="maintenance-slant-lines maintenance-slant-lines-hero" aria-hidden="true" />
       {/* Top accent */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #d97706, #f59e0b 50%, #fbbf24)' }} />
       {/* Right glow */}

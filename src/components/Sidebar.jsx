@@ -291,8 +291,8 @@ function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile })
       borderRight: '1px solid rgba(245,158,11,0.1)',
       position: 'fixed', top: 0, left: 0, zIndex: 100, overflow: 'hidden',
     }}>
-      {/* Diagonal stripe texture */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.025, backgroundImage: 'repeating-linear-gradient(55deg,#f59e0b 0px,#f59e0b 8px,transparent 8px,transparent 24px)', pointerEvents: 'none' }} />
+      {/* Live animated diagonal slant lines in sidebar body */}
+      <div className="maintenance-slant-lines maintenance-slant-lines-body" aria-hidden="true" />
 
       {/* ── Bold amber top header ── */}
       <div style={{
@@ -301,8 +301,8 @@ function MaintenanceSidebar({ user, location, navigate, logout, onOpenProfile })
         padding: '22px 18px 18px',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* Header diagonal overlay */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'repeating-linear-gradient(55deg,#fbbf24 0px,#fbbf24 8px,transparent 8px,transparent 24px)', pointerEvents: 'none' }} />
+        {/* Live animated diagonal slant lines in top header card */}
+        <div className="maintenance-slant-lines maintenance-slant-lines-header" aria-hidden="true" />
         {/* Bottom amber glow line */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,#fbbf24,transparent)' }} />
 
