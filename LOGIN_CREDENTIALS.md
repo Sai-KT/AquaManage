@@ -23,11 +23,11 @@ Students can submit water leakage reports, view persistent complaint histories, 
 
 | Full Name | Student ID / IRN | Password | Department | Email | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Arjun Mehta** | `STU-2024-001` | `Student@123` | Computer Engineering | `arjun@student.iiit.ac.in` | **Primary demo student** (has submitted reports) |
-| **Priya Singh** | `STU-2024-002` | `Student@456` | Information Technology | `priya@student.iiit.ac.in` | **Secondary demo student** (for account isolation tests) |
-| **Mrugmay** | `IRN-101` | `Student@123` | Civil Engineering | `mrugmay@student.iiit.ac.in` | General student account |
-| **Raj** | `INR3421324` | `Student@123` | General | `inr3421324@student.iiit.ac.in` | Test account |
-| **Sai** | `INR31435123` | `Student@123` | General | `inr31435123@student.iiit.ac.in` | Test account |
+| **Arjun Mehta** | `STU-2024-001` | `Student@123` | Computer Engineering (Comp) | `arjun@student.iiit.ac.in` | **Primary demo student** (has submitted reports) |
+| **Priya Singh** | `STU-2024-002` | `Student@456` | Information Technology (IT) | `priya@student.iiit.ac.in` | **Secondary demo student** (for account isolation tests) |
+| **Mrugmay** | `IRN-101` | `Student@123` | Electronics and Telecommunication (ENTC) | `mrugmay@student.iiit.ac.in` | General student account |
+| **Raj** | `INR3421324` | `Student@123` | Computer Engineering (Comp) | `inr3421324@student.iiit.ac.in` | Test account |
+| **Sai** | `INR31435123` | `Student@123` | Computer Engineering (Comp) | `inr31435123@student.iiit.ac.in` | Test account |
 
 ### Student Portal Features:
 - **Submit Complaint:** Attach photo/video, location, zone, and description.

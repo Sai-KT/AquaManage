@@ -42,7 +42,7 @@ The `/admin/students` page provides a streamlined view of student accounts:
 
 ### Filter & Search Bar
 - **Real-Time Search**: Instant client-side filtering across Full Name, Student ID, and Email.
-- **Department Filter**: Dropdown filter for departments (Computer Engineering, IT, E&TC, Mechanical, Civil, etc.).
+- **Department Filter**: Dropdown filter for the 3 official college departments (Computer Engineering (Comp), Information Technology (IT), Electronics and Telecommunication (ENTC)).
 - **Status Filter**: Toggle between All Status, Active Only, and Inactive Only.
 
 ### Student Table Columns

@@ -22,12 +22,9 @@ import {
 import adminService from '../../services/adminService';
 
 const DEFAULT_DEPARTMENTS = [
-  'Computer Engineering',
-  'Information Technology',
-  'Electronics and Telecommunication',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Other',
+  'Computer Engineering (Comp)',
+  'Information Technology (IT)',
+  'Electronics and Telecommunication (ENTC)',
 ];
 
 export default function StudentManagement() {
@@ -45,8 +42,7 @@ export default function StudentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formFullName, setFormFullName] = useState('');
   const [formStudentId, setFormStudentId] = useState('');
-  const [formDepartment, setFormDepartment] = useState('Computer Engineering');
-  const [customDepartment, setCustomDepartment] = useState('');
+  const [formDepartment, setFormDepartment] = useState('Computer Engineering (Comp)');
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formConfirmPassword, setFormConfirmPassword] = useState('');
@@ -91,8 +87,7 @@ export default function StudentManagement() {
   const handleOpenModal = () => {
     setFormFullName('');
     setFormStudentId('');
-    setFormDepartment('Computer Engineering');
-    setCustomDepartment('');
+    setFormDepartment('Computer Engineering (Comp)');
     setFormEmail('');
     setFormPassword('');
     setFormConfirmPassword('');
@@ -148,9 +143,7 @@ export default function StudentManagement() {
     const trimmedName = formFullName.trim();
     const trimmedId = formStudentId.trim().toUpperCase();
     const trimmedEmail = formEmail.trim().toLowerCase();
-    const chosenDept = formDepartment === 'Other'
-      ? (customDepartment.trim() || 'General')
-      : formDepartment;
+    const chosenDept = formDepartment || DEFAULT_DEPARTMENTS[0];
 
     if (!trimmedName) {
       setFormError('Full Name is required.');
@@ -228,7 +221,10 @@ export default function StudentManagement() {
 
       const matchDept =
         deptFilter === 'all' ||
-        (s.department || '').toLowerCase() === deptFilter.toLowerCase();
+        (s.department || '').toLowerCase() === deptFilter.toLowerCase() ||
+        (deptFilter === 'Computer Engineering (Comp)' && ((s.department || '').toLowerCase().includes('computer') || (s.department || '').toLowerCase() === 'comp')) ||
+        (deptFilter === 'Information Technology (IT)' && ((s.department || '').toLowerCase().includes('information') || (s.department || '').toLowerCase() === 'it')) ||
+        (deptFilter === 'Electronics and Telecommunication (ENTC)' && ((s.department || '').toLowerCase().includes('telecom') || (s.department || '').toLowerCase().includes('entc') || (s.department || '').toLowerCase().includes('e&tc')));
 
       const matchStatus =
         statusFilter === 'all' ||
@@ -540,7 +536,7 @@ export default function StudentManagement() {
                   }}
                 >
                   <option value="all">All Departments</option>
-                  {DEFAULT_DEPARTMENTS.filter((d) => d !== 'Other').map((d) => (
+                  {DEFAULT_DEPARTMENTS.map((d) => (
                     <option key={d} value={d}>
                       {d}
                     </option>
@@ -1118,43 +1114,6 @@ export default function StudentManagement() {
                   </select>
                 </div>
               </div>
-
-              {/* Custom department if "Other" is chosen */}
-              {formDepartment === 'Other' && (
-                <div style={{ marginBottom: 14 }}>
-                  <label
-                    htmlFor="student-custom-dept"
-                    style={{
-                      display: 'block',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: 'var(--navy-700)',
-                      marginBottom: 6,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    Custom Department Name
-                  </label>
-                  <input
-                    id="student-custom-dept"
-                    type="text"
-                    placeholder="Enter academic department"
-                    value={customDepartment}
-                    onChange={(e) => setCustomDepartment(e.target.value)}
-                    disabled={isSubmitting}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: 8,
-                      border: '1px solid var(--border)',
-                      background: 'var(--card-bg)',
-                      color: 'var(--navy-900)',
-                      fontSize: '0.875rem',
-                    }}
-                  />
-                </div>
-              )}
 
               {/* Field 4: Email Address */}
               <div style={{ marginBottom: 14 }}>

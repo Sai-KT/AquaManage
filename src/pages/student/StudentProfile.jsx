@@ -11,6 +11,21 @@ import {
   FileText, RefreshCw, AlertCircle, Info, Camera, Trash2, UploadCloud, Image as ImageIcon
 } from 'lucide-react';
 
+const STUDENT_BRANCHES = [
+  'Computer Engineering (Comp)',
+  'Information Technology (IT)',
+  'Electronics and Telecommunication (ENTC)',
+];
+
+const normalizeBranch = (dept) => {
+  if (!dept) return STUDENT_BRANCHES[0];
+  const d = dept.trim().toLowerCase();
+  if (d.includes('comp')) return 'Computer Engineering (Comp)';
+  if (d.includes('info') || d === 'it') return 'Information Technology (IT)';
+  if (d.includes('tele') || d.includes('entc') || d.includes('elect') || d.includes('e&tc')) return 'Electronics and Telecommunication (ENTC)';
+  return dept;
+};
+
 export default function StudentProfile() {
   const navigate = useNavigate();
   const { user, logout, updateCurrentUser } = useAuth();
@@ -62,7 +77,7 @@ export default function StudentProfile() {
         setProfile(res.profile);
         setEditForm({
           email: res.profile.email || '',
-          department: res.profile.department || '',
+          department: normalizeBranch(res.profile.department) || STUDENT_BRANCHES[0],
         });
         if (res.profile.avatar_url && updateCurrentUser) {
           updateCurrentUser({ avatar_url: res.profile.avatar_url });
@@ -154,7 +169,7 @@ export default function StudentProfile() {
     if (profile) {
       setEditForm({
         email: profile.email || '',
-        department: profile.department || '',
+        department: normalizeBranch(profile.department) || STUDENT_BRANCHES[0],
       });
     }
     setEditErrors({});
@@ -676,6 +691,12 @@ export default function StudentProfile() {
                         <button
                           className="btn btn-outline btn-sm"
                           onClick={() => {
+                            if (profile) {
+                              setEditForm({
+                                email: profile.email || '',
+                                department: normalizeBranch(profile.department) || STUDENT_BRANCHES[0],
+                              });
+                            }
                             setIsEditing(true);
                             setSaveSuccess('');
                             setSaveError('');
@@ -699,25 +720,29 @@ export default function StudentProfile() {
                             <Building size={14} style={{ color: '#0ea5e9' }} />
                             <span>Department / Branch</span>
                           </label>
-                          <input
-                            type="text"
+                          <select
+                            id="student-branch-select"
                             className="form-control"
                             value={editForm.department}
                             onChange={handleEditChange('department')}
-                            placeholder="e.g. Computer Engineering, IT, Mechanical"
-                            maxLength={100}
                             style={{
                               width: '100%',
                               borderColor: editErrors.department ? '#ef4444' : undefined,
                             }}
-                          />
+                          >
+                            {STUDENT_BRANCHES.map((branch) => (
+                              <option key={branch} value={branch}>
+                                {branch}
+                              </option>
+                            ))}
+                          </select>
                           {editErrors.department ? (
                             <div style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: 4 }}>
                               {editErrors.department}
                             </div>
                           ) : (
                             <div style={{ fontSize: '0.75rem', color: 'var(--navy-500)', marginTop: 4 }}>
-                              Your academic discipline or faculty department.
+                              Select from the 3 official college departments.
                             </div>
                           )}
                         </div>
