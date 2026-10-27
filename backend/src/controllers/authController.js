@@ -188,6 +188,7 @@ export const authController = {
       });
     } else {
       res.clearCookie('aquamanage_sid');
+      res.clearCookie('connect.sid');
       return res.json({ success: true, message: 'Already logged out.' });
     }
   },

@@ -279,14 +279,12 @@ export const adminController = {
    */
   async createStudent(req, res, next) {
     try {
-      const {
-        full_name,
-        student_id,
-        department,
-        email,
-        password,
-        confirmPassword,
-      } = req.body || {};
+      const full_name = req.body?.full_name || req.body?.fullName;
+      const student_id = req.body?.student_id || req.body?.studentId;
+      const department = req.body?.department;
+      const email = req.body?.email;
+      const password = req.body?.password;
+      const confirmPassword = req.body?.confirmPassword;
 
       // 1. Mandatory input presence & type validation
       if (!full_name || typeof full_name !== 'string' || !full_name.trim()) {

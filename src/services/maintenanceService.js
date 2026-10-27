@@ -1,5 +1,4 @@
 import apiClient from './apiClient';
-import { maintenanceTasks as mockTasks } from '../data/mockData';
 
 export const maintenanceService = {
   // ── 1. Fetch Assigned Tasks for Maintenance Staff ─────────────────────────
@@ -9,11 +8,11 @@ export const maintenanceService = {
       if (res && res.success && res.tasks) {
         return { success: true, tasks: res.tasks };
       }
+      return { success: false, error: res?.message || 'Failed to retrieve tasks', tasks: [] };
     } catch (err) {
-      console.warn('[maintenanceService] getAssignedTasks API unavailable, using fallback:', err.message);
+      console.warn('[maintenanceService] getAssignedTasks API unavailable:', err.message);
+      return { success: false, error: err.message, tasks: [] };
     }
-
-    return { success: true, tasks: mockTasks };
   },
 
   // ── 2. Fetch Completed/Resolved Tasks ─────────────────────────────────────

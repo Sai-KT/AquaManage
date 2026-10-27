@@ -99,10 +99,11 @@ export const studentService = {
           },
         };
       }
+      return { success: false, error: res?.message || 'Failed to retrieve harvesting status', tanks: [], stats: {} };
     } catch (err) {
       console.warn('[studentService] getHarvestingStatus error:', err.message);
+      return { success: false, error: err.message, tanks: [], stats: {} };
     }
-
   },
 
   // ── 5. Fetch Student Profile ───────────────────────────────────────────────

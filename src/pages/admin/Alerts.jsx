@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import { Bell, CheckCheck, Settings, ChevronLeft, RefreshCw } from 'lucide-react';
-import { alerts as defaultAlerts } from '../../data/mockData';
 import adminService from '../../services/adminService';
 
 export default function Alerts() {
@@ -12,7 +11,7 @@ export default function Alerts() {
   const urlType = searchParams.get('type') || 'all';
 
   const [filter, setFilter] = useState(urlType);
-  const [alertList, setAlertList] = useState(defaultAlerts);
+  const [alertList, setAlertList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadAlerts = async () => {
@@ -20,6 +19,8 @@ export default function Alerts() {
     const res = await adminService.getAlerts();
     if (res && res.success && res.alerts) {
       setAlertList(res.alerts);
+    } else {
+      setAlertList([]);
     }
     setIsLoading(false);
   };

@@ -15,7 +15,6 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
-import { leakReports as defaultReports } from '../../data/mockData';
 import adminService from '../../services/adminService';
 
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -23,8 +22,8 @@ const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 export default function LeakReports() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [reports, setReports] = useState(defaultReports);
-  const [staffList, setStaffList] = useState(['Ram Kumar', 'Suresh Babu', 'Mohan Das', 'Vijay Patil', 'Anil Sharma']);
+  const [reports, setReports] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Sorting state: default is date descending (newest first)
@@ -55,9 +54,13 @@ export default function LeakReports() {
     ]);
     if (reportsRes && reportsRes.success && reportsRes.reports) {
       setReports(reportsRes.reports);
+    } else {
+      setReports([]);
     }
     if (staffRes && staffRes.success && staffRes.staff) {
       setStaffList(staffRes.staff);
+    } else {
+      setStaffList([]);
     }
     setIsLoading(false);
   };

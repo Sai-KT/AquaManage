@@ -4,8 +4,6 @@ import {
   tankData as mockTanks,
   harvestingTrend as mockTrend,
   waterUsageByZone as mockZones,
-  leakReports as mockReports,
-  alerts as mockAlerts,
 } from '../data/mockData';
 
 export const adminService = {
@@ -42,11 +40,11 @@ export const adminService = {
       if (res && res.success && res.reports) {
         return { success: true, reports: res.reports };
       }
+      return { success: false, error: res?.message || 'Failed to retrieve reports', reports: [] };
     } catch (err) {
-      console.warn('[adminService] getLeakReports API failed, using fallback:', err.message);
+      console.warn('[adminService] getLeakReports API failed:', err.message);
+      return { success: false, error: err.message, reports: [] };
     }
-
-    return { success: true, reports: mockReports };
   },
 
   // ── 3. Update Report Status ───────────────────────────────────────────────
@@ -80,11 +78,11 @@ export const adminService = {
       if (res && res.success && res.alerts) {
         return { success: true, alerts: res.alerts };
       }
+      return { success: false, error: res?.message || 'Failed to retrieve alerts', alerts: [] };
     } catch (err) {
-      console.warn('[adminService] getAlerts API failed, using fallback:', err.message);
+      console.warn('[adminService] getAlerts API failed:', err.message);
+      return { success: false, error: err.message, alerts: [] };
     }
-
-    return { success: true, alerts: mockAlerts };
   },
 
   async markAllAlertsRead() {
@@ -103,11 +101,11 @@ export const adminService = {
       if (res && res.success && res.staff) {
         return { success: true, staff: res.staff };
       }
+      return { success: false, error: res?.message || 'Failed to retrieve staff', staff: [] };
     } catch (err) {
-      console.warn('[adminService] getMaintenanceStaff API failed, using fallback:', err.message);
+      console.warn('[adminService] getMaintenanceStaff API failed:', err.message);
+      return { success: false, error: err.message, staff: [] };
     }
-
-    return { success: true, staff: ['Ram Kumar', 'Suresh Babu', 'Mohan Das', 'Vijay Patil', 'Anil Sharma'] };
   },
 
   // ── 7. Registered Students & Users ────────────────────────────────────────

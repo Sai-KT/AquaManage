@@ -90,6 +90,7 @@ if (isProduction && !process.env.SESSION_SECRET) {
 
 app.use(
   session({
+    name: 'aquamanage_sid',
     key: 'aquamanage_sid',
     secret: sessionSecret,
     store: sessionStore,

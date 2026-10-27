@@ -4,7 +4,6 @@ import Sidebar from '../../components/Sidebar';
 import HeroBanner from '../../components/HeroBanner';
 import Topbar from '../../components/Topbar';
 import { CheckCircle, Clock, MapPin, MessageSquare, ChevronDown, ChevronUp, Wrench, RefreshCw, Image as ImageIcon } from 'lucide-react';
-import { maintenanceTasks as defaultTasks } from '../../data/mockData';
 import maintenanceService from '../../services/maintenanceService';
 
 const priorityColors = {
@@ -154,7 +153,7 @@ function TaskCard({ task, onStatusChange, onAddLog }) {
 
 export default function TaskQueue() {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState(defaultTasks);
+  const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -163,6 +162,8 @@ export default function TaskQueue() {
     const res = await maintenanceService.getAssignedTasks(user);
     if (res && res.success && res.tasks) {
       setTasks(res.tasks);
+    } else {
+      setTasks([]);
     }
     setIsLoading(false);
     setIsRefreshing(false);
