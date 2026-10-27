@@ -135,6 +135,18 @@ export const adminService = {
       return { success: false, error: err.message };
     }
   },
+
+  async deleteStudent(studentId) {
+    try {
+      const res = await apiClient.delete(`/admin/students/${studentId}`);
+      if (res && res.success) {
+        return { success: true, message: res.message, deletedStudent: res.deletedStudent };
+      }
+      return { success: false, error: res?.message || 'Failed to delete student account' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
 };
 
 export default adminService;

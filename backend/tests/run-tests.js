@@ -1382,6 +1382,102 @@ async function runAllTests() {
       !studentASeesNewTicket && !newStudentSeesOldTicket ? 'PASS' : 'FAIL',
       'Neither student can view or access complaints submitted by the other'
     );
+
+    // 9.14 Security: Unauthorized Student Deletion Barred (401/403)
+    const unauthDelRes = await request(`/api/admin/students/${newStudentDbId}`, {
+      method: 'DELETE',
+    });
+    const studentDelRes = await request(`/api/admin/students/${newStudentDbId}`, {
+      method: 'DELETE',
+      headers: { Cookie: studentCookie },
+    });
+
+    recordTest(
+      'Security: Unauthorized Student Deletion Barred (401/403)',
+      'Security',
+      unauthDelRes.status === 401 && studentDelRes.status === 403 ? 'PASS' : 'FAIL',
+      `Unauth: ${unauthDelRes.status}, Student Role: ${studentDelRes.status}`
+    );
+
+    // 9.15 Validation: Non-existent student deletion returns 404
+    const notFoundDelRes = await request('/api/admin/students/999999', {
+      method: 'DELETE',
+      headers: { Cookie: adminCookie },
+    });
+
+    recordTest(
+      'Validation: Non-Existent Student Deletion Rejected (HTTP 404)',
+      'Validation',
+      notFoundDelRes.status === 404 ? 'PASS' : 'FAIL',
+      `HTTP 404: "${notFoundDelRes.data?.message}"`
+    );
+
+    // 9.16 Role Protection: Attempting to delete non-student account blocked (403)
+    // Find an admin user id
+    const [adminUserRows] = await pool.query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+    let nonStudentDelBlocked = false;
+    if (adminUserRows.length > 0) {
+      const nonStudentDelRes = await request(`/api/admin/students/${adminUserRows[0].id}`, {
+        method: 'DELETE',
+        headers: { Cookie: adminCookie },
+      });
+      nonStudentDelBlocked = nonStudentDelRes.status === 403;
+    }
+
+    recordTest(
+      'Security: Non-Student Account Deletion Protected (HTTP 403)',
+      'Security',
+      nonStudentDelBlocked ? 'PASS' : 'FAIL',
+      'Admin cannot delete non-student accounts via student management endpoint'
+    );
+
+    // 9.17 Admin completely deletes student account
+    const deleteRes = await request(`/api/admin/students/${newStudentDbId}`, {
+      method: 'DELETE',
+      headers: { Cookie: adminCookie },
+    });
+
+    // Verify student is completely deleted from MySQL
+    const [deletedDbRows] = await pool.query(
+      'SELECT id FROM users WHERE id = ?',
+      [newStudentDbId]
+    );
+    const dbDeletedVerified = deletedDbRows.length === 0;
+
+    recordTest(
+      'Admin Completely Deletes Student Account (DELETE /api/admin/students/:id)',
+      'Student Management',
+      deleteRes.status === 200 && deleteRes.data?.success && dbDeletedVerified ? 'PASS' : 'FAIL',
+      `HTTP 200, Student ${newStudentDbId} removed from MySQL users table`
+    );
+
+    // 9.18 Deleted student cannot log in
+    const postDelLoginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { role: 'student', studentId: testStudentCode, password: testStudentPwd },
+    });
+
+    recordTest(
+      'Deleted Student Login Barred (HTTP 401)',
+      'Auth',
+      postDelLoginRes.status === 401 ? 'PASS' : 'FAIL',
+      'Permanently removed student rejected at login'
+    );
+
+    // 9.19 Verification in Student Directory (no longer listed)
+    const afterDelListRes = await request('/api/admin/students', {
+      headers: { Cookie: adminCookie },
+    });
+    const stillInList = afterDelListRes.status === 200 &&
+      Array.isArray(afterDelListRes.data?.students) &&
+      afterDelListRes.data.students.some(s => s.id === newStudentDbId || s.student_id === testStudentCode);
+
+    recordTest(
+      'Student Directory Sync: Deleted Student Excluded from Directory',
+      'Student Management',
+      afterDelListRes.status === 200 && !stillInList ? 'PASS' : 'FAIL',
+      'Directory listing reflects immediate deletion'
+    );
   } catch (fe03Err) {
     recordTest('Admin Student Registration Checks', 'Student Management', 'FAIL', fe03Err.message);
   }

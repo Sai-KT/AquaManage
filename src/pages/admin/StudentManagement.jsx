@@ -17,6 +17,7 @@ import {
   Filter,
   Check,
   ShieldAlert,
+  Trash2,
 } from 'lucide-react';
 import adminService from '../../services/adminService';
 
@@ -55,6 +56,11 @@ export default function StudentManagement() {
   // Success notification toast
   const [successToast, setSuccessToast] = useState(null);
   const [newlyCreatedId, setNewlyCreatedId] = useState(null);
+
+  // Delete modal state
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const fullNameInputRef = useRef(null);
 
@@ -98,6 +104,40 @@ export default function StudentManagement() {
     if (isSubmitting) return;
     setIsModalOpen(false);
     setFormError(null);
+  };
+
+  const handleConfirmDelete = (student) => {
+    setStudentToDelete(student);
+    setDeleteError(null);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (isDeleting) return;
+    setStudentToDelete(null);
+    setDeleteError(null);
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!studentToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const targetId = studentToDelete.id || studentToDelete.student_id;
+    const res = await adminService.deleteStudent(targetId);
+
+    if (res && res.success) {
+      setIsDeleting(false);
+      const deletedName = studentToDelete.full_name;
+      const deletedCode = studentToDelete.student_id;
+      setStudentToDelete(null);
+      setSuccessToast(
+        res.message || `Student account for ${deletedName} (${deletedCode}) has been completely deleted.`
+      );
+      await loadStudents(false);
+    } else {
+      setIsDeleting(false);
+      setDeleteError(res?.error || 'Failed to completely delete the student account. Please try again.');
+    }
   };
 
   const handleCreateStudent = async (e) => {
@@ -618,6 +658,9 @@ export default function StudentManagement() {
                       <th style={{ padding: '12px 16px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--navy-600)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Registered On
                       </th>
+                      <th style={{ padding: '12px 16px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--navy-600)', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -754,6 +797,41 @@ export default function StudentManagement() {
                           {/* Registered On */}
                           <td style={{ padding: '14px 16px', fontSize: '0.8125rem', color: 'var(--navy-500)' }}>
                             {formatDate(s.created_at)}
+                          </td>
+
+                          {/* Actions: Delete Student */}
+                          <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                            <button
+                              type="button"
+                              className="btn-delete-student"
+                              onClick={() => handleConfirmDelete(s)}
+                              title={`Completely delete ${s.full_name} (${s.student_id})`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                padding: '5px 10px',
+                                borderRadius: 7,
+                                background: 'rgba(239, 68, 68, 0.08)',
+                                border: '1px solid rgba(239, 68, 68, 0.25)',
+                                color: '#ef4444',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                              }}
+                            >
+                              <Trash2 size={13} />
+                              <span>Delete</span>
+                            </button>
                           </td>
                         </tr>
                       );
@@ -1301,6 +1379,247 @@ export default function StudentManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          DELETE STUDENT CONFIRMATION MODAL
+          ══════════════════════════════════════════════════════════ */}
+      {studentToDelete && (
+        <div
+          className="modal-backdrop"
+          onClick={handleCloseDeleteModal}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            animation: 'fadeIn 0.18s ease both',
+          }}
+        >
+          <div
+            className="modal-dialog card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: 480,
+              borderRadius: 16,
+              padding: 0,
+              border: '1px solid var(--border)',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+              animation: 'fadeUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) both',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '20px 24px 16px',
+                borderBottom: '1px solid var(--border)',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, transparent 100%)',
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ef4444',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Trash2 size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1875rem', fontWeight: 800, color: 'var(--navy-900)' }}>
+                    Delete Student Account
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--navy-500)' }}>
+                    Permanent removal from database
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                disabled={isDeleting}
+                style={{
+                  position: 'absolute',
+                  top: 18,
+                  right: 18,
+                  background: 'none',
+                  border: 'none',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  color: 'var(--navy-400)',
+                  padding: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 6,
+                }}
+                title="Cancel"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ padding: '20px 24px' }}>
+              <p style={{ margin: '0 0 16px', fontSize: '0.875rem', color: 'var(--navy-700)', lineHeight: 1.5 }}>
+                Are you sure you want to completely delete student{' '}
+                <strong style={{ color: 'var(--navy-900)' }}>{studentToDelete.full_name}</strong>?
+              </p>
+
+              {/* Student Summary Card */}
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: 10,
+                  background: 'var(--navy-50)',
+                  border: '1px solid var(--border)',
+                  marginBottom: 16,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 10,
+                  fontSize: '0.8125rem',
+                }}
+              >
+                <div>
+                  <div style={{ color: 'var(--navy-400)', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Student ID
+                  </div>
+                  <div style={{ fontWeight: 700, fontFamily: 'monospace', color: '#0284c7' }}>
+                    {studentToDelete.student_id}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: 'var(--navy-400)', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Department
+                  </div>
+                  <div style={{ fontWeight: 600, color: 'var(--navy-800)' }}>
+                    {studentToDelete.department || 'General'}
+                  </div>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ color: 'var(--navy-400)', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Email Address
+                  </div>
+                  <div style={{ fontWeight: 600, color: 'var(--navy-800)' }}>
+                    {studentToDelete.email}
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Alert */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  color: '#dc2626',
+                  fontSize: '0.8125rem',
+                  lineHeight: 1.4,
+                }}
+              >
+                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>
+                  This action is permanent and cannot be undone. Active login sessions will be immediately terminated and the student will no longer have access to the system.
+                </span>
+              </div>
+
+              {deleteError && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid #ef4444',
+                    color: '#dc2626',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    marginTop: 12,
+                  }}
+                >
+                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 10,
+                padding: '14px 24px 20px',
+                borderTop: '1px solid var(--border)',
+                background: 'var(--navy-50)',
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={handleCloseDeleteModal}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                id="confirm-delete-student-btn"
+                className="btn btn-sm"
+                onClick={handleExecuteDelete}
+                disabled={isDeleting}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: '#ef4444',
+                  borderColor: '#ef4444',
+                  color: '#fff',
+                  fontWeight: 700,
+                  minWidth: 150,
+                  justifyContent: 'center',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw size={14} className="spin-icon" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Yes, Delete Student</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

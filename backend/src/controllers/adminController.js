@@ -464,6 +464,74 @@ export const adminController = {
       next(error);
     }
   },
+
+  /**
+   * Completely delete a student account (admin only)
+   */
+  async deleteStudent(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Student identifier parameter is required.',
+        });
+      }
+
+      // Support lookup by integer id or string student_id
+      const isNumeric = /^\d+$/.test(id);
+      const studentRows = isNumeric
+        ? await query('SELECT id, full_name, student_id, email, role FROM users WHERE id = ?', [parseInt(id, 10)])
+        : await query('SELECT id, full_name, student_id, email, role FROM users WHERE student_id = ?', [id]);
+
+      if (!studentRows || studentRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Student account not found in database.',
+        });
+      }
+
+      const student = studentRows[0];
+
+      // Security check: Only allow deleting accounts with role === 'student'
+      if (student.role !== 'student') {
+        return res.status(403).json({
+          success: false,
+          message: 'Only student accounts can be deleted via this administrative endpoint.',
+        });
+      }
+
+      await withTransaction(async (conn) => {
+        // 1. Invalidate active sessions in MySQL sessions table
+        await conn.query(
+          `DELETE FROM sessions 
+           WHERE data LIKE ? OR data LIKE ? OR data LIKE ?`,
+          [
+            `%"id":${student.id}%`,
+            `%"id": "${student.id}"%`,
+            `%"student_id":"${student.student_id}"%`,
+          ]
+        );
+
+        // 2. Delete user from users table
+        // Note: fk_leak_reports_student has ON DELETE SET NULL, preserving campus work orders cleanly
+        await conn.query('DELETE FROM users WHERE id = ?', [student.id]);
+      });
+
+      return res.json({
+        success: true,
+        message: `Student account for ${student.full_name} (${student.student_id}) has been completely deleted.`,
+        deletedStudent: {
+          id: student.id,
+          full_name: student.full_name,
+          student_id: student.student_id,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 export default adminController;

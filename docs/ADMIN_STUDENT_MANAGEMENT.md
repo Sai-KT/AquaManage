@@ -171,6 +171,31 @@ Clicking **"+ Add Student"** opens a modal dialog (`#add-student-btn`):
   }
   ```
 
+### Endpoint 3: Completely Delete Student
+- **Route**: `DELETE /api/admin/students/:id`
+- **Protection**: Session authenticated (`requireAuth`) + Role authorization (`requireRole('admin')`).
+- **Path Parameter**: `:id` — Database integer ID or alphanumeric `student_id`.
+- **Security Check**: Restricts deletion strictly to accounts with `role = 'student'` (prevents accidental deletion of administrators or maintenance personnel).
+- **Backend Processing**:
+  1. Locates user by integer ID or `student_id`. Returns `HTTP 404` if not found.
+  2. Verifies account role is `student`. Returns `HTTP 403` if non-student.
+  3. Executes atomic MySQL transaction:
+     - Invalidates active sessions in MySQL `sessions` table.
+     - Permanently removes record from `users` table.
+     - Preserves historical campus work orders safely via `ON DELETE SET NULL` on `leak_reports.student_id`.
+- **Response** (`HTTP 200 OK`):
+  ```json
+  {
+    "success": true,
+    "message": "Student account for Kavita Patel (STU-2024-003) has been completely deleted.",
+    "deletedStudent": {
+      "id": 62,
+      "full_name": "Kavita Patel",
+      "student_id": "STU-2024-003"
+    }
+  }
+  ```
+
 ---
 
 ## 6. Student Login & Lifecycle Integration

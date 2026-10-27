@@ -16,5 +16,6 @@ router.get('/alerts', adminController.getAlerts);
 router.patch('/alerts/mark-read', adminController.markAllAlertsRead);
 router.get('/students', adminController.getStudents);
 router.post('/students', adminController.createStudent);
+router.delete('/students/:id', adminController.deleteStudent);
 
 export default router;
